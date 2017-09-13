@@ -1,10 +1,10 @@
-# Jenetics for .Net
+# Jenetics.Net
 
-**Jenetics for .Net** is a port of the popular Genetic Algorithm framework [Jenetics](http://jenetics.io) to .NET.
+**Jenetics.Net** is a port of the popular Java Genetic Algorithm framework [Jenetics](http://jenetics.io) to .NET Core.
 
 ## Documentation
 
-Currently documentation is not ported but because of the nearly identical structure look into the Java Jenetics ([javadoc](http://jenetics.io/javadoc/jenetics/3.9/index.html)) and the user manual ([pdf](http://jenetics.io/manual/manual-3.9.0.pdf)).
+Currently the documentation is not ported, but because of the nearly identical structure, look into the Jenetics ([javadoc](http://jenetics.io/javadoc/jenetics/3.9/index.html)) and the user manual ([pdf](http://jenetics.io/manual/manual-3.9.0.pdf)).
 
 ## Requirements
 
