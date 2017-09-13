@@ -1,0 +1,49 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+      <RootNamespace>Jenetics</RootNamespace>
+      <ApplicationIcon/>
+    <OutputType>Library</OutputType>
+      <StartupObject/>
+  </PropertyGroup>
+  <ItemGroup>
+      <None Remove="resources\RouletteWheelSelector[MAXIMUM].dat"/>
+      <None Remove="resources\RouletteWheelSelector[MINIMUM].dat"/>
+      <None Remove="resources\TruncationSelector[MAXIMUM].dat"/>
+      <None Remove="resources\TruncationSelector[MINIMUM].dat"/>
+      <None Remove="resources\BoltzmannSelector[MAXIMUM].dat"/>
+      <None Remove="resources\BoltzmannSelector[MINIMUM].dat"/>
+      <None Remove="resources\ExponentialRankSelector[MAXIMUM].dat"/>
+      <None Remove="resources\ExponentialRankSelector[MINIMUM].dat"/>
+      <None Remove="resources\LinearRankSelector[MAXIMUM].dat"/>
+      <None Remove="resources\LinearRankSelector[MINIMUM].dat"/>
+      <None Remove="resources\StochasticUniversalSelector[MAXIMUM].dat"/>
+      <None Remove="resources\StochasticUniversalSelector[MINIMUM].dat"/>
+      <None Remove="resources\TournamentSelector[MAXIMUM].dat"/>
+      <None Remove="resources\TournamentSelector[MINIMUM].dat"/>
+  </ItemGroup>
+  <ItemGroup>
+      <PackageReference Include="MathNet.Numerics.Core" Version="3.17.0"/>
+      <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0"/>
+      <PackageReference Include="xunit" Version="2.3.0-beta5-build3769"/>
+      <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.0-beta5-build3769"/>
+      <EmbeddedResource Include="resources\RouletteWheelSelector[MAXIMUM].dat"/>
+      <EmbeddedResource Include="resources\RouletteWheelSelector[MINIMUM].dat"/>
+      <EmbeddedResource Include="resources\TruncationSelector[MAXIMUM].dat"/>
+      <EmbeddedResource Include="resources\TruncationSelector[MINIMUM].dat"/>
+      <EmbeddedResource Include="resources\BoltzmannSelector[MAXIMUM].dat"/>
+      <EmbeddedResource Include="resources\BoltzmannSelector[MINIMUM].dat"/>
+      <EmbeddedResource Include="resources\ExponentialRankSelector[MAXIMUM].dat"/>
+      <EmbeddedResource Include="resources\ExponentialRankSelector[MINIMUM].dat"/>
+      <EmbeddedResource Include="resources\LinearRankSelector[MAXIMUM].dat"/>
+      <EmbeddedResource Include="resources\LinearRankSelector[MINIMUM].dat"/>
+      <EmbeddedResource Include="resources\StochasticUniversalSelector[MAXIMUM].dat"/>
+      <EmbeddedResource Include="resources\StochasticUniversalSelector[MINIMUM].dat"/>
+      <EmbeddedResource Include="resources\TournamentSelector[MAXIMUM].dat"/>
+      <EmbeddedResource Include="resources\TournamentSelector[MINIMUM].dat"/>
+      <PackageReference Include="xunit.runner.visualstudio" Version="2.3.0-beta5-build3769"/>
+  </ItemGroup>
+  <ItemGroup>
+      <ProjectReference Include="..\Jenetics\Jenetics.csproj"/>
+  </ItemGroup>
+</Project>
