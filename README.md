@@ -11,6 +11,38 @@ Currently the documentation is not ported, but because of the nearly identical s
 ### Build time
 *  **.Net Core 2.0**: The [.Net Core 2.0](https://www.microsoft.com/net/download/core) SDK must be installed.
 
+## Build Jenetics.Net
+
+Check out the master branch from Github.
+
+    $ git clone https://github.com/rmeindl/jenetics.net.git <builddir>
+
+Jenetics.Net is currently not using anything thing else for building besides .Net Core projects.
+
+Go to `src/core/Jenetics` for building the library
+
+    $ dotnet build
+    
+Go to `src/core/Jenetics.Tests` for running the xUnit Tests
+
+    $ dotnet xunit
+    
+All artifacts can be found in `bin\Debug\netcoreapp2.0`.
+
+Go to `src/examples/<example>` for running on of the examples, e.g. `src/examples/HelloWorld`
+
+    $ dotnet run
+        
+If you want to publish an example including the .Net Core runtime as self-contained application, define the [runtime](https://docs.microsoft.com/en-us/dotnet/core/rid-catalog)
+
+    $ dotnet publish -r linux-x64 --self-contained
+
+or 
+
+    $ dotnet publish -r win-x64 --self-contained
+
+All artifacts can be found in `bin\Debug\netcoreapp2.0\linux-x64\publish` or `bin\Debug\netcoreapp2.0\win-x64\publish`.
+
 ## Example
 
 ### Hello World (Ones counting)
