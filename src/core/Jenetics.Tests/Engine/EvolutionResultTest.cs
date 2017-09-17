@@ -106,8 +106,8 @@ namespace Jenetics.Engine
 
             var bestMinValue = Enumerable.Range(0, 100)
                 .Select(value => NewResult(Optimize.Minimum, value))
-                .ToBestGenotype()
-                .Gene.Allele;
+                .ToBestEvolutionResult()
+                .GetBestFitness();
 
             Assert.Equal(0, bestMinValue);
         }

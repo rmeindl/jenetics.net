@@ -87,12 +87,16 @@ namespace Jenetics.Engine
                 if (Interlocked.CompareExchange(ref bestResult, result, null) != null)
                 {
                     var oldValue = bestResult;
-                    var newValue = result;
+                    EvolutionResult<TGene, TAllele> newValue;
                     do
                     {
                         if (result.GetOptimize().Compare(result.GetBestPhenotype(), oldValue.GetBestPhenotype()) > 0)
                         {
                             newValue = result;
+                        }
+                        else
+                        {
+                            break;
                         }
                     } while (ReferenceEquals(Interlocked.CompareExchange(ref bestResult, newValue, oldValue), oldValue));
                 }
@@ -108,17 +112,24 @@ namespace Jenetics.Engine
         {
             Phenotype<TGene, TAllele> bestPhenotype = null;
             foreach (var result in source)
-                if (bestPhenotype == null)
+            {
+                if (Interlocked.CompareExchange(ref bestPhenotype, result.GetBestPhenotype(), null) != null)
                 {
-                    bestPhenotype = result.GetBestPhenotype();
+                    var oldValue = bestPhenotype;
+                    Phenotype<TGene, TAllele> newValue;
+                    do
+                    {
+                        if (result.GetOptimize().Compare(result.GetBestPhenotype().GetFitness(), oldValue.GetFitness()) > 0)
+                        {
+                            newValue = result.GetBestPhenotype();
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    } while (ReferenceEquals(Interlocked.CompareExchange(ref bestPhenotype, newValue, oldValue), oldValue));
                 }
-                else
-                {
-                    if (result.GetOptimize()
-                            .Compare(result.GetBestPhenotype().GetFitness(), bestPhenotype.GetFitness()) > 0)
-                        bestPhenotype = result.GetBestPhenotype();
-                }
-
+            }
             return bestPhenotype;
         }
 
