@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using System.Runtime.Serialization;
 using System.Threading;
 
@@ -87,13 +86,15 @@ namespace Jenetics.Engine
             {
                 if (Interlocked.CompareExchange(ref bestResult, result, null) != null)
                 {
-                    lock (bestResult)
+                    var oldValue = bestResult;
+                    var newValue = result;
+                    do
                     {
-                        if (result.GetOptimize().Compare(result.GetBestPhenotype(), bestResult.GetBestPhenotype()) > 0)
+                        if (result.GetOptimize().Compare(result.GetBestPhenotype(), oldValue.GetBestPhenotype()) > 0)
                         {
-                            bestResult = result;
+                            newValue = result;
                         }
-                    }
+                    } while (ReferenceEquals(Interlocked.CompareExchange(ref bestResult, newValue, oldValue), oldValue));
                 }
                 Interlocked.Increment(ref count);
             }
