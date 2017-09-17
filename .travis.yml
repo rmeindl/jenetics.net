@@ -3,4 +3,4 @@ mono: none
 dotnet: 2.0.0
 script:
   - dotnet build ./src/core/Jenetics
-  - dotnet test ./src/core/Jenetics.Tests
+  - travis_wait 20 dotnet test ./src/core/Jenetics.Tests
