@@ -19,7 +19,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Runtime.Serialization;
+using System.Threading;
 
 namespace Jenetics.Engine
 {
@@ -83,18 +85,18 @@ namespace Jenetics.Engine
             EvolutionResult<TGene, TAllele> bestResult = null;
             foreach (var result in source)
             {
-                if (bestResult == null)
+                if (Interlocked.CompareExchange(ref bestResult, result, null) != null)
                 {
-                    bestResult = result;
+                    lock (bestResult)
+                    {
+                        if (result.GetOptimize().Compare(result.GetBestPhenotype(), bestResult.GetBestPhenotype()) > 0)
+                        {
+                            bestResult = result;
+                        }
+                    }
                 }
-                else
-                {
-                    if (result.GetOptimize().Compare(result.GetBestPhenotype(), bestResult.GetBestPhenotype()) > 0)
-                        bestResult = result;
-                }
-                count++;
+                Interlocked.Increment(ref count);
             }
-
             return bestResult?.WithTotalGenerations(count);
         }
 
