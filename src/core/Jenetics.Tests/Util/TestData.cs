@@ -18,6 +18,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -73,7 +74,7 @@ namespace Jenetics.Util
 
         public static double[] ToDouble(string[] line)
         {
-            return line.Select(l => double.Parse(l)).ToArray();
+            return line.Select(l => double.Parse(l, CultureInfo.InvariantCulture)).ToArray();
         }
     }
 }
