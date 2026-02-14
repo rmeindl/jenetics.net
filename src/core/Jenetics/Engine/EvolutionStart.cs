@@ -20,19 +20,17 @@ using System;
 
 namespace Jenetics.Engine
 {
-    public class EvolutionStart<TGene, TAllele>
-        where TGene : IGene<TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
+    /// <summary>
+    /// Represents the starting state for an evolutionary algorithm: an initial population and generation number.
+    /// Modernized with primary constructor and init-only properties (C# 12).
+    /// </summary>
+    public class EvolutionStart<TGene, TAllele>(
+        Population<TGene, TAllele> population,
+        long generation
+    ) where TGene : IGene<TGene> where TAllele : IComparable<TAllele>, IConvertible
     {
-        public EvolutionStart(Population<TGene, TAllele> population, long generation)
-        {
-            Population = population;
-            Generation = generation;
-        }
-
-        public Population<TGene, TAllele> Population { get; }
-
-        public long Generation { get; }
+        public Population<TGene, TAllele> Population { get; } = population;
+        public long Generation { get; } = generation;
     }
 
     public static class EvolutionStart

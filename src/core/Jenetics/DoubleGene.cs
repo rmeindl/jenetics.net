@@ -22,12 +22,14 @@ using Jenetics.Util;
 
 namespace Jenetics
 {
+    /// <summary>
+    /// Double precision gene for genetic algorithms.
+    /// Modernized with primary constructor syntax (C# 12).
+    /// </summary>
     [Serializable]
-    public class DoubleGene : NumericGeneBase<double, DoubleGene>, IMean<DoubleGene>
+    public class DoubleGene(double value, double min, double max) 
+        : NumericGeneBase<double, DoubleGene>(value, min, max), IMean<DoubleGene>
     {
-        public DoubleGene(double value, double min, double max) : base(value, min, max)
-        {
-        }
 
         public DoubleGene Mean(DoubleGene that)
         {

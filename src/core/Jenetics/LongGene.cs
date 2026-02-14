@@ -23,12 +23,14 @@ using Jenetics.Util;
 
 namespace Jenetics
 {
+    /// <summary>
+    /// Long integer gene for genetic algorithms.
+    /// Modernized with primary constructor syntax (C# 12).
+    /// </summary>
     [Serializable]
-    public class LongGene : NumericGeneBase<long, LongGene>, IMean<LongGene>
+    public class LongGene(long value, long min, long max) 
+        : NumericGeneBase<long, LongGene>(value, min, max), IMean<LongGene>
     {
-        public LongGene(long value, long min, long max) : base(value, min, max)
-        {
-        }
 
         public LongGene Mean(LongGene that)
         {

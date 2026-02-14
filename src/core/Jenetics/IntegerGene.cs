@@ -22,12 +22,14 @@ using Jenetics.Util;
 
 namespace Jenetics
 {
+    /// <summary>
+    /// Integer gene for genetic algorithms.
+    /// Modernized with primary constructor syntax (C# 12).
+    /// </summary>
     [Serializable]
-    public class IntegerGene : NumericGeneBase<int, IntegerGene>, IMean<IntegerGene>
+    public class IntegerGene(int value, int min, int max) 
+        : NumericGeneBase<int, IntegerGene>(value, min, max), IMean<IntegerGene>
     {
-        public IntegerGene(int value, int min, int max) : base(value, min, max)
-        {
-        }
 
         public IntegerGene Mean(IntegerGene that)
         {
