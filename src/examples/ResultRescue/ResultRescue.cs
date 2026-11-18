@@ -19,48 +19,69 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
+using System.Text.Json;
 using Jenetics.Engine;
 using Jenetics.Util;
+using JeneticsEngine = Jenetics.Engine.Engine;
+using ProblemFactory = Jenetics.Engine.Problem;
 
-namespace Jenetics.Example
+namespace Jenetics.Example;
+public static class ResultRescue
 {
-    public static class ResultRescue
+    private static readonly DoubleRange Range = DoubleRange.Of(0.0, 2.0 * Math.PI);
+
+    private static readonly IProblem<double, DoubleGene, double> Problem = ProblemFactory.Of(
+        x => Math.Cos(0.5 + Math.Sin(x)) * Math.Cos(x),
+        Codecs.OfScalar(Range)
+    );
+
+    private static readonly Engine<DoubleGene, double> Engine = JeneticsEngine.Builder(Problem)
+        .Optimize(Optimize.Minimum)
+        .OffspringSelector(new RouletteWheelSelector<DoubleGene, double>())
+        .Build();
+
+    private sealed record ResultSnapshot(long Generation, double[] Individuals);
+
+    public static void Main()
     {
-        private static readonly IProblem<double, DoubleGene, double> Problem = Jenetics.Engine.Problem.Of(
-            x => Math.Cos(0.5 + Math.Sin(x)) * Math.Cos(x),
-            Codecs.OfScalar(DoubleRange.Of(0.0, 2.0 * Math.PI))
+        var rescue = Engine.Stream()
+            .TakeWhile(Limits.BySteadyFitness<DoubleGene, double>(10))
+            .ToBestEvolutionResult();
+
+        var snapshot = new ResultSnapshot(
+            rescue.GetTotalGenerations(),
+            rescue.GetPopulation()
+                .Select(phenotype => phenotype.GetGenotype().Gene.DoubleValue())
+                .ToArray()
         );
+        File.WriteAllText("result.json", JsonSerializer.Serialize(snapshot));
 
-        private static readonly Engine<DoubleGene, double> Engine = Jenetics.Engine.Engine.Builder(Problem)
-            .Optimize(Optimize.Minimum)
-            .OffspringSelector(new RouletteWheelSelector<DoubleGene, double>())
-            .Build();
+        var restored = JsonSerializer.Deserialize<ResultSnapshot>(File.ReadAllText("result.json"))
+            ?? throw new InvalidDataException("The saved evolution result is empty.");
 
-        public static void Main()
+        if (restored.Individuals is null || restored.Individuals.Length == 0)
+            throw new InvalidDataException("The saved evolution result contains no individuals.");
+
+        var fitness = Problem.Fitness();
+        var decoder = Problem.Codec().Decoder();
+        var population = new Population<DoubleGene, double>(restored.Individuals.Length);
+        foreach (var value in restored.Individuals)
         {
-            var rescue = Engine.Stream()
-                .TakeWhile(Limits.BySteadyFitness<DoubleGene, double>(10))
-                .ToBestEvolutionResult();
-
-            using (var stream = new MemoryStream())
-            {
-                IFormatter formatter = new BinaryFormatter();
-                formatter.Serialize(stream, rescue);
-                File.WriteAllBytes("result.bin", stream.ToArray());
-            }
-
-            using (var stream = File.OpenRead("result.bin"))
-            {
-                IFormatter formatter = new BinaryFormatter();
-                var result = Engine
-                    .Stream((EvolutionResult<DoubleGene, double>) formatter.Deserialize(stream))
-                    .TakeWhile(Limits.BySteadyFitness<DoubleGene, double>(20))
-                    .ToBestEvolutionResult();
-
-                Console.WriteLine(result);
-            }
+            var genotype = Genotype.Of(
+                DoubleChromosome.Of(DoubleGene.Of(value, Range.Min, Range.Max))
+            );
+            population.Add(Phenotype.Of(
+                genotype,
+                restored.Generation,
+                individual => fitness(decoder(individual))
+            ));
         }
+
+        var result = Engine
+            .Stream(population, restored.Generation)
+            .TakeWhile(Limits.BySteadyFitness<DoubleGene, double>(20))
+            .ToBestEvolutionResult();
+
+        Console.WriteLine(result);
     }
 }

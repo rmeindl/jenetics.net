@@ -20,42 +20,42 @@ using System;
 using System.Linq;
 using Jenetics.Engine;
 using Jenetics.Util;
+using JeneticsEngine = Jenetics.Engine.Engine;
+using ProblemFactory = Jenetics.Engine.Problem;
 
-namespace Jenetics.Example
+namespace Jenetics.Example;
+public static class StringGenerator
 {
-    public static class StringGenerator
+    private const string TargetString = "jenetics";
+
+    private static readonly IProblem<string, CharacterGene, int> Problem =
+        ProblemFactory.Of(
+            seq => Enumerable.Range(0, TargetString.Length)
+                .Select(i => seq[i] == TargetString[i] ? 1 : 0)
+                .Sum(),
+            Codec.Of(
+                () => Genotype.Of(new CharacterChromosome(
+                    CharSeq.Of("a-z"), TargetString.Length
+                )),
+                gt => gt.GetChromosome().ToString()
+            )
+        );
+
+    public static void Main()
     {
-        private const string TargetString = "jenetics";
+        var engine = JeneticsEngine.Builder(Problem)
+            .PopulationSize(500)
+            .SurvivorsSelector(new StochasticUniversalSelector<CharacterGene, int>())
+            .OffspringSelector(new TournamentSelector<CharacterGene, int>(5))
+            .Alterers(
+                new Mutator<CharacterGene, int>(0.1),
+                new SinglePointCrossover<CharacterGene, int>(0.5))
+            .Build();
 
-        private static readonly IProblem<string, CharacterGene, int> Problem =
-            Engine.Problem.Of(
-                seq => Enumerable.Range(0, TargetString.Length)
-                    .Select(i => seq[i] == TargetString[i] ? 1 : 0)
-                    .Sum(),
-                Codec.Of(
-                    () => Genotype.Of(new CharacterChromosome(
-                        CharSeq.Of("a-z"), TargetString.Length
-                    )),
-                    gt => gt.GetChromosome().ToString()
-                )
-            );
+        var result = engine.Stream()
+            .Take(100)
+            .ToBestPhenotype();
 
-        public static void Main()
-        {
-            var engine = Engine.Engine.Builder(Problem)
-                .PopulationSize(500)
-                .SurvivorsSelector(new StochasticUniversalSelector<CharacterGene, int>())
-                .OffspringSelector(new TournamentSelector<CharacterGene, int>(5))
-                .Alterers(
-                    new Mutator<CharacterGene, int>(0.1),
-                    new SinglePointCrossover<CharacterGene, int>(0.5))
-                .Build();
-
-            var result = engine.Stream()
-                .Take(100)
-                .ToBestPhenotype();
-
-            Console.WriteLine(result);
-        }
+        Console.WriteLine(result);
     }
 }

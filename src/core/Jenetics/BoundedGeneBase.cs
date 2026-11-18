@@ -19,63 +19,61 @@
 using System;
 using Jenetics.Internal.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+public interface IBoundedGene<TAllele, TGene> : IGene<TAllele, TGene>, IComparable<TGene>
+    where TAllele : IComparable<TAllele>
+    where TGene : IBoundedGene<TAllele, TGene>
 {
-    public interface IBoundedGene<TAllele, TGene> : IGene<TAllele, TGene>, IComparable<TGene>
-        where TAllele : IComparable<TAllele>
-        where TGene : IBoundedGene<TAllele, TGene>
+    TAllele Min { get; }
+    TAllele Max { get; }
+}
+
+[Serializable]
+public abstract class BoundedGeneBase<TAllele, TGene> : IBoundedGene<TAllele, TGene>
+    where TAllele : IComparable<TAllele>
+    where TGene : BoundedGeneBase<TAllele, TGene>
+{
+    internal readonly TAllele Value;
+
+    protected BoundedGeneBase(TAllele value, TAllele min, TAllele max)
     {
-        TAllele Min { get; }
-        TAllele Max { get; }
+        Min = Require.NonNull(min);
+        Max = Require.NonNull(max);
+        Value = Require.NonNull(value);
+        IsValid = Value.CompareTo(min) >= 0 && Value.CompareTo(max) <= 0;
     }
 
-    [Serializable]
-    public abstract class BoundedGeneBase<TAllele, TGene> : IBoundedGene<TAllele, TGene>
-        where TAllele : IComparable<TAllele>
-        where TGene : BoundedGeneBase<TAllele, TGene>
+    public abstract int CompareTo(TGene? other);
+    public abstract TGene NewInstance();
+    public abstract TGene NewInstance(TAllele value);
+
+    public TAllele Allele => Value;
+
+    public bool IsValid { get; }
+
+    public TAllele Min { get; }
+    public TAllele Max { get; }
+
+    public override bool Equals(object? obj)
     {
-        private readonly bool _valid;
-        internal readonly TAllele Value;
+        return Equality.Of(this, obj)(gene =>
+            Equality.Eq(Value, gene.Value) &&
+            Equality.Eq(Min, gene.Min) &&
+            Equality.Eq(Max, gene.Max)
+        );
+    }
 
-        protected BoundedGeneBase(TAllele value, TAllele min, TAllele max)
-        {
-            Min = Require.NonNull(min);
-            Max = Require.NonNull(max);
-            Value = Require.NonNull(value);
-            _valid = Value.CompareTo(min) >= 0 && Value.CompareTo(max) <= 0;
-        }
+    public override int GetHashCode()
+    {
+        return Hash.Of(GetType())
+            .And(Value)
+            .And(Min)
+            .And(Max).Value;
+    }
 
-        public abstract int CompareTo(TGene other);
-        public abstract TGene NewInstance();
-        public abstract TGene NewInstance(TAllele value);
-
-        public TAllele Allele => Value;
-
-        public bool IsValid => _valid;
-
-        public TAllele Min { get; }
-        public TAllele Max { get; }
-
-        public override bool Equals(object obj)
-        {
-            return Equality.Of(this, obj)(gene =>
-                Equality.Eq(Value, gene.Value) &&
-                Equality.Eq(Min, gene.Min) &&
-                Equality.Eq(Max, gene.Max)
-            );
-        }
-
-        public override int GetHashCode()
-        {
-            return Hash.Of(GetType())
-                .And(Value)
-                .And(Min)
-                .And(Max).Value;
-        }
-
-        public override string ToString()
-        {
-            return $"[{Value}]";
-        }
+    public override string ToString()
+    {
+        return $"[{Value}]";
     }
 }

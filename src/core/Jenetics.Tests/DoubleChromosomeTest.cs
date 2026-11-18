@@ -16,17 +16,16 @@
 // Author:
 //    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
 
-namespace Jenetics
-{
-    public class DoubleChromosomeTest : NumericChromosomeTesterBase<double, DoubleGene>
-    {
-        private readonly DoubleChromosome _factory = new DoubleChromosome(
-            0.0, double.MaxValue, 500
-        );
+namespace Jenetics;
 
-        protected override Factory<IChromosome<DoubleGene>> Factory()
-        {
-            return () => _factory;
-        }
+public class DoubleChromosomeTest : NumericChromosomeTesterBase<double, DoubleGene>
+{
+    private readonly DoubleChromosome _factory = new(
+        0.0, double.MaxValue, 500
+    );
+
+    protected override Factory<IChromosome<DoubleGene>> Factory()
+    {
+        return () => _factory;
     }
 }

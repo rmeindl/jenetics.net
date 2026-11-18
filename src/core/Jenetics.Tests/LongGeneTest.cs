@@ -18,65 +18,64 @@
 
 using Xunit;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class LongGeneTest : NumericGeneTesterBase<long, LongGene>
 {
-    public class LongGeneTest : NumericGeneTesterBase<long, LongGene>
+    private readonly Factory<LongGene> _factory = () => LongGene.Of(0, long.MaxValue);
+
+    protected override Factory<LongGene> Factory()
     {
-        private readonly Factory<LongGene> _factory = () => LongGene.Of(0, long.MaxValue);
+        return _factory;
+    }
 
-        protected override Factory<LongGene> Factory()
+    [Fact]
+    public void CreateInvalidNumber()
+    {
+        var gene = LongGene.Of(0, 1, 2);
+        Assert.False(gene.IsValid);
+    }
+
+    [Fact]
+    public void CreateNumber()
+    {
+        var gene = LongGene.Of(1, 0, 12);
+        var g2 = gene.NewInstance(5L);
+
+        Assert.Equal(5, g2.Allele);
+        Assert.Equal(0, g2.Min);
+        Assert.Equal(12, g2.Max);
+    }
+
+    [Fact]
+    public void Mean()
+    {
+        const long min = -int.MaxValue;
+        const long max = int.MaxValue;
+        var template = LongGene.Of(min, max);
+
+        for (var i = 1; i < 500; ++i)
         {
-            return _factory;
+            var a = template.NewInstance(i - 50L);
+            var b = template.NewInstance((i - 100L) * 3);
+            var c = a.Mean(b);
+
+            Assert.Equal(min, a.Min);
+            Assert.Equal(max, a.Max);
+            Assert.Equal(min, b.Min);
+            Assert.Equal(max, b.Max);
+            Assert.Equal(min, c.Min);
+            Assert.Equal(max, c.Max);
+            Assert.Equal((i - 50 + (i - 100) * 3) / 2, c.Allele);
         }
+    }
 
-        [Fact]
-        public void CreateInvalidNumber()
-        {
-            var gene = LongGene.Of(0, 1, 2);
-            Assert.False(gene.IsValid);
-        }
-
-        [Fact]
-        public void CreateNumber()
-        {
-            var gene = LongGene.Of(1, 0, 12);
-            var g2 = gene.NewInstance(5L);
-
-            Assert.Equal(5, g2.Allele);
-            Assert.Equal(0, g2.Min);
-            Assert.Equal(12, g2.Max);
-        }
-
-        [Fact]
-        public void Mean()
-        {
-            const long min = -int.MaxValue;
-            const long max = int.MaxValue;
-            var template = LongGene.Of(min, max);
-
-            for (var i = 1; i < 500; ++i)
-            {
-                var a = template.NewInstance(i - 50L);
-                var b = template.NewInstance((i - 100L) * 3);
-                var c = a.Mean(b);
-
-                Assert.Equal(min, a.Min);
-                Assert.Equal(max, a.Max);
-                Assert.Equal(min, b.Min);
-                Assert.Equal(max, b.Max);
-                Assert.Equal(min, c.Min);
-                Assert.Equal(max, c.Max);
-                Assert.Equal((i - 50 + (i - 100) * 3) / 2, c.Allele);
-            }
-        }
-
-        [Fact]
-        public void Set()
-        {
-            var gene = new LongGene(5L, 0L, 10L);
-            Assert.Equal(5, gene.Allele);
-            Assert.Equal(0, gene.Min);
-            Assert.Equal(10, gene.Max);
-        }
+    [Fact]
+    public void Set()
+    {
+        var gene = new LongGene(5L, 0L, 10L);
+        Assert.Equal(5, gene.Allele);
+        Assert.Equal(0, gene.Min);
+        Assert.Equal(10, gene.Max);
     }
 }

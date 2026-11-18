@@ -18,19 +18,18 @@
 
 using Jenetics.Util;
 
-namespace Jenetics
-{
-    public class AnyChromosomeTest : ChromosomeTesterBase<AnyGene<int>>
-    {
-        protected override Factory<IChromosome<AnyGene<int>>> Factory()
-        {
-            return () => AnyChromosome.Of(RandomRegistry.GetRandom().NextInt, 10);
-        }
+namespace Jenetics;
 
-        public override void ObjectSerialize()
-        {
-            // Ignore the serialization test. The 'AnyChromosome' shouldn't be
-            // Serializable, but the 'AbstractChromosome' is. Will be removed.
-        }
+public class AnyChromosomeTest : ChromosomeTesterBase<AnyGene<int>>
+{
+    protected override Factory<IChromosome<AnyGene<int>>> Factory()
+    {
+        return () => AnyChromosome.Of(RandomRegistry.GetRandom().NextInt, 10);
+    }
+
+    public override void ObjectSerialize()
+    {
+        // Ignore the serialization test. The 'AnyChromosome' shouldn't be
+        // Serializable, but the 'AbstractChromosome' is. Will be removed.
     }
 }

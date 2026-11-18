@@ -19,30 +19,29 @@
 using Jenetics.Util;
 using Xunit;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class BitGeneTest : GeneTesterBase<bool, BitGene>
 {
-    public class BitGeneTest : GeneTesterBase<bool, BitGene>
+    protected override Factory<BitGene> Factory()
     {
-        protected override Factory<BitGene> Factory()
-        {
-            return () => BitGene.Of(RandomRegistry.GetRandom().NextBoolean());
-        }
+        return () => BitGene.Of(RandomRegistry.GetRandom().NextBoolean());
+    }
 
-        [Fact]
-        public void TestCompareTo()
-        {
-            Assert.Equal(0, BitGene.Zero.CompareTo(BitGene.False));
-            Assert.True(BitGene.False.CompareTo(BitGene.One) < 0);
-            Assert.True(BitGene.True.CompareTo(BitGene.Zero) > 0);
-        }
+    [Fact]
+    public void TestCompareTo()
+    {
+        Assert.Equal(0, BitGene.Zero.CompareTo(BitGene.False));
+        Assert.True(BitGene.False.CompareTo(BitGene.One) < 0);
+        Assert.True(BitGene.True.CompareTo(BitGene.Zero) > 0);
+    }
 
-        [Fact]
-        public void TestGetValue()
-        {
-            Assert.False(BitGene.False.GetBit());
-            Assert.False(BitGene.Zero.GetBit());
-            Assert.True(BitGene.True.GetBit());
-            Assert.True(BitGene.One.GetBit());
-        }
+    [Fact]
+    public void TestGetValue()
+    {
+        Assert.False(BitGene.False.GetBit());
+        Assert.False(BitGene.Zero.GetBit());
+        Assert.True(BitGene.True.GetBit());
+        Assert.True(BitGene.One.GetBit());
     }
 }

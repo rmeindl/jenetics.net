@@ -25,110 +25,109 @@ using Jenetics.Stat;
 using Jenetics.Util;
 using Xunit;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class RouletteWheelSelectorTest : ProbabilitySelectorTesterBase<RouletteWheelSelector<DoubleGene, double>>
 {
-    public class RouletteWheelSelectorTest : ProbabilitySelectorTesterBase<RouletteWheelSelector<DoubleGene, double>>
+    protected override Factory<RouletteWheelSelector<DoubleGene, double>> Factory()
     {
-        protected override Factory<RouletteWheelSelector<DoubleGene, double>> Factory()
-        {
-            return () => new RouletteWheelSelector<DoubleGene, double>();
-        }
+        return () => new RouletteWheelSelector<DoubleGene, double>();
+    }
 
-        protected override bool IsSorted()
-        {
-            return false;
-        }
+    protected override bool IsSorted()
+    {
+        return false;
+    }
 
-        [Theory]
-        [MemberData(nameof(ExpectedDistribution))]
-        public void SelectDistribution(Named<double[]> expected, Optimize opt)
+    [Theory]
+    [MemberData(nameof(ExpectedDistribution))]
+    public void SelectDistribution(Named<double[]> expected, Optimize opt)
+    {
+        Retry<Exception>(3, () =>
         {
-            Retry<Exception>(3, () =>
+            const int loops = 50;
+            var npopulation = PopulationCount;
+
+            //ThreadLocal<LCG64ShiftRandom> random = new LCG64ShiftRandom.ThreadLocal();
+            var random = RandomRegistry.GetRandom();
+            RandomRegistry.Using(random, _ =>
             {
-                const int loops = 50;
-                var npopulation = PopulationCount;
+                var distribution = Distribution(
+                    new RouletteWheelSelector<DoubleGene, double>(),
+                    opt,
+                    npopulation,
+                    loops
+                );
 
-                //ThreadLocal<LCG64ShiftRandom> random = new LCG64ShiftRandom.ThreadLocal();
-                var random = RandomRegistry.GetRandom();
-                RandomRegistry.Using(random, r =>
-                {
-                    var distribution = Distribution(
-                        new RouletteWheelSelector<DoubleGene, double>(),
-                        opt,
-                        npopulation,
-                        loops
-                    );
-
-                    StatisticsAssert.AssertDistribution(distribution, expected.Value, 0.001, 5);
-                });
+                StatisticsAssert.AssertDistribution(distribution, expected.Value, 0.001, 5);
             });
-        }
+        });
+    }
 
-        public static IEnumerable<object[]> ExpectedDistribution()
-        {
-            const string resource = "Jenetics.resources.RouletteWheelSelector";
+    public static IEnumerable<object[]> ExpectedDistribution()
+    {
+        const string resource = "Jenetics.resources.RouletteWheelSelector";
 
-            return new[] {Optimize.Maximum, Optimize.Minimum}
-                .Select(opt =>
-                {
-                    var data = TestData.Of(resource, opt.ToString().ToUpper());
-                    var expected = data
-                        .Select(line => double.Parse(line[0]))
-                        .ToArray();
-
-                    return new object[] {Named<double[]>.Of("distribution", expected), opt};
-                }).ToArray();
-        }
-
-        [Fact]
-        public void Maximize()
-        {
-            RandomRegistry.Using(new Random(), r =>
+        return new[] { Optimize.Maximum, Optimize.Minimum }
+            .Select(opt =>
             {
-                Func<Genotype<IntegerGene>, int> ff =
-                    g => g.GetChromosome().GetGene().Allele;
+                var data = TestData.Of(resource, opt.ToString().ToUpper());
+                var expected = data
+                    .Select(line => double.Parse(line[0]))
+                    .ToArray();
 
-                Phenotype<IntegerGene, int> F()
-                {
-                    return Phenotype.Of(Genotype.Of(IntegerChromosome.Of(0, 100)), 1, ff);
-                }
+                return new object[] { Named<double[]>.Of("distribution", expected), opt };
+            }).ToArray();
+    }
 
-                var population = Enumerable.Range(0, 1000)
-                    .Select(i => F())
-                    .ToPopulation();
-
-                var selector =
-                    new RouletteWheelSelector<IntegerGene, int>();
-
-                var p = selector.Probabilities(population, 100, Optimize.Maximum);
-                Assert.True(ProbabilitySelector.Sum2One(p), p + " != 1");
-            });
-        }
-
-        [Fact]
-        public void Minimize()
+    [Fact]
+    public void Maximize()
+    {
+        RandomRegistry.Using(new Random(), _ =>
         {
-            RandomRegistry.Using(new Random(), r =>
+            Func<Genotype<IntegerGene>, int> ff =
+                g => g.GetChromosome().GetGene().Allele;
+
+            Phenotype<IntegerGene, int> F()
             {
-                int Ff(Genotype<IntegerGene> g)
-                {
-                    return g.GetChromosome().GetGene().Allele;
-                }
+                return Phenotype.Of(Genotype.Of(IntegerChromosome.Of(0, 100)), 1, ff);
+            }
 
-                Phenotype<IntegerGene, int> F()
-                {
-                    return Phenotype.Of(Genotype.Of(IntegerChromosome.Of(0, 100)), 1, Ff);
-                }
+            var population = Enumerable.Range(0, 1000)
+                .Select(_ => F())
+                .ToPopulation();
 
-                var population = Enumerable.Range(0, 1000)
-                    .Select(i => F())
-                    .ToPopulation();
+            var selector =
+                new RouletteWheelSelector<IntegerGene, int>();
 
-                var selector = new RouletteWheelSelector<IntegerGene, int>();
+            var p = selector.Probabilities(population, 100, Optimize.Maximum);
+            Assert.True(ProbabilitySelector.Sum2One(p), p + " != 1");
+        });
+    }
 
-                var p = selector.Probabilities(population, 100, Optimize.Minimum);
-                Assert.True(ProbabilitySelector.Sum2One(p), p + " != 1");
-            });
-        }
+    [Fact]
+    public void Minimize()
+    {
+        RandomRegistry.Using(new Random(), _ =>
+        {
+            int Ff(Genotype<IntegerGene> g)
+            {
+                return g.GetChromosome().GetGene().Allele;
+            }
+
+            Phenotype<IntegerGene, int> F()
+            {
+                return Phenotype.Of(Genotype.Of(IntegerChromosome.Of(0, 100)), 1, Ff);
+            }
+
+            var population = Enumerable.Range(0, 1000)
+                .Select(_ => F())
+                .ToPopulation();
+
+            var selector = new RouletteWheelSelector<IntegerGene, int>();
+
+            var p = selector.Probabilities(population, 100, Optimize.Minimum);
+            Assert.True(ProbabilitySelector.Sum2One(p), p + " != 1");
+        });
     }
 }

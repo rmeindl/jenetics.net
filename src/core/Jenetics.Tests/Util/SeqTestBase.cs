@@ -17,31 +17,28 @@
 //    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
 
 using System;
-using System.Collections.Generic;
-using System.Reflection;
 using Xunit;
 
-namespace Jenetics.Util
+namespace Jenetics.Util;
+
+public abstract class SeqTestBase
 {
-    public abstract class SeqTestBase
+    protected abstract ISeq<int> NewSeq(int length);
+
+    private static Func<int, bool> ValueOf(int value)
     {
-        protected abstract ISeq<int> NewSeq(int length);
+        return i => i == value;
+    }
 
-        private static Func<int, bool> ValueOf(int value)
+    [Fact]
+    public void Length()
+    {
+        for (var i = 0; i < 100; ++i)
         {
-            return i => i == value;
-        }
-
-        [Fact]
-        public void Length()
-        {
-            for (var i = 0; i < 100; ++i)
-            {
-                var seq = NewSeq(i);
-                for (var j = 0; j < i; ++j)
-                    Assert.Equal(j, seq[j]);
-                Assert.Equal(i, seq.Length);
-            }
+            var seq = NewSeq(i);
+            for (var j = 0; j < i; ++j)
+                Assert.Equal(j, seq[j]);
+            Assert.Equal(i, seq.Length);
         }
     }
 }

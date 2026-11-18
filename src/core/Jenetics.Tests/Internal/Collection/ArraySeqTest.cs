@@ -16,27 +16,24 @@
 // Author:
 //    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
 
-using System.Runtime.CompilerServices;
 using Jenetics.Util;
 
-namespace Jenetics.Internal.Collection
+namespace Jenetics.Internal.Collection;
+
+public class ArraySeqTest : SeqTestBase
 {
-    public class ArraySeqTest : SeqTestBase
+    protected override ISeq<int> NewSeq(int length)
     {
-        protected override ISeq<int> NewSeq(int length)
-        {
-            var impl = Array.OfLength<int>(length);
-            for (var i = 0; i < length; ++i)
-                impl[i] = i;
-            return new ArraySeqImpl<int>(impl);
-        }
+        var impl = Array.OfLength<int>(length);
+        for (var i = 0; i < length; ++i)
+            impl[i] = i;
+        return new ArraySeqImpl<int>(impl);
+    }
 
-        private class ArraySeqImpl<T> : ArraySeqBase<T>
+    private class ArraySeqImpl<T> : ArraySeqBase<T>
+    {
+        public ArraySeqImpl(Array<T> array) : base(array.Seal())
         {
-            public ArraySeqImpl(Array<T> array) : base(array.Seal())
-            {
-            }
         }
-
     }
 }

@@ -21,60 +21,59 @@ using System.Collections.Generic;
 using Xunit;
 using static Jenetics.TestUtils;
 
-namespace Jenetics
+namespace Jenetics;
+
+public abstract class AltererTesterBase
 {
-    public abstract class AltererTesterBase
+    protected abstract IAlterer<DoubleGene, double> NewAlterer(double p);
+
+    [Theory]
+    [ClassData(typeof(ParametersDataGenerator))]
+    public void AlterParameters(
+        int ngenes,
+        int nchromosomes,
+        int npopulation
+    )
     {
-        protected abstract IAlterer<DoubleGene, double> NewAlterer(double p);
+        var population = NewDoubleGenePopulation(
+            ngenes, nchromosomes, npopulation
+        );
 
-        [Theory]
-        [ClassData(typeof(ParametersDataGenerator))]
-        public void AlterParameters(
-            int ngenes,
-            int nchromosomes,
-            int npopulation
-        )
+        var alterer = NewAlterer(1);
+
+        alterer.Alter(population, 1);
+    }
+
+    private class ParametersDataGenerator : IEnumerable<object[]>
+    {
+        private readonly List<object[]> _data = new()
         {
-            var population = NewDoubleGenePopulation(
-                ngenes, nchromosomes, npopulation
-            );
+            new object[] { 20, 20, 0 },
+            new object[] { 1, 1, 0 },
+            new object[] { 5, 1, 0 },
+            new object[] { 80, 1, 0 },
+            new object[] { 20, 20, 1 },
+            new object[] { 1, 1, 1 },
+            new object[] { 5, 1, 1 },
+            new object[] { 80, 1, 1 },
+            new object[] { 20, 20, 2 },
+            new object[] { 1, 1, 2 },
+            new object[] { 5, 1, 2 },
+            new object[] { 80, 1, 2 },
+            new object[] { 20, 20, 3 },
+            new object[] { 1, 1, 3 },
+            new object[] { 5, 1, 3 },
+            new object[] { 80, 1, 3 }
+        };
 
-            var alterer = NewAlterer(1);
-
-            alterer.Alter(population, 1);
+        public IEnumerator<object[]> GetEnumerator()
+        {
+            return _data.GetEnumerator();
         }
 
-        private class ParametersDataGenerator : IEnumerable<object[]>
+        IEnumerator IEnumerable.GetEnumerator()
         {
-            private readonly List<object[]> _data = new List<object[]>
-            {
-                new object[] {20, 20, 0},
-                new object[] {1, 1, 0},
-                new object[] {5, 1, 0},
-                new object[] {80, 1, 0},
-                new object[] {20, 20, 1},
-                new object[] {1, 1, 1},
-                new object[] {5, 1, 1},
-                new object[] {80, 1, 1},
-                new object[] {20, 20, 2},
-                new object[] {1, 1, 2},
-                new object[] {5, 1, 2},
-                new object[] {80, 1, 2},
-                new object[] {20, 20, 3},
-                new object[] {1, 1, 3},
-                new object[] {5, 1, 3},
-                new object[] {80, 1, 3}
-            };
-
-            public IEnumerator<object[]> GetEnumerator()
-            {
-                return _data.GetEnumerator();
-            }
-
-            IEnumerator IEnumerable.GetEnumerator()
-            {
-                return GetEnumerator();
-            }
+            return GetEnumerator();
         }
     }
 }

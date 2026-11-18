@@ -20,48 +20,47 @@ using System;
 using System.Linq;
 using Jenetics.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+public interface IAlterer<TGene, TAllele>
+    where TGene : IGene<TGene>
+    where TAllele : IComparable<TAllele>
 {
-    public interface IAlterer<TGene, TAllele>
+    int Alter(Population<TGene, TAllele> population, long generation);
+}
+
+internal class DefaultAlterer<TGene, TAllele> : IAlterer<TGene, TAllele>
+    where TGene : IGene<TGene>
+    where TAllele : IComparable<TAllele>
+{
+    public int Alter(Population<TGene, TAllele> population, long generation)
+    {
+        return 0;
+    }
+}
+
+public static class Alterer
+{
+    public const double DefaultAlterProbability = 0.2;
+
+    public static IAlterer<TGene, TAllele> Of<TGene, TAllele>(params IAlterer<TGene, TAllele>[] alterers)
         where TGene : IGene<TGene>
         where TAllele : IComparable<TAllele>
     {
-        int Alter(Population<TGene, TAllele> population, long generation);
-    }
-
-    internal class DefaultAlterer<TGene, TAllele> : IAlterer<TGene, TAllele>
-        where TGene : IGene<TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
-    {
-        public int Alter(Population<TGene, TAllele> population, long generation)
-        {
-            return 0;
-        }
-    }
-
-    public static class Alterer
-    {
-        public const double DefaultAlterProbability = 0.2;
-
-        public static IAlterer<TGene, TAllele> Of<TGene, TAllele>(params IAlterer<TGene, TAllele>[] alterers)
-            where TGene : IGene<TGene>
-            where TAllele : IComparable<TAllele>, IConvertible
-        {
-            return alterers.Length == 0
-                ? new DefaultAlterer<TGene, TAllele>()
+        return alterers.Length == 0
+            ? new DefaultAlterer<TGene, TAllele>()
+            : alterers.Length == 1
+                ? alterers[0]
                 : alterers.Length == 1
-                    ? alterers[0]
-                    : alterers.Length == 1
-                        ? alterers.First()
-                        : new CompositeAlterer<TGene, TAllele>(ImmutableSeq.Of(alterers));
-        }
+                    ? alterers.First()
+                    : new CompositeAlterer<TGene, TAllele>(ImmutableSeq.Of(alterers));
+    }
 
-        public static IAlterer<TGene, TAllele> Compose<TGene, TAllele>(this IAlterer<TGene, TAllele> alterer,
-            IAlterer<TGene, TAllele> before)
-            where TGene : IGene<TGene>
-            where TAllele : IComparable<TAllele>, IConvertible
-        {
-            return Of(before, alterer);
-        }
+    public static IAlterer<TGene, TAllele> Compose<TGene, TAllele>(this IAlterer<TGene, TAllele> alterer,
+        IAlterer<TGene, TAllele> before)
+        where TGene : IGene<TGene>
+        where TAllele : IComparable<TAllele>
+    {
+        return Of(before, alterer);
     }
 }

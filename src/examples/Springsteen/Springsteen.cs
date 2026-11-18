@@ -21,102 +21,99 @@ using System.Linq;
 using Jenetics.Engine;
 using Jenetics.Util;
 using static Jenetics.Internal.Util.Require;
+using JeneticsEngine = Jenetics.Engine.Engine;
 
-namespace Jenetics.Example
+namespace Jenetics.Example;
+public class Springsteen : IProblem<IImmutableSeq<Springsteen.Record>, BitGene, double>
 {
-    public class Springsteen : IProblem<IImmutableSeq<Springsteen.Record>, BitGene, double>
+    private readonly double _maxPricePerUniqueSong;
+
+    private readonly IImmutableSeq<Record> _records;
+
+    private Springsteen(IImmutableSeq<Record> records, double maxPricePerUniqueSong)
     {
-        private readonly double _maxPricePerUniqueSong;
+        _records = NonNull(records);
+        _maxPricePerUniqueSong = maxPricePerUniqueSong;
+    }
 
-        private readonly IImmutableSeq<Record> _records;
-
-        private Springsteen(IImmutableSeq<Record> records, double maxPricePerUniqueSong)
+    public Func<IImmutableSeq<Record>, double> Fitness()
+    {
+        return records =>
         {
-            _records = NonNull(records);
-            _maxPricePerUniqueSong = maxPricePerUniqueSong;
-        }
-
-        public Func<IImmutableSeq<Record>, double> Fitness()
-        {
-            return records =>
-            {
-                var cost = records
-                    .Select(r => r.Price)
-                    .Sum();
-
-                var uniqueSongCount = records
-                    .Select(r => r.Songs)
-                    .ToHashSet()
-                    .Count;
-
-                var pricePerUniqueSong = cost / uniqueSongCount;
-
-                return pricePerUniqueSong <= _maxPricePerUniqueSong
-                    ? uniqueSongCount
-                    : 0.0;
-            };
-        }
-
-        public ICodec<IImmutableSeq<Record>, BitGene> Codec()
-        {
-            return Codecs.OfSubSet(_records);
-        }
-
-        public static void Main()
-        {
-            const double maxPricePerUniqueSong = 2.5;
-
-            var springsteen = new Springsteen(
-                ImmutableSeq.Of(
-                    new Record("Record1", 25, ImmutableSeq.Of("Song1", "Song2", "Song3", "Song4", "Song5", "Song6")),
-                    new Record("Record2", 15, ImmutableSeq.Of("Song2", "Song3", "Song4", "Song5", "Song6", "Song7")),
-                    new Record("Record3", 35, ImmutableSeq.Of("Song5", "Song6", "Song7", "Song8", "Song9", "Song10")),
-                    new Record("Record4", 17,
-                        ImmutableSeq.Of("Song9", "Song10", "Song12", "Song4", "Song13", "Song14")),
-                    new Record("Record5", 29,
-                        ImmutableSeq.Of("Song1", "Song2", "Song13", "Song14", "Song15", "Song16")),
-                    new Record("Record6", 5, ImmutableSeq.Of("Song18", "Song20", "Song30", "Song40"))
-                ),
-                maxPricePerUniqueSong
-            );
-
-            var engine = Engine.Engine.Builder(springsteen).Build();
-
-            var result = springsteen.Codec().Decoder()(
-                engine.Stream()
-                    .Take(10)
-                    .ToBestGenotype()
-            );
-
-            var cost = result
+            var cost = records
                 .Select(r => r.Price)
                 .Sum();
 
-            var uniqueSongCount = result
-                .Select(r => r.Songs)
-                .ToHashSet()
-                .Count;
+            var uniqueSongCount = records
+                .SelectMany(recordItem => recordItem.Songs)
+                .Distinct()
+                .Count();
 
-            var pricePerUniqueSong = cost / uniqueSongCount;
+            return uniqueSongCount != 0 && cost / uniqueSongCount <= _maxPricePerUniqueSong
+                ? uniqueSongCount
+                : 0.0;
+        };
+    }
 
-            Console.WriteLine("Overall cost:  " + cost);
-            Console.WriteLine("Unique songs:  " + uniqueSongCount);
-            Console.WriteLine("Cost per song: " + cost / uniqueSongCount);
-            Console.WriteLine("Records:       " + string.Join(", ", result));
-        }
+    public ICodec<IImmutableSeq<Record>, BitGene> Codec()
+    {
+        return Codecs.OfSubSet(_records);
+    }
 
-        public class Record
+    public static void Main()
+    {
+        const double maxPricePerUniqueSong = 2.5;
+
+        var springsteen = new Springsteen(
+            ImmutableSeq.Of(
+                new Record("Record1", 25, ImmutableSeq.Of("Song1", "Song2", "Song3", "Song4", "Song5", "Song6")),
+                new Record("Record2", 15, ImmutableSeq.Of("Song2", "Song3", "Song4", "Song5", "Song6", "Song7")),
+                new Record("Record3", 35, ImmutableSeq.Of("Song5", "Song6", "Song7", "Song8", "Song9", "Song10")),
+                new Record("Record4", 17,
+                    ImmutableSeq.Of("Song9", "Song10", "Song12", "Song4", "Song13", "Song14")),
+                new Record("Record5", 29,
+                    ImmutableSeq.Of("Song1", "Song2", "Song13", "Song14", "Song15", "Song16")),
+                new Record("Record6", 5, ImmutableSeq.Of("Song18", "Song20", "Song30", "Song40"))
+            ),
+            maxPricePerUniqueSong
+        );
+
+        var engine = JeneticsEngine.Builder(springsteen).Build();
+
+        var result = springsteen.Codec().Decoder()(
+            engine.Stream()
+                .Take(10)
+                .ToBestGenotype()
+        );
+
+        var cost = result
+            .Select(r => r.Price)
+            .Sum();
+
+        var uniqueSongCount = result
+            .SelectMany(recordItem => recordItem.Songs)
+            .Distinct()
+            .Count();
+
+        var pricePerUniqueSong = uniqueSongCount == 0 ? double.PositiveInfinity : cost / uniqueSongCount;
+
+        Console.WriteLine("Overall cost:  " + cost);
+        Console.WriteLine("Unique songs:  " + uniqueSongCount);
+        Console.WriteLine("Cost per song: " + pricePerUniqueSong);
+        Console.WriteLine("Records:       " + string.Join(", ", result));
+    }
+
+    public class Record
+    {
+        public double Price { get; }
+        public IImmutableSeq<string> Songs { get; }
+        public string Name { get; }
+
+        public Record(string name, double price, IImmutableSeq<string> songs)
         {
-            public double Price { get; }
-            public IImmutableSeq<string> Songs { get; }
-            public string Name { get; }
-
-            public Record(string name, double price, IImmutableSeq<string> songs)
-            {
-                Name = NonNull(name);
-                Price = price;
-                Songs = NonNull(songs);
-            }
+            Name = NonNull(name);
+            Price = price;
+            Songs = NonNull(songs);
         }
     }
 }

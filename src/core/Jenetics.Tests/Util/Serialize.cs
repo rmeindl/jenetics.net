@@ -16,41 +16,29 @@
 // Author:
 //    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
 
-using System;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using Xunit;
-using Xunit.Sdk;
 
-namespace Jenetics.Util
+namespace Jenetics.Util;
+
+public static class Serialize
 {
-    public static class Serialize
+    public static void Test<T>(T obj)
     {
-        public static void Test<T>(T obj)
+        using (var stream = new MemoryStream())
         {
-            using (var stream = new MemoryStream())
-            {
 #pragma warning disable SYSLIB0011 // BinaryFormatter is used to validate legacy serialization behavior.
-                IFormatter formatter = new BinaryFormatter();
-                try
-                {
-                    formatter.Serialize(stream, obj);
-                }
-                catch (PlatformNotSupportedException)
-                {
-                    // BinaryFormatter is not supported on this runtime (e.g., .NET 10+)
-                    // Re-throw to allow calling code to handle appropriately
-                    throw;
-                }
+            IFormatter formatter = new BinaryFormatter();
+            formatter.Serialize(stream, obj);
 
-                stream.Seek(0, SeekOrigin.Begin);
+            stream.Seek(0, SeekOrigin.Begin);
 
-                var copy = formatter.Deserialize(stream);
+            var copy = formatter.Deserialize(stream);
 #pragma warning restore SYSLIB0011 // BinaryFormatter is used to validate legacy serialization behavior.
 
-                Assert.Equal(obj, copy);
-            }
+            Assert.Equal(obj, copy);
         }
     }
 }

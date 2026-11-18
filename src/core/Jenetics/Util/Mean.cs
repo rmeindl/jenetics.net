@@ -16,10 +16,9 @@
 // Author:
 //    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
 
-namespace Jenetics.Util
+namespace Jenetics.Util;
+
+public interface IMean<T>
 {
-    public interface IMean<T>
-    {
-        T Mean(T that);
-    }
+    T Mean(T that);
 }

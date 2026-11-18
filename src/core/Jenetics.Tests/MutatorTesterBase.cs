@@ -21,67 +21,66 @@ using Jenetics.Util;
 using Xunit;
 using static Jenetics.TestUtils;
 
-namespace Jenetics
+namespace Jenetics;
+
+public abstract class MutatorTesterBase : AltererTesterBase
 {
-    public abstract class MutatorTesterBase : AltererTesterBase
+    [Theory]
+    [ClassData(typeof(AlterCountParameters))]
+    public virtual void AlterCount(
+        int ngenes,
+        int nchromosomes,
+        int npopulation
+    )
     {
-        [Theory]
-        [ClassData(typeof(AlterCountParameters))]
-        public virtual void AlterCount(
-            int ngenes,
-            int nchromosomes,
-            int npopulation
-        )
+        var p1 = NewDoubleGenePopulation(
+            ngenes, nchromosomes, npopulation
+        );
+        var p2 = p1.Copy();
+        Assert.Equal(p2, p1);
+
+        var mutator = NewAlterer(0.01);
+
+        var mutations = mutator.Alter(p1, 1);
+        var difference = Diff(p1, p2);
+
+        Assert.Equal(mutations, difference);
+    }
+
+    [Theory]
+    [ClassData(typeof(AlterProbabilityParameters))]
+    public virtual void AlterProbability(int ngenes, int nchromosomes, int npopulation, double p)
+    {
+        var population = NewDoubleGenePopulation(
+            ngenes, nchromosomes, npopulation
+        );
+
+        // The mutator to test.
+        var mutator = NewAlterer(p);
+
+        long nallgenes = ngenes * nchromosomes * npopulation;
+        long n = 100;
+        var mean = nallgenes * p;
+
+        const long min = 0;
+        var max = nallgenes;
+        var domain = new Range<long>(min, max);
+
+        var histogram = Histogram.OfLong(min, max, 10);
+        var variance = new LongMomentStatistics();
+
+        for (var i = 0; i < n; ++i)
         {
-            var p1 = NewDoubleGenePopulation(
-                ngenes, nchromosomes, npopulation
-            );
-            var p2 = p1.Copy();
-            Assert.Equal(p2, p1);
-
-            var mutator = NewAlterer(0.01);
-
-            var mutations = mutator.Alter(p1, 1);
-            var difference = Diff(p1, p2);
-
-            Assert.Equal(mutations, difference);
+            long alterations = mutator.Alter(population, 1);
+            histogram.Accept(alterations);
+            variance.Accept(alterations);
         }
 
-        [Theory]
-        [ClassData(typeof(AlterProbabilityParameters))]
-        public virtual void AlterProbability(int ngenes, int nchromosomes, int npopulation, double p)
-        {
-            var population = NewDoubleGenePopulation(
-                ngenes, nchromosomes, npopulation
-            );
-
-            // The mutator to test.
-            var mutator = NewAlterer(p);
-
-            long nallgenes = ngenes * nchromosomes * npopulation;
-            long N = 100;
-            var mean = nallgenes * p;
-
-            const long min = 0;
-            var max = nallgenes;
-            var domain = new Range<long>(min, max);
-
-            var histogram = Histogram.OfLong(min, max, 10);
-            var variance = new LongMomentStatistics();
-
-            for (var i = 0; i < N; ++i)
-            {
-                long alterations = mutator.Alter(population, 1);
-                histogram.Accept(alterations);
-                variance.Accept(alterations);
-            }
-
-            // Normal distribution as approximation for binomial distribution.
-            // TODO: Implement test
+        // Normal distribution as approximation for binomial distribution.
+        // TODO: Implement test
 //		assertDistribution(
 //			histogram,
 //			new NormalDistribution<>(domain, mean, variance.getVariance())
 //		);
-        }
     }
 }

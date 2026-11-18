@@ -20,181 +20,178 @@ using System;
 using System.Collections.Generic;
 using Jenetics.Test;
 using Xunit;
-using Xunit.Sdk;
 using static Jenetics.Util.RandomRegistry;
 
-namespace Jenetics.Util
+namespace Jenetics.Util;
+
+public abstract class ObjectTesterBase<T> : RetryBase
+    where T : class
 {
-    public abstract class ObjectTesterBase<T> : RetryBase
-        where T : class
+    protected abstract Factory<T> Factory();
+
+
+    protected IMutableSeq<T> NewEqualObjects(int length)
     {
-        protected abstract Factory<T> Factory();
-
-
-        protected IMutableSeq<T> NewEqualObjects(int length)
+        IEnumerable<T> F()
         {
-            IEnumerable<T> F()
-            {
-                for (var i = 0; i < length; i++)
-                    yield return With(new Random(589), r => Factory()());
-            }
-
-            return F().ToMutableSeq();
+            for (var i = 0; i < length; i++)
+                yield return With(new Random(589), _ => Factory()());
         }
 
-        [Fact]
-        public void CloneMethod()
+        return F().ToMutableSeq();
+    }
+
+    [Fact]
+    public void CloneMethod()
+    {
+        var that = Factory()();
+
+        if (that is ICloneable)
+        {
+            var clone = that.GetType().GetMethod("clone");
+            var other = clone.Invoke(that, null);
+
+            Assert.Equal(that, other);
+            Assert.NotSame(that, other);
+        }
+    }
+
+    [Fact]
+    public void CopyMethod()
+    {
+        var that = Factory()();
+        if (that is ICopyable<T> copyable)
+        {
+            var other = copyable.Copy();
+            if (other.GetType() == copyable.GetType())
+            {
+                Assert.Equal(that, other);
+                Assert.NotSame(copyable, other);
+            }
+        }
+    }
+
+    [Fact]
+    public void Equal()
+    {
+        var same = NewEqualObjects(5);
+
+        var that = same[0];
+        for (var i = 1; i < same.Length; ++i)
+        {
+            var other = same[i];
+
+            Assert.Equal(other, other);
+            Assert.Equal(that, other);
+            Assert.Equal(other, that);
+            Assert.Equal(other.GetHashCode(), that.GetHashCode());
+        }
+    }
+
+    [Fact]
+    public void HashCodeMethod()
+    {
+        var same = NewEqualObjects(5);
+
+        var that = same[0];
+        for (var i = 1; i < same.Length; ++i)
+        {
+            var other = same[i];
+
+            Assert.Equal(other.GetHashCode(), that.GetHashCode());
+        }
+    }
+
+    [Fact]
+    public virtual void IsValid()
+    {
+        var a = Factory()();
+        if (a is IVerifiable verifiable)
+            Assert.True(verifiable.IsValid);
+    }
+
+    [Fact]
+    public void NotEquals()
+    {
+        for (var i = 0; i < 10; ++i)
         {
             var that = Factory()();
+            var other = Factory()();
 
-            if (that is ICloneable)
+            if (that.Equals(other))
             {
-                var clone = that.GetType().GetMethod("clone");
-                var other = clone.Invoke(that, null);
-
-                Assert.Equal(that, other);
-                Assert.NotSame(that, other);
-            }
-        }
-
-        [Fact]
-        public void CopyMethod()
-        {
-            var that = Factory()();
-            if (that is ICopyable<T> copyable)
-            {
-                var other = copyable.Copy();
-                if (other.GetType() == copyable.GetType())
-                {
-                    Assert.Equal(that, other);
-                    Assert.NotSame(copyable, other);
-                }
-            }
-        }
-
-        [Fact]
-        public void Equal()
-        {
-            var same = NewEqualObjects(5);
-
-            var that = same[0];
-            for (var i = 1; i < same.Length; ++i)
-            {
-                var other = same[i];
-
-                Assert.Equal(other, other);
-                Assert.Equal(that, other);
-                Assert.Equal(other, that);
+                Assert.True(other.Equals(that));
                 Assert.Equal(other.GetHashCode(), that.GetHashCode());
             }
-        }
-
-        [Fact]
-        public void HashCodeMethod()
-        {
-            var same = NewEqualObjects(5);
-
-            var that = same[0];
-            for (var i = 1; i < same.Length; ++i)
+            else
             {
-                var other = same[i];
-
-                Assert.Equal(other.GetHashCode(), that.GetHashCode());
+                Assert.False(other.Equals(that));
+                Assert.False(that.Equals(other));
             }
         }
+    }
 
-        [Fact]
-        public virtual void IsValid()
-        {
-            var a = Factory()();
-            if (a is IVerifiable verifiable)
-                Assert.True(verifiable.IsValid);
-        }
+    [Fact]
+    public void NotEqualsClassType()
+    {
+        var that = Factory()();
+        Assert.False(that.Equals(typeof(Type)));
+    }
 
-        [Fact]
-        public void NotEquals()
+    [Fact]
+    public void NotEqualsNull()
+    {
+        var that = Factory()();
+        Assert.False(that == null);
+    }
+
+    [Fact]
+    public void NotEqualsStringType()
+    {
+        var that = Factory()();
+        Assert.False(that.Equals("__some_string__"));
+    }
+
+    [Fact]
+    public virtual void ObjectSerialize()
+    {
+        var type = Factory()().GetType();
+
+        if (!type.IsSerializable) return;
+
+        // Check if BinaryFormatter is available on this platform (not available in .NET 10+)
+        try
         {
-            for (var i = 0; i < 10; ++i)
+            // Test if BinaryFormatter can be used
+            var testObj = Factory()();
+            Serialize.Test(testObj);
+
+            // If successful, run remaining iterations
+            for (var i = 1; i < 10; ++i)
             {
-                var that = Factory()();
-                var other = Factory()();
-
-                if (that.Equals(other))
-                {
-                    Assert.True(other.Equals(that));
-                    Assert.Equal(other.GetHashCode(), that.GetHashCode());
-                }
-                else
-                {
-                    Assert.False(other.Equals(that));
-                    Assert.False(that.Equals(other));
-                }
+                var serializable = Factory()();
+                Serialize.Test(serializable);
             }
         }
-
-        [Fact]
-        public void NotEqualsClassType()
+        catch (PlatformNotSupportedException)
         {
-            var that = Factory()();
-            Assert.False(that.Equals(typeof(Type)));
+            // BinaryFormatter is not supported on this platform (.NET 10+)
+            // Skip this test silently - this is expected behavior on .NET 10
         }
+    }
 
-        [Fact]
-        public void NotEqualsNull()
+    [Fact]
+    public void ToStringMethod()
+    {
+        var same = NewEqualObjects(5);
+
+        var that = same[0];
+        for (var i = 1; i < same.Length; ++i)
         {
-            var that = Factory()();
-            Assert.False(that == null);
-        }
+            var other = same[i];
 
-        [Fact]
-        public void NotEqualsStringType()
-        {
-            var that = Factory()();
-            Assert.False(that.Equals("__some_string__"));
-        }
-
-        [Fact]
-        public virtual void ObjectSerialize()
-        {
-            var type = Factory()().GetType();
-
-            if (!type.IsSerializable) return;
-
-            // Check if BinaryFormatter is available on this platform (not available in .NET 10+)
-            try
-            {
-                // Test if BinaryFormatter can be used
-                var testObj = Factory()();
-                Serialize.Test(testObj);
-                
-                // If successful, run remaining iterations
-                for (var i = 1; i < 10; ++i)
-                {
-                    var serializable = Factory()();
-                    Serialize.Test(serializable);
-                }
-            }
-            catch (PlatformNotSupportedException)
-            {
-                // BinaryFormatter is not supported on this platform (.NET 10+)
-                // Skip this test silently - this is expected behavior on .NET 10
-                return;
-            }
-        }
-
-        [Fact]
-        public void ToStringMethod()
-        {
-            var same = NewEqualObjects(5);
-
-            var that = same[0];
-            for (var i = 1; i < same.Length; ++i)
-            {
-                var other = same[i];
-
-                Assert.Equal(that.ToString(), other.ToString());
-                Assert.NotNull(other.ToString());
-            }
+            Assert.Equal(that.ToString(), other.ToString());
+            Assert.NotNull(other.ToString());
         }
     }
 }

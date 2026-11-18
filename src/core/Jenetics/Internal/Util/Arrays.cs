@@ -19,42 +19,41 @@
 using System;
 using Jenetics.Util;
 
-namespace Jenetics.Internal.Util
+namespace Jenetics.Internal.Util;
+
+public static class Arrays
 {
-    public static class Arrays
+    public static double[] Revert(double[] array)
     {
-        public static double[] Revert(double[] array)
-        {
-            for (int i = 0, j = array.Length - 1; i < j; ++i, --j)
-                Swap(array, i, j);
+        for (int i = 0, j = array.Length - 1; i < j; ++i, --j)
+            Swap(array, i, j);
 
-            return array;
-        }
+        return array;
+    }
 
-        public static void Swap(int[] array, int i, int j)
-        {
-            var temp = array[i];
-            array[i] = array[j];
-            array[j] = temp;
-        }
+    public static void Swap(int[] array, int i, int j)
+    {
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
 
-        public static void Swap(double[] array, int i, int j)
-        {
-            var temp = array[i];
-            array[i] = array[j];
-            array[j] = temp;
-        }
+    public static void Swap(double[] array, int i, int j)
+    {
+        var temp = array[i];
+        array[i] = array[j];
+        array[j] = temp;
+    }
 
-        public static int[] Shuffle(int[] array)
-        {
-            return Shuffle(array, RandomRegistry.GetRandom());
-        }
+    public static int[] Shuffle(int[] array)
+    {
+        return Shuffle(array, RandomRegistry.GetRandom());
+    }
 
-        public static int[] Shuffle(int[] array, Random random)
-        {
-            for (var j = array.Length - 1; j > 0; --j)
-                Swap(array, j, random.NextInt(j + 1));
-            return array;
-        }
+    public static int[] Shuffle(int[] array, Random random)
+    {
+        for (var j = array.Length - 1; j > 0; --j)
+            Swap(array, j, random.NextInt(j + 1));
+        return array;
     }
 }

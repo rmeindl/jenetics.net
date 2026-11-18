@@ -20,57 +20,55 @@ using System;
 using Jenetics.Internal.Math;
 using Jenetics.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+/// <summary>
+///     Double precision gene for genetic algorithms.
+///     Modernized with primary constructor syntax (C# 12).
+/// </summary>
+[Serializable]
+public class DoubleGene(double value, double min, double max)
+    : NumericGeneBase<double, DoubleGene>(value, min, max), IMean<DoubleGene>
 {
-    /// <summary>
-    /// Double precision gene for genetic algorithms.
-    /// Modernized with primary constructor syntax (C# 12).
-    /// </summary>
-    [Serializable]
-    public class DoubleGene(double value, double min, double max) 
-        : NumericGeneBase<double, DoubleGene>(value, min, max), IMean<DoubleGene>
+    public DoubleGene Mean(DoubleGene that)
     {
+        return new DoubleGene(Value + (that.Value - Value) / 2.0, Min, Max);
+    }
 
-        public DoubleGene Mean(DoubleGene that)
-        {
-            return new DoubleGene(Value + (that.Value - Value) / 2.0, Min, Max);
-        }
+    public static IImmutableSeq<DoubleGene> Seq(double minimum, double maximum, int length)
+    {
+        var min = minimum;
+        var max = maximum;
+        var r = RandomRegistry.GetRandom();
 
-        public static IImmutableSeq<DoubleGene> Seq(double minimum, double maximum, int length)
-        {
-            var min = minimum;
-            var max = maximum;
-            var r = RandomRegistry.GetRandom();
+        return MutableSeq.OfLength<DoubleGene>(length).Fill(() =>
+            new DoubleGene(RandomExtensions.NextDouble(r, min, max), minimum, maximum)).ToImmutableSeq();
+    }
 
-            return MutableSeq.OfLength<DoubleGene>(length).Fill(() =>
-                new DoubleGene(random.NextDouble(r, min, max), minimum, maximum)).ToImmutableSeq();
-        }
+    public override int CompareTo(DoubleGene? other)
+    {
+        return other == null ? 1 : Value.CompareTo(other.Value);
+    }
 
-        public override int CompareTo(DoubleGene other)
-        {
-            return Value.CompareTo(other.Value);
-        }
+    public override DoubleGene NewInstance()
+    {
+        var r = RandomRegistry.GetRandom();
 
-        public override DoubleGene NewInstance()
-        {
-            var r = RandomRegistry.GetRandom();
+        return new DoubleGene(RandomExtensions.NextDouble(r, Min, Max), Min, Max);
+    }
 
-            return new DoubleGene(random.NextDouble(r, Min, Max), Min, Max);
-        }
+    public override DoubleGene NewInstance(double number)
+    {
+        return new DoubleGene(number, Min, Max);
+    }
 
-        public override DoubleGene NewInstance(double number)
-        {
-            return new DoubleGene(number, Min, Max);
-        }
+    public static DoubleGene Of(double value, double min, double max)
+    {
+        return new DoubleGene(value, min, max);
+    }
 
-        public static DoubleGene Of(double value, double min, double max)
-        {
-            return new DoubleGene(value, min, max);
-        }
-
-        public static DoubleGene Of(double min, double max)
-        {
-            return Of(random.NextDouble(RandomRegistry.GetRandom(), min, max), min, max);
-        }
+    public static DoubleGene Of(double min, double max)
+    {
+        return Of(RandomExtensions.NextDouble(RandomRegistry.GetRandom(), min, max), min, max);
     }
 }

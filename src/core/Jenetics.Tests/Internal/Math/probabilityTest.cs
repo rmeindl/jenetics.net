@@ -18,18 +18,17 @@
 
 using Xunit;
 
-namespace Jenetics.Internal.Math
+namespace Jenetics.Internal.Math;
+
+public class ProbabilityTest
 {
-    public class ProbabilityTest
+    [Fact]
+    public void ProbabilityToInt()
     {
-        [Fact]
-        public void ProbabilityToInt()
-        {
-            Assert.Equal(int.MinValue, Probability.ToInt(0));
-            Assert.Equal(int.MaxValue, Probability.ToInt(1));
-            Assert.Equal(0, Probability.ToInt(0.5));
-            Assert.Equal(int.MinValue / 2, Probability.ToInt(0.25));
-            Assert.Equal(int.MaxValue / 2, Probability.ToInt(0.75));
-        }
+        Assert.Equal(int.MinValue, Probability.ToInt(0));
+        Assert.Equal(int.MaxValue, Probability.ToInt(1));
+        Assert.Equal(0, Probability.ToInt(0.5));
+        Assert.Equal(int.MinValue / 2, Probability.ToInt(0.25));
+        Assert.Equal(int.MaxValue / 2, Probability.ToInt(0.75));
     }
 }

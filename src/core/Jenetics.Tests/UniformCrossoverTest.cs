@@ -22,61 +22,60 @@ using Jenetics.Stat;
 using Jenetics.Util;
 using Xunit;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class UniformCrossoverTest : AltererTesterBase
 {
-    public class UniformCrossoverTest : AltererTesterBase
+    protected override IAlterer<DoubleGene, double> NewAlterer(double p)
     {
-        protected override IAlterer<DoubleGene, double> NewAlterer(double p)
-        {
-            return new UniformCrossover<DoubleGene, double>(p);
-        }
+        return new UniformCrossover<DoubleGene, double>(p);
+    }
 
-        [Fact]
-        public void Crossover()
-        {
-            var g1 = CharacterChromosome.Of("1234567890").ToSeq();
-            var g2 = CharacterChromosome.Of("abcdefghij").ToSeq();
+    [Fact]
+    public void Crossover()
+    {
+        var g1 = CharacterChromosome.Of("1234567890").ToSeq();
+        var g2 = CharacterChromosome.Of("abcdefghij").ToSeq();
 
-            RandomRegistry.Using(new Random(10), r =>
+        RandomRegistry.Using(new Random(10), _ =>
+        {
+            var crossover = new UniformCrossover<CharacterGene, char>(0.5, 0.5);
+
+            var g1C = g1.Copy();
+            var g2C = g2.Copy();
+            var changed = crossover.Crossover(g1C, g2C);
+
+            Assert.Equal(Enumerable.Range(0, g2C.Length).Count(i => char.IsDigit(g2C[i].Allele)), changed);
+        });
+    }
+
+    [Fact]
+    public void CrossoverChanges()
+    {
+        var g1 = CharacterChromosome.Of("1234567890").ToSeq();
+        var g2 = CharacterChromosome.Of("abcdefghij").ToSeq();
+
+        RandomRegistry.Using(new Random(10), _ =>
+        {
+            var crossover = new UniformCrossover<CharacterGene, char>(0.5, 0.5);
+
+            var statistics = new DoubleMomentStatistics();
+
+            for (var j = 0; j < 1000; ++j)
             {
-                var crossover = new UniformCrossover<CharacterGene, char>(0.5, 0.5);
-
                 var g1C = g1.Copy();
                 var g2C = g2.Copy();
                 var changed = crossover.Crossover(g1C, g2C);
 
-                Assert.Equal(Enumerable.Range(0, g2C.Length).Count(i => char.IsDigit(g2C[i].Allele)), changed);
-            });
-        }
+                Assert.Equal(Enumerable
+                        .Range(0, g2C.Length)
+                        .Count(i => char.IsDigit(g2C[i].Allele)), changed
+                );
 
-        [Fact]
-        public void CrossoverChanges()
-        {
-            var g1 = CharacterChromosome.Of("1234567890").ToSeq();
-            var g2 = CharacterChromosome.Of("abcdefghij").ToSeq();
+                statistics.Accept(changed);
+            }
 
-            RandomRegistry.Using(new Random(10), r =>
-            {
-                var crossover = new UniformCrossover<CharacterGene, char>(0.5, 0.5);
-
-                var statistics = new DoubleMomentStatistics();
-
-                for (var j = 0; j < 1000; ++j)
-                {
-                    var g1C = g1.Copy();
-                    var g2C = g2.Copy();
-                    var changed = crossover.Crossover(g1C, g2C);
-
-                    Assert.Equal(Enumerable
-                            .Range(0, g2C.Length)
-                            .Count(i => char.IsDigit(g2C[i].Allele)), changed
-                    );
-
-                    statistics.Accept(changed);
-                }
-
-                Assert.Equal(5.0, statistics.Mean, 1);
-            });
-        }
+            Assert.Equal(5.0, statistics.Mean, 1);
+        });
     }
 }

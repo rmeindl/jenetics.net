@@ -16,15 +16,14 @@
 // Author:
 //    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
 
-namespace Jenetics.Internal.Math
-{
-    public static class Probability
-    {
-        private static readonly long IntRange = Arithmetics.Pow(2, 32) - 1;
+namespace Jenetics.Internal.Math;
 
-        public static int ToInt(double probability)
-        {
-            return (int) (System.Math.Round(IntRange * probability) + int.MinValue);
-        }
+public static class Probability
+{
+    private static readonly long IntRange = Arithmetics.Pow(2, 32) - 1;
+
+    public static int ToInt(double probability)
+    {
+        return (int)(System.Math.Round(IntRange * probability) + int.MinValue);
     }
 }

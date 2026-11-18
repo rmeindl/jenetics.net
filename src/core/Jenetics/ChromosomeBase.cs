@@ -23,97 +23,96 @@ using Jenetics.Engine;
 using Jenetics.Internal.Util;
 using Jenetics.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+public interface IChromosome<TGene> : IVerifiable, IEnumerable<TGene>, IFactory<IChromosome<TGene>>
+    where TGene : IGene<TGene>
 {
-    public interface IChromosome<TGene> : IVerifiable, IEnumerable<TGene>, IFactory<IChromosome<TGene>>
-        where TGene : IGene<TGene>
+    int Length { get; }
+    TGene GetGene();
+    TGene GetGene(int index);
+
+    IImmutableSeq<TGene> ToSeq();
+    IChromosome<TGene> NewInstance(IImmutableSeq<TGene> genes);
+
+    T As<T>();
+}
+
+[Serializable]
+public abstract class ChromosomeBase<TGene> : IChromosome<TGene>
+    where TGene : IGene<TGene>, IVerifiable
+{
+    protected IImmutableSeq<TGene> Genes;
+    protected bool? Valid;
+
+    // for serialization only
+    protected internal ChromosomeBase()
     {
-        int Length { get; }
-        TGene GetGene();
-        TGene GetGene(int index);
-
-        IImmutableSeq<TGene> ToSeq();
-        IChromosome<TGene> NewInstance(IImmutableSeq<TGene> genes);
-
-        T As<T>();
     }
 
-    [Serializable]
-    public abstract class ChromosomeBase<TGene> : IChromosome<TGene>
-        where TGene : IGene<TGene>, IVerifiable
+    protected ChromosomeBase(IImmutableSeq<TGene> genes)
     {
-        protected IImmutableSeq<TGene> Genes;
-        protected bool? Valid;
+        if (genes.Empty())
+            throw new ArgumentException("The genes sequence must contain at least one gene.");
+        Genes = genes;
+    }
 
-        // for serialization only
-        protected internal ChromosomeBase()
+    public TGene GetGene()
+    {
+        return GetGene(0);
+    }
+
+    public TGene GetGene(int index)
+    {
+        return Genes[index];
+    }
+
+    public int Length => Genes.Length;
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
+
+    public virtual bool IsValid
+    {
+        get
         {
+            if (Valid == null)
+                Valid = Genes.ForAll(g => g.IsValid);
+
+            return (bool)Valid;
         }
+    }
 
-        protected ChromosomeBase(IImmutableSeq<TGene> genes)
-        {
-            if (genes.Empty())
-                throw new ArgumentException("The genes sequence must contain at least one gene.");
-            Genes = genes;
-        }
+    public IImmutableSeq<TGene> ToSeq()
+    {
+        return Genes;
+    }
 
-        public TGene GetGene()
-        {
-            return GetGene(0);
-        }
+    public abstract IEnumerator<TGene> GetEnumerator();
 
-        public TGene GetGene(int index)
-        {
-            return Genes[index];
-        }
+    public abstract IChromosome<TGene> NewInstance();
 
-        public int Length => Genes.Length;
+    public abstract IChromosome<TGene> NewInstance(IImmutableSeq<TGene> genes);
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+    public T As<T>()
+    {
+        return (T)Convert.ChangeType(this, typeof(T));
+    }
 
-        public virtual bool IsValid
-        {
-            get
-            {
-                if (Valid == null)
-                    Valid = Genes.ForAll(g => g.IsValid);
+    public override bool Equals(object? obj)
+    {
+        return Equality.Of(this, obj)(ch => Equality.Eq(Genes, ch.Genes));
+    }
 
-                return (bool) Valid;
-            }
-        }
+    public override int GetHashCode()
+    {
+        return Hash.Of(GetType()).And(Genes).Value;
+    }
 
-        public IImmutableSeq<TGene> ToSeq()
-        {
-            return Genes;
-        }
-
-        public abstract IEnumerator<TGene> GetEnumerator();
-
-        public abstract IChromosome<TGene> NewInstance();
-
-        public abstract IChromosome<TGene> NewInstance(IImmutableSeq<TGene> genes);
-
-        public T As<T>()
-        {
-            return (T) Convert.ChangeType(this, typeof(T));
-        }
-
-        public override bool Equals(object obj)
-        {
-            return Equality.Of(this, obj)(ch => Equality.Eq(Genes, ch.Genes));
-        }
-
-        public override int GetHashCode()
-        {
-            return Hash.Of(GetType()).And(Genes).Value;
-        }
-
-        public override string ToString()
-        {
-            return Genes.ToString();
-        }
+    public override string? ToString()
+    {
+        return Genes.ToString();
     }
 }

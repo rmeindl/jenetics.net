@@ -16,17 +16,16 @@
 // Author:
 //    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
 
-namespace Jenetics
-{
-    public class LongChromosomeTest : NumericChromosomeTesterBase<long, LongGene>
-    {
-        private readonly LongChromosome _factory = new LongChromosome(
-            0, long.MaxValue, 500
-        );
+namespace Jenetics;
 
-        protected override Factory<IChromosome<LongGene>> Factory()
-        {
-            return () => _factory;
-        }
+public class LongChromosomeTest : NumericChromosomeTesterBase<long, LongGene>
+{
+    private readonly LongChromosome _factory = new(
+        0, long.MaxValue, 500
+    );
+
+    protected override Factory<IChromosome<LongGene>> Factory()
+    {
+        return () => _factory;
     }
 }

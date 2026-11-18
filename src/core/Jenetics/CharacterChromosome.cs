@@ -22,110 +22,109 @@ using System.Runtime.Serialization;
 using Jenetics.Internal.Util;
 using Jenetics.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+[Serializable]
+public class CharacterChromosome : ChromosomeBase<CharacterGene>, ISerializable
 {
-    [Serializable]
-    public class CharacterChromosome : ChromosomeBase<CharacterGene>, ISerializable
+    private readonly CharSeq _validCharacters;
+
+    public CharacterChromosome(IImmutableSeq<CharacterGene> genes) : base(genes)
     {
-        private readonly CharSeq _validCharacters;
+        _validCharacters = genes[0].GetValidCharacters();
+    }
 
-        public CharacterChromosome(IImmutableSeq<CharacterGene> genes) : base(genes)
+    public CharacterChromosome(CharSeq validCharacters, int length) : this(CharacterGene.Seq(validCharacters,
+        length))
+    {
+        Valid = true;
+    }
+
+    protected CharacterChromosome(SerializationInfo info, StreamingContext context)
+    {
+        var length = info.GetInt32("_length");
+        _validCharacters = (CharSeq)info.GetValue("_validCharacters", typeof(CharSeq));
+
+        var genes = MutableSeq.OfLength<CharacterGene>(length);
+        for (var i = 0; i < length; ++i)
         {
-            _validCharacters = genes[0].GetValidCharacters();
-        }
-
-        public CharacterChromosome(CharSeq validCharacters, int length) : this(CharacterGene.Seq(validCharacters,
-            length))
-        {
-            Valid = true;
-        }
-
-        protected CharacterChromosome(SerializationInfo info, StreamingContext context)
-        {
-            var length = info.GetInt32("_length");
-            _validCharacters = (CharSeq) info.GetValue("_validCharacters", typeof(CharSeq));
-
-            var genes = MutableSeq.OfLength<CharacterGene>(length);
-            for (var i = 0; i < length; ++i)
-            {
-                var gene = CharacterGene.Of(
-                    info.GetChar("_gene_" + i),
-                    _validCharacters
-                );
-                genes[i] = gene;
-            }
-
-            Genes = genes.ToImmutableSeq();
-        }
-
-        public void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            info.AddValue("_length", Length);
-            info.AddValue("_validCharacters", _validCharacters);
-
-            for (var i = 0; i < Genes.Length; i++)
-                info.AddValue("_gene_" + i, Genes[i].Allele);
-        }
-
-        public override IEnumerator<CharacterGene> GetEnumerator()
-        {
-            return Genes.GetEnumerator();
-        }
-
-        public override IChromosome<CharacterGene> NewInstance()
-        {
-            return new CharacterChromosome(_validCharacters, Length);
-        }
-
-        public override IChromosome<CharacterGene> NewInstance(IImmutableSeq<CharacterGene> genes)
-        {
-            return new CharacterChromosome(genes);
-        }
-
-        public override bool Equals(object obj)
-        {
-            return Equality.Of(this, obj)(cc =>
-                base.Equals(obj) &&
-                Equality.Eq(_validCharacters, cc._validCharacters)
+            var gene = CharacterGene.Of(
+                info.GetChar("_gene_" + i),
+                _validCharacters
             );
+            genes[i] = gene;
         }
 
-        public override int GetHashCode()
+        Genes = genes.ToImmutableSeq();
+    }
+
+    public void GetObjectData(SerializationInfo info, StreamingContext context)
+    {
+        info.AddValue("_length", Length);
+        info.AddValue("_validCharacters", _validCharacters);
+
+        for (var i = 0; i < Genes.Length; i++)
+            info.AddValue("_gene_" + i, Genes[i].Allele);
+    }
+
+    public override IEnumerator<CharacterGene> GetEnumerator()
+    {
+        return Genes.GetEnumerator();
+    }
+
+    public override IChromosome<CharacterGene> NewInstance()
+    {
+        return new CharacterChromosome(_validCharacters, Length);
+    }
+
+    public override IChromosome<CharacterGene> NewInstance(IImmutableSeq<CharacterGene> genes)
+    {
+        return new CharacterChromosome(genes);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return Equality.Of(this, obj)(cc =>
+            base.Equals(obj) &&
+            Equality.Eq(_validCharacters, cc._validCharacters)
+        );
+    }
+
+    public override int GetHashCode()
+    {
+        return Hash.Of(GetType())
+            .And(base.GetHashCode())
+            .And(_validCharacters).Value;
+    }
+
+    public override string ToString()
+    {
+        return string.Join("", ToSeq());
+    }
+
+    public static CharacterChromosome Of(int length)
+    {
+        return new CharacterChromosome(
+            CharacterGene.Seq(CharacterGene.DefaultCharacters, length)
+        );
+    }
+
+    public static CharacterChromosome Of(string alleles, CharSeq validChars)
+    {
+        var index = new IntRef();
+
+        CharacterGene GeneFactory()
         {
-            return Hash.Of(GetType())
-                .And(base.GetHashCode())
-                .And(_validCharacters).Value;
+            return CharacterGene.Of(alleles[index.Value++], validChars);
         }
 
-        public override string ToString()
-        {
-            return string.Join("", ToSeq());
-        }
+        var genes = MutableSeq.OfLength<CharacterGene>(alleles.Length).Fill(GeneFactory).ToImmutableSeq();
 
-        public static CharacterChromosome Of(int length)
-        {
-            return new CharacterChromosome(
-                CharacterGene.Seq(CharacterGene.DefaultCharacters, length)
-            );
-        }
+        return new CharacterChromosome(genes);
+    }
 
-        public static CharacterChromosome Of(string alleles, CharSeq validChars)
-        {
-            var index = new IntRef();
-
-            CharacterGene GeneFactory()
-            {
-                return CharacterGene.Of(alleles[index.Value++], validChars);
-            }
-
-            var genes = MutableSeq.OfLength<CharacterGene>(alleles.Length).Fill(GeneFactory).ToImmutableSeq();
-
-            return new CharacterChromosome(genes);
-        }
-
-        public static CharacterChromosome Of(string alleles)
-        {
-            return Of(alleles, CharacterGene.DefaultCharacters);
-        }
+    public static CharacterChromosome Of(string alleles)
+    {
+        return Of(alleles, CharacterGene.DefaultCharacters);
     }
 }

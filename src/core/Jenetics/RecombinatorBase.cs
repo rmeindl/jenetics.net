@@ -18,47 +18,47 @@
 
 using System;
 using System.Linq;
+using Jenetics.Internal.Math;
 using Jenetics.Util;
 using static Jenetics.Internal.Math.Base;
 
-namespace Jenetics
+namespace Jenetics;
+
+public abstract class RecombinatorBase<TGene, TAllele> : AltererBase<TGene, TAllele>
+    where TGene : IGene<TGene>
+    where TAllele : IComparable<TAllele>
 {
-    public abstract class RecombinatorBase<TGene, TAllele> : AltererBase<TGene, TAllele>
-        where TGene : IGene<TGene>
-        where TAllele : IComparable<TAllele>
+    protected RecombinatorBase(double probability, int order) : base(probability)
     {
-        protected RecombinatorBase(double probability, int order) : base(probability)
-        {
-            if (order < 2)
-                throw new ArgumentOutOfRangeException($"Order must be greater than one, but was {order}.");
-            Order = order;
-        }
+        if (order < 2)
+            throw new ArgumentOutOfRangeException($"Order must be greater than one, but was {order}.");
+        Order = order;
+    }
 
-        public int Order { get; }
+    public int Order { get; }
 
-        public override int Alter(Population<TGene, TAllele> population, long generation)
+    public override int Alter(Population<TGene, TAllele> population, long generation)
+    {
+        var count = 0;
+        if (population.Count >= 2)
         {
-            var count = 0;
-            if (population.Count >= 2)
+            var random = RandomRegistry.GetRandom();
+            var order = Math.Min(Order, population.Count);
+
+            int[] Individuals(int i)
             {
-                var random = RandomRegistry.GetRandom();
-                var order = Math.Min(Order, population.Count);
-
-                int[] Individuals(int i)
-                {
-                    var ind = Subset(population.Count, order, random);
-                    ind[0] = i;
-                    return ind;
-                }
-
-                count = Internal.Math.random.Indexes(random, population.Count, Probability)
-                    .Select(Individuals).Select(i => Recombine(population, i, generation)).Sum();
+                var ind = Subset(population.Count, order, random);
+                ind[0] = i;
+                return ind;
             }
 
-            return count;
+            count = RandomExtensions.Indexes(random, population.Count, Probability)
+                .Select(Individuals).Select(i => Recombine(population, i, generation)).Sum();
         }
 
-        protected internal abstract int Recombine(Population<TGene, TAllele> population, int[] individuals,
-            long generation);
+        return count;
     }
+
+    protected internal abstract int Recombine(Population<TGene, TAllele> population, int[] individuals,
+        long generation);
 }

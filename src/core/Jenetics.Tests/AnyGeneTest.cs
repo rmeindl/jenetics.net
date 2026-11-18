@@ -20,69 +20,68 @@ using System;
 using Jenetics.Util;
 using Xunit;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class AnyGeneTest : GeneTesterBase<int, AnyGene<int>>
 {
-    public class AnyGeneTest : GeneTesterBase<int, AnyGene<int>>
+    protected override Factory<AnyGene<int>> Factory()
     {
-        private class ContinuousRandom : Random
+        return () => AnyGene.Of(RandomRegistry.GetRandom().NextInt);
+    }
+
+    [Fact]
+    public void AllowNullAlleles()
+    {
+        var gene = AnyGene.Of((int?)null, () => null);
+
+        Assert.Null(gene.Allele);
+        for (var i = 0; i < 10; ++i)
+            Assert.Null(gene.NewInstance().Allele);
+    }
+
+    [Fact]
+    public override void IsValid()
+    {
+        var gene = AnyGene.Of(
+            () => RandomRegistry.GetRandom().NextInt(1000),
+            i => i < 100
+        );
+
+        for (var i = 0; i < 5000; ++i)
         {
-            private int _next;
+            var g = gene.NewInstance();
 
-            public ContinuousRandom(int start)
-            {
-                _next = start;
-            }
+            Assert.Equal(g.Allele < 100, g.IsValid);
+            Assert.True(g.Allele < 1000);
+            Assert.True(g.Allele >= 0);
+        }
+    }
 
-            public override int Next()
-            {
-                return _next++;
-            }
+    [Fact]
+    public override void NewInstance()
+    {
+        Random random = new ContinuousRandom(0);
+        var gene = AnyGene.Of(random.Next);
+
+        for (var i = 0; i < 100; ++i)
+        {
+            var g = gene.NewInstance();
+            Assert.Equal(i + 1, g.Allele);
+        }
+    }
+
+    private class ContinuousRandom : Random
+    {
+        private int _next;
+
+        public ContinuousRandom(int start)
+        {
+            _next = start;
         }
 
-        protected override Factory<AnyGene<int>> Factory()
+        public override int Next()
         {
-            return () => AnyGene.Of(RandomRegistry.GetRandom().NextInt);
-        }
-
-        [Fact]
-        public void AllowNullAlleles()
-        {
-            var gene = AnyGene.Of((int?) null, () => null);
-
-            Assert.Null(gene.Allele);
-            for (var i = 0; i < 10; ++i)
-                Assert.Null(gene.NewInstance().Allele);
-        }
-
-        [Fact]
-        public override void IsValid()
-        {
-            var gene = AnyGene.Of(
-                () => RandomRegistry.GetRandom().NextInt(1000),
-                i => i < 100
-            );
-
-            for (var i = 0; i < 5000; ++i)
-            {
-                var g = gene.NewInstance();
-
-                Assert.Equal(g.Allele < 100, g.IsValid);
-                Assert.True(g.Allele < 1000);
-                Assert.True(g.Allele >= 0);
-            }
-        }
-
-        [Fact]
-        public override void NewInstance()
-        {
-            Random random = new ContinuousRandom(0);
-            var gene = AnyGene.Of(random.Next);
-
-            for (var i = 0; i < 100; ++i)
-            {
-                var g = gene.NewInstance();
-                Assert.Equal(i + 1, g.Allele);
-            }
+            return _next++;
         }
     }
 }

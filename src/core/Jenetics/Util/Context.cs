@@ -19,82 +19,82 @@
 using System;
 using System.Threading;
 
-namespace Jenetics.Util
+namespace Jenetics.Util;
+
+public class Context<T>
 {
-    public class Context<T>
+    private readonly T _default;
+    private readonly ThreadLocal<Entry> _threadLocalEntry = new();
+    private Entry _entry;
+
+    internal Context(T defaultValue)
     {
-        private readonly T _default;
-        private readonly ThreadLocal<Entry> _threadLocalEntry = new ThreadLocal<Entry>();
-        private Entry _entry;
+        _default = defaultValue;
+        _entry = new Entry(defaultValue);
+    }
 
-        internal Context(T defaultValue)
+    internal void Set(T value)
+    {
+        var e = _threadLocalEntry.Value;
+
+        if (e != null) e.Value = value;
+        else Volatile.Write(ref _entry, new Entry(value));
+    }
+
+    internal T Get()
+    {
+        var e = _threadLocalEntry.Value;
+        return (e != null ? e : Volatile.Read(ref _entry)).Value;
+    }
+
+    internal void Reset()
+    {
+        Set(_default);
+    }
+
+    // ReSharper disable once InconsistentNaming
+    internal TR With<TR>(T value, Func<T, TR> f)
+    {
+        var e = _threadLocalEntry.Value;
+        if (e != null)
+            _threadLocalEntry.Value = e.Inner(value);
+        else
+            _threadLocalEntry.Value = new Entry(value, Thread.CurrentThread);
+
+        try
         {
-            _default = defaultValue;
-            _entry = new Entry(defaultValue);
+            return f(value);
+        }
+        finally
+        {
+            _threadLocalEntry.Value = e;
+        }
+    }
+
+    private class Entry
+    {
+        internal readonly Entry? Parent;
+        private readonly Thread? _thread;
+        internal T Value;
+
+        private Entry(T value, Entry? parent, Thread? thread)
+        {
+            Value = value;
+            Parent = parent;
+            _thread = thread;
         }
 
-        internal void Set(T value)
+        public Entry(T value, Thread thread) : this(value, null, thread)
         {
-            var e = _threadLocalEntry.Value;
-
-            if (e != null) e.Value = value;
-            else Volatile.Write(ref _entry, new Entry(value));
         }
 
-        internal T Get()
+        public Entry(T value) : this(value, null, null)
         {
-            var e = _threadLocalEntry.Value;
-            return (e != null ? e : Volatile.Read(ref _entry)).Value;
         }
 
-        internal void Reset()
+        public Entry Inner(T value)
         {
-            Set(_default);
-        }
-
-        internal TR With<TR>(T value, Func<T, TR> f)
-        {
-            var e = _threadLocalEntry.Value;
-            if (e != null)
-                _threadLocalEntry.Value = e.Inner(value);
-            else
-                _threadLocalEntry.Value = new Entry(value, Thread.CurrentThread);
-
-            try
-            {
-                return f(value);
-            }
-            finally
-            {
-                _threadLocalEntry.Value = _threadLocalEntry.Value.Parent;
-            }
-        }
-
-        private class Entry
-        {
-            private readonly Thread _thread;
-            internal readonly Entry Parent;
-            internal T Value;
-
-            private Entry(T value, Entry parent, Thread thread)
-            {
-                Value = value;
-                Parent = parent;
-                _thread = thread;
-            }
-
-            public Entry(T value, Thread thread) : this(value, null, thread)
-            {
-            }
-
-            public Entry(T value) : this(value, null, null)
-            {
-            }
-
-            public Entry Inner(T value)
-            {
-                return new Entry(value, this, _thread);
-            }
+            return new Entry(value, this, _thread);
         }
     }
 }

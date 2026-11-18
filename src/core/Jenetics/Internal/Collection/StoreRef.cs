@@ -19,75 +19,74 @@
 using System;
 using System.Collections.Generic;
 
-namespace Jenetics.Internal.Collection
+namespace Jenetics.Internal.Collection;
+
+public static class StoreRef
 {
-    public static class StoreRef
+    public static StoreRef<TSource> Of<TSource>(IStore<TSource> value)
     {
-        public static StoreRef<TSource> Of<TSource>(IStore<TSource> value)
+        return new StoreRef<TSource>(value, false);
+    }
+}
+
+[Serializable]
+public class StoreRef<T> : IStore<T>
+{
+    private bool _sealed;
+
+    public StoreRef(IStore<T> value, bool isSealed)
+    {
+        Value = value;
+        _sealed = isSealed;
+    }
+
+    internal IStore<T> Value { get; private set; }
+
+    public int Length => Value.Length;
+
+    public T this[int index]
+    {
+        get => Value[index];
+        set
         {
-            return new StoreRef<TSource>(value, false);
+            CopyIfSealed();
+            Value[index] = value;
         }
     }
 
-    [Serializable]
-    public class StoreRef<T> : IStore<T>
+    public void Sort(int from, int until, IComparer<T> comparator)
     {
-        private bool _sealed;
+        CopyIfSealed();
+        Value.Sort(from, until, comparator);
+    }
 
-        public StoreRef(IStore<T> value, bool isSealed)
+    public IStore<T> Copy(int from, int until)
+    {
+        return Value.Copy(from, until);
+    }
+
+    public IStore<T> NewInstance(int length)
+    {
+        return Value.NewInstance(length);
+    }
+
+    public StoreRef<T> Seal()
+    {
+        _sealed = true;
+        return new StoreRef<T>(Value, true);
+    }
+
+    public bool IsSealed()
+    {
+        return _sealed;
+    }
+
+    private void CopyIfSealed()
+    {
+        if (_sealed)
         {
-            Value = value;
-            _sealed = isSealed;
-        }
-
-        internal IStore<T> Value { get; private set; }
-
-        public int Length => Value.Length;
-
-        public T this[int index]
-        {
-            get => Value[index];
-            set
-            {
-                CopyIfSealed();
-                Value[index] = value;
-            }
-        }
-
-        public void Sort(int from, int until, IComparer<T> comparator)
-        {
-            CopyIfSealed();
-            Value.Sort(from, until, comparator);
-        }
-
-        public IStore<T> Copy(int from, int until)
-        {
-            return Value.Copy(from, until);
-        }
-
-        public IStore<T> NewInstance(int length)
-        {
-            return Value.NewInstance(length);
-        }
-
-        public StoreRef<T> Seal()
-        {
-            _sealed = true;
-            return new StoreRef<T>(Value, true);
-        }
-
-        public bool IsSealed()
-        {
-            return _sealed;
-        }
-
-        private void CopyIfSealed()
-        {
-            if (_sealed)
-            {
-                Value = this.Copy();
-                _sealed = false;
-            }
+            Value = this.Copy();
+            _sealed = false;
         }
     }
 }

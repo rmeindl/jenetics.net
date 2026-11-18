@@ -17,75 +17,73 @@
 //    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
 
 using System;
-using System.Collections;
 using System.Linq;
 using System.Threading;
 using Jenetics.Engine;
 using Jenetics.Util;
 using static Jenetics.Engine.Limits;
+using JeneticsEngine = Jenetics.Engine.Engine;
 
-namespace Jenetics.Example
+namespace Jenetics.Example;
+internal static class Game
 {
-    internal static class Game
+    public static void Main()
     {
-        public static void Main()
+        var codec = Codec.Of(
+            () => Genotype.Of(DoubleChromosome.Of(0, 1)),
+            gt => Player.Of(gt.Gene.DoubleValue())
+        );
+
+        var population = new Population<DoubleGene, double>();
+
+        double Fitness(Player player)
         {
-            var codec = Codec.Of(
-                () => Genotype.Of(DoubleChromosome.Of(0, 1)),
-                gt => Player.Of(gt.Gene.DoubleValue())
-            );
+            var pop = Volatile.Read(ref population);
 
-            Population<DoubleGene, double> population = null;
-
-            double Fitness(Player player)
+            Player other;
+            if (pop.Count != 0)
             {
-                var pop = population;
-
-                Player other;
-                if (pop != null)
-                {
-                    var index = RandomRegistry.GetRandom().NextInt(pop.Count);
-                    other = codec.Decode(pop[index].GetGenotype());
-                }
-                else
-                {
-                    other = Player.Of(0.5);
-                }
-
-                return player.CompareTo(other);
+                var index = RandomRegistry.GetRandom().NextInt(pop.Count);
+                other = codec.Decode(pop[index].GetGenotype());
+            }
+            else
+            {
+                other = Player.Of(0.5);
             }
 
-            var engine = Engine.Engine
-                .Builder(Fitness, codec)
-                .Build();
-
-            var best = codec.Decode(
-                engine.Stream()
-                    .TakeWhile(BySteadyFitness<DoubleGene, double>(50))
-                    .Peek(er => Interlocked.Exchange(ref population, er.GetPopulation()))
-                    .ToBestGenotype());
-
-            Console.WriteLine(best.Value);
+            return player.CompareTo(other);
         }
 
-        public class Player : IComparable<Player>
+        var engine = JeneticsEngine
+            .Builder(Fitness, codec)
+            .Build();
+
+        var best = codec.Decode(
+            engine.Stream()
+                .TakeWhile(BySteadyFitness<DoubleGene, double>(50))
+                .Peek(er => Interlocked.Exchange(ref population, er.GetPopulation()))
+                .ToBestGenotype());
+
+        Console.WriteLine(best.Value);
+    }
+
+    public class Player : IComparable<Player>
+    {
+        public double Value { get; }
+
+        private Player(double value)
         {
-            public readonly double Value;
+            Value = value;
+        }
 
-            private Player(double value)
-            {
-                Value = value;
-            }
+        public int CompareTo(Player other)
+        {
+            return Value.CompareTo(other.Value);
+        }
 
-            public int CompareTo(Player other)
-            {
-                return Comparer.Default.Compare(Value, other.Value);
-            }
-
-            public static Player Of(double value)
-            {
-                return new Player(value);
-            }
+        public static Player Of(double value)
+        {
+            return new Player(value);
         }
     }
 }

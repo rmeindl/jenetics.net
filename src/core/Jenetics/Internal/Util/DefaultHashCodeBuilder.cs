@@ -20,89 +20,87 @@ using System;
 using System.Collections.Generic;
 using Jenetics.Util;
 
-namespace Jenetics.Internal.Util
+namespace Jenetics.Internal.Util;
+
+internal class DefaultHashCodeBuilder : IHash
 {
-    internal class DefaultHashCodeBuilder : IHash
+    private const int P1 = 47;
+    private const int P2 = 103;
+
+    internal DefaultHashCodeBuilder(Type type)
     {
-        private const int P1 = 47;
-        private const int P2 = 103;
+        Value = type.GetHashCode();
+    }
 
-        private int _hash;
+    public IHash And(byte[] values)
+    {
+        return AndEnumerable(values);
+    }
 
-        internal DefaultHashCodeBuilder(Type type)
-        {
-            _hash = type.GetHashCode();
-        }
-
-        public IHash And(byte[] values)
-        {
-            return AndEnumerable(values);
-        }
-
-        public IHash And(char[] values)
-        {
-            return AndEnumerable(values);
-        }
+    public IHash And(char[] values)
+    {
+        return AndEnumerable(values);
+    }
 
 
-        public IHash And<T>(ISeq<T> values)
-        {
-            _hash += values.GetHashCode();
-            return this;
-        }
+    public IHash And<T>(ISeq<T> values)
+    {
+        Value += values.GetHashCode();
+        return this;
+    }
 
-        public IHash And<T>(IImmutableSeq<T> values)
-        {
-            _hash += values.GetHashCode();
-            return this;
-        }
+    public IHash And<T>(IImmutableSeq<T> values)
+    {
+        Value += values.GetHashCode();
+        return this;
+    }
 
-        public IHash And(char value)
-        {
-            _hash += P1 * value + P2;
-            return this;
-        }
+    public IHash And(char value)
+    {
+        Value += P1 * value + P2;
+        return this;
+    }
 
-        public IHash And(double value)
-        {
-            _hash += P1 * value.GetHashCode();
-            return this;
-        }
+    public IHash And(double value)
+    {
+        Value += P1 * value.GetHashCode();
+        return this;
+    }
 
-        public IHash And(int value)
-        {
-            _hash += P1 * value + P2;
-            return this;
-        }
+    public IHash And(int value)
+    {
+        Value += P1 * value + P2;
+        return this;
+    }
 
-        public IHash And(long value)
-        {
-            _hash += P1 * value.GetHashCode();
-            return this;
-        }
+    public IHash And(long value)
+    {
+        Value += P1 * value.GetHashCode();
+        return this;
+    }
 
-        public IHash And<T>(T value)
-        {
-            _hash += P1 * (value?.GetHashCode() ?? 0) + P2;
-            return this;
-        }
+    public IHash And<T>(T value)
+    {
+        Value += P1 * (value?.GetHashCode() ?? 0) + P2;
+        return this;
+    }
 
-        public IHash And<T>(List<T> values)
-        {
-            return AndEnumerable(values);
-        }
+    public IHash And<T>(List<T> values)
+    {
+        return AndEnumerable(values);
+    }
 
-        public int Value => _hash;
+    public int Value { get; private set; }
 
-        private IHash AndEnumerable<T>(IEnumerable<T> values)
-        {
-            if (values == null) return this;
+    private IHash AndEnumerable<T>(IEnumerable<T>? values)
+    {
+        if (values == null) return this;
 
-            const int hash = 17;
-            foreach (var element in values)
-                _hash += hash * 31 + element.GetHashCode();
+        const int hash = 17;
+        foreach (var element in values)
+            if (element != null)
+                Value += hash * 31 + element.GetHashCode();
 
-            return this;
-        }
+        return this;
     }
 }

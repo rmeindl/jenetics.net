@@ -19,70 +19,69 @@
 using System;
 using Xunit;
 
-namespace Jenetics
+namespace Jenetics;
+
+public abstract class NumericChromosomeTesterBase<TAllele, TGene> : ChromosomeTesterBase<TGene>
+    where TAllele : IComparable<TAllele>, IConvertible
+    where TGene : class, INumericGene<TAllele, TGene>
 {
-    public abstract class NumericChromosomeTesterBase<TAllele, TGene> : ChromosomeTesterBase<TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
-        where TGene : class, INumericGene<TAllele, TGene>
+    /*
+    [Fact]
+    public void PrimitiveTypeAccess() {
+        var c = (INumericChromosome<N, G>) Factory()();
+
+        Assert.Equal(c.ByteValue(), c.ByteValue(0));
+        Assert.Equal(c.ShortValue(), c.ShortValue(0));
+        Assert.Equal(c.IntValue(), c.IntValue(0));
+        Assert.Equal(c.FloatValue(), c.FloatValue(0));
+        Assert.Equal(c.DoubleValue(), c.DoubleValue(0));
+    }
+    */
+
+    private static void AssertMinMax(INumericChromosome<TAllele, TGene> c1, INumericChromosome<TAllele, TGene> c2)
     {
-        /*
-        [Fact]
-        public void PrimitiveTypeAccess() {
-            var c = (INumericChromosome<N, G>) Factory()();
+        Assert.Equal(c1.Min, c2.Min);
+        Assert.Equal(c1.Max, c2.Max);
+    }
 
-            Assert.Equal(c.ByteValue(), c.ByteValue(0));
-            Assert.Equal(c.ShortValue(), c.ShortValue(0));
-            Assert.Equal(c.IntValue(), c.IntValue(0));
-            Assert.Equal(c.FloatValue(), c.FloatValue(0));
-            Assert.Equal(c.DoubleValue(), c.DoubleValue(0));
-        }
-        */
-
-        private static void AssertMinMax(INumericChromosome<TAllele, TGene> c1, INumericChromosome<TAllele, TGene> c2)
-        {
-            Assert.Equal(c1.Min, c2.Min);
-            Assert.Equal(c1.Max, c2.Max);
-        }
-
-        private static void AssertValid(INumericChromosome<TAllele, TGene> c)
-        {
-            if (c.IsValid)
-                foreach (var gene in c)
-                {
-                    Assert.True(gene.Allele.CompareTo(c.Min) >= 0);
-                    Assert.True(gene.Allele.CompareTo(c.Max) <= 0);
-                }
-            else
-                foreach (var gene in c)
-                    Assert.True(
-                        gene.Allele.CompareTo(c.Min) < 0 ||
-                        gene.Allele.CompareTo(c.Max) > 0
-                    );
-        }
-
-        [Fact]
-        public void GeneMinMax()
-        {
-            var c = (INumericChromosome<TAllele, TGene>) Factory()();
-
+    private static void AssertValid(INumericChromosome<TAllele, TGene> c)
+    {
+        if (c.IsValid)
             foreach (var gene in c)
             {
-                Assert.Equal(c.Min, gene.Min);
-                Assert.Equal(c.Max, gene.Max);
+                Assert.True(gene.Allele.CompareTo(c.Min) >= 0);
+                Assert.True(gene.Allele.CompareTo(c.Max) <= 0);
             }
-        }
+        else
+            foreach (var gene in c)
+                Assert.True(
+                    gene.Allele.CompareTo(c.Min) < 0 ||
+                    gene.Allele.CompareTo(c.Max) > 0
+                );
+    }
 
-        [Fact]
-        public void MinMax()
+    [Fact]
+    public void GeneMinMax()
+    {
+        var c = (INumericChromosome<TAllele, TGene>)Factory()();
+
+        foreach (var gene in c)
         {
-            var c1 = (INumericChromosome<TAllele, TGene>) Factory()();
-
-            var c2 = (INumericChromosome<TAllele, TGene>) Factory()();
-
-
-            AssertMinMax(c1, c2);
-            AssertValid(c1);
-            AssertValid(c2);
+            Assert.Equal(c.Min, gene.Min);
+            Assert.Equal(c.Max, gene.Max);
         }
+    }
+
+    [Fact]
+    public void MinMax()
+    {
+        var c1 = (INumericChromosome<TAllele, TGene>)Factory()();
+
+        var c2 = (INumericChromosome<TAllele, TGene>)Factory()();
+
+
+        AssertMinMax(c1, c2);
+        AssertValid(c1);
+        AssertValid(c2);
     }
 }

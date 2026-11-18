@@ -16,14 +16,13 @@
 // Author:
 //    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
 
-namespace Jenetics
+namespace Jenetics;
+
+public interface IVerifiable
 {
-    public interface IVerifiable
-    {
-        /// <summary>
-        ///     Check if this object is valid.
-        /// </summary>
-        /// <returns>true if this object is valid, false otherwise.</returns>
-        bool IsValid { get; }
-    }
+    /// <summary>
+    ///     Check if this object is valid.
+    /// </summary>
+    /// <returns>true if this object is valid, false otherwise.</returns>
+    bool IsValid { get; }
 }

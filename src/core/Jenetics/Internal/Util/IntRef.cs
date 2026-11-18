@@ -18,41 +18,40 @@
 
 using System;
 
-namespace Jenetics.Internal.Util
+namespace Jenetics.Internal.Util;
+
+[Serializable]
+public class IntRef
 {
-    [Serializable]
-    public class IntRef
+    private int _value;
+
+    public IntRef() : this(0)
     {
-        private int _value;
+    }
 
-        public IntRef() : this(0)
-        {
-        }
+    public IntRef(int initialValue)
+    {
+        Value = initialValue;
+    }
 
-        public IntRef(int initialValue)
-        {
-            Value = initialValue;
-        }
+    public int Value
+    {
+        get => _value;
+        set => _value = value;
+    }
 
-        public int Value
-        {
-            get => _value;
-            set => _value = value;
-        }
+    public override bool Equals(object? obj)
+    {
+        return obj is IntRef @ref && @ref._value == _value;
+    }
 
-        public override bool Equals(object obj)
-        {
-            return obj is IntRef @ref && @ref._value == _value;
-        }
+    public override int GetHashCode()
+    {
+        return _value.GetHashCode();
+    }
 
-        public override int GetHashCode()
-        {
-            return _value.GetHashCode();
-        }
-
-        public override string ToString()
-        {
-            return _value.ToString();
-        }
+    public override string ToString()
+    {
+        return _value.ToString();
     }
 }

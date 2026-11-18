@@ -19,62 +19,61 @@
 using System;
 using System.Collections.Generic;
 
-namespace Jenetics.Internal.Collection
+namespace Jenetics.Internal.Collection;
+
+[Serializable]
+public class CharStore : IStore<char>
 {
-    [Serializable]
-    public class CharStore : IStore<char>
+    private readonly char[] _array;
+
+    private CharStore(char[] chars)
     {
-        private readonly char[] _array;
+        _array = chars;
+    }
 
-        private CharStore(char[] chars)
+    public CharStore(int length) : this(new char[length])
+    {
+    }
+
+    public int Length => _array.Length;
+
+    public char this[int index]
+    {
+        get => _array[index];
+        set => _array[index] = value;
+    }
+
+    public void Sort(int from, int until, IComparer<char>? comparator)
+    {
+        if (comparator == null)
         {
-            _array = chars;
+            System.Array.Sort(_array, from, until);
         }
-
-        public CharStore(int length) : this(new char[length])
+        else
         {
+            var chars = new char[_array.Length];
+            for (var i = 0; i < _array.Length; ++i)
+                chars[i] = _array[i];
+            System.Array.Sort(chars, from, until, comparator);
+            for (var i = 0; i < _array.Length; ++i)
+                _array[i] = chars[i];
         }
+    }
 
-        public int Length => _array.Length;
+    public IStore<char> Copy(int from, int until)
+    {
+        var newArray = new char[until - from];
+        System.Array.Copy(_array, from, newArray, 0, until - from);
+        return new CharStore(newArray);
+    }
 
-        public char this[int index]
-        {
-            get => _array[index];
-            set => _array[index] = value;
-        }
+    public IStore<char> NewInstance(int length)
+    {
+        return new CharStore(length);
+    }
 
-        public void Sort(int from, int until, IComparer<char> comparator)
-        {
-            if (comparator == null)
-            {
-                System.Array.Sort(_array, from, until);
-            }
-            else
-            {
-                var chars = new char[_array.Length];
-                for (var i = 0; i < _array.Length; ++i)
-                    chars[i] = _array[i];
-                System.Array.Sort(chars, from, until, comparator);
-                for (var i = 0; i < _array.Length; ++i)
-                    _array[i] = chars[i];
-            }
-        }
-
-        public IStore<char> Copy(int from, int until)
-        {
-            var newArray = new char[until - from];
-            System.Array.Copy(_array, from, newArray, 0, until - from);
-            return new CharStore(newArray);
-        }
-
-        public IStore<char> NewInstance(int length)
-        {
-            return new CharStore(length);
-        }
-
-        public static CharStore Of(char[] chars)
-        {
-            return new CharStore(chars);
-        }
+    public static CharStore Of(char[] chars)
+    {
+        return new CharStore(chars);
     }
 }

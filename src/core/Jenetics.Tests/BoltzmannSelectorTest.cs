@@ -24,79 +24,78 @@ using Jenetics.Stat;
 using Jenetics.Util;
 using Xunit;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class BoltzmannSelectorTest : ProbabilitySelectorTesterBase<BoltzmannSelector<DoubleGene, double>>
 {
-    public class BoltzmannSelectorTest : ProbabilitySelectorTesterBase<BoltzmannSelector<DoubleGene, double>>
+    protected override Factory<BoltzmannSelector<DoubleGene, double>> Factory()
     {
-        protected override Factory<BoltzmannSelector<DoubleGene, double>> Factory()
-        {
-            return () => new BoltzmannSelector<DoubleGene, double>();
-        }
+        return () => new BoltzmannSelector<DoubleGene, double>();
+    }
 
-        protected override bool IsSorted()
-        {
-            return false;
-        }
+    protected override bool IsSorted()
+    {
+        return false;
+    }
 
-        [Theory]
-        [MemberData(nameof(ExpectedDistribution))]
-        public void SelectDistribution(double b, Named<double[]> expected, Optimize opt)
+    [Theory]
+    [MemberData(nameof(ExpectedDistribution))]
+    public void SelectDistribution(double b, Named<double[]> expected, Optimize opt)
+    {
+        Retry<Exception>(3, () =>
         {
-            Retry<Exception>(3, () =>
+            const int loops = 50;
+            const int npopulation = PopulationCount;
+
+            //ThreadLocal<LCG64ShiftRandom> random = new LCG64ShiftRandom.ThreadLocal();
+            var random = RandomRegistry.GetRandom();
+            RandomRegistry.Using(random, _ =>
             {
-                const int loops = 50;
-                const int npopulation = PopulationCount;
+                var distribution = Distribution(
+                    new BoltzmannSelector<DoubleGene, double>(b),
+                    opt,
+                    npopulation,
+                    loops
+                );
 
-                //ThreadLocal<LCG64ShiftRandom> random = new LCG64ShiftRandom.ThreadLocal();
-                var random = RandomRegistry.GetRandom();
-                RandomRegistry.Using(random, r =>
-                {
-                    var distribution = Distribution(
-                        new BoltzmannSelector<DoubleGene, double>(b),
-                        opt,
-                        npopulation,
-                        loops
-                    );
-
-                    StatisticsAssert.AssertDistribution(distribution, expected.Value, 0.001, 5);
-                });
+                StatisticsAssert.AssertDistribution(distribution, expected.Value, 0.001, 5);
             });
-        }
+        });
+    }
 
-        public static IEnumerable<object[]> ExpectedDistribution()
+    public static IEnumerable<object[]> ExpectedDistribution()
+    {
+        const string resource = "Jenetics.resources.BoltzmannSelector";
+
+        foreach (var opt in new[] { Optimize.Maximum, Optimize.Minimum })
         {
-            const string resource = "Jenetics.resources.BoltzmannSelector";
+            var data = TestData.Of(resource, opt.ToString().ToUpper());
 
-            foreach (var opt in new[] {Optimize.Maximum, Optimize.Minimum})
-            {
-                var data = TestData.Of(resource, opt.ToString().ToUpper());
+            var csv = data.Select(TestData.ToDouble).ToArray();
 
-                var csv = data.Select(TestData.ToDouble).ToArray();
-
-                for (var i = 0; i < csv[0].Length; i++)
-                    yield return new object[]
-                        {csv[0][i], Named<double[]>.Of($"distribution[{csv[0][i]}]", Expected(csv, i)), opt};
-            }
+            for (var i = 0; i < csv[0].Length; i++)
+                yield return new object[]
+                    { csv[0][i], Named<double[]>.Of($"distribution[{csv[0][i]}]", Expected(csv, i)), opt };
         }
+    }
 
-        private static double[] Expected(double[][] csv, int c)
-        {
-            var col = new double[csv.Length - 1];
-            for (var i = 0; i < col.Length; ++i)
-                col[i] = Math.Max(csv[i + 1][c], double.MinValue);
-            return col;
-        }
+    private static double[] Expected(double[][] csv, int c)
+    {
+        var col = new double[csv.Length - 1];
+        for (var i = 0; i < col.Length; ++i)
+            col[i] = Math.Max(csv[i + 1][c], double.MinValue);
+        return col;
+    }
 
-        [Fact]
-        public void Parameters()
-        {
-            var selector = new BoltzmannSelector<DoubleGene, double>(2);
+    [Fact]
+    public void Parameters()
+    {
+        var selector = new BoltzmannSelector<DoubleGene, double>(2);
 
-            // Create population with zero fitness.
-            var population = TestUtils.NewDoublePopulation(20, 0, 0);
+        // Create population with zero fitness.
+        var population = TestUtils.NewDoublePopulation(20, 0, 0);
 
-            // Must select without exception.
-            selector.Probabilities(population, 10);
-        }
+        // Must select without exception.
+        selector.Probabilities(population, 10);
     }
 }

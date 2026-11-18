@@ -20,55 +20,55 @@ using System;
 using Jenetics.Util;
 using Xunit;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class IntermediateCrossoverTest
 {
-    public class IntermediateCrossoverTest
+    [Fact]
+    public void PopulationRecombine()
     {
-        [Fact]
-        public void PopulationRecombine()
+        RandomRegistry.Using(new Random(123), _ =>
         {
-            RandomRegistry.Using(new Random(123), r =>
+            var pop = TestUtils.NewDoubleGenePopulation(5, 1, 2);
+            var copy = pop.Copy();
+
+            var recombinator = new IntermediateCrossover<DoubleGene, double>(1);
+
+            recombinator.Alter(pop, 10);
+
+            for (var i = 0; i < pop.Count; ++i)
             {
-                var pop = TestUtils.NewDoubleGenePopulation(5, 1, 2);
-                var copy = pop.Copy();
+                ISeq<DoubleGene> genes = pop[i]
+                    .GetGenotype()
+                    .GetChromosome()
+                    .ToSeq();
 
-                var recombinator = new IntermediateCrossover<DoubleGene, double>(1);
+                ISeq<DoubleGene> genesCopy = copy[i]
+                    .GetGenotype()
+                    .GetChromosome()
+                    .ToSeq();
 
-                recombinator.Alter(pop, 10);
+                foreach (var t in genes)
+                    Assert.NotEqual(t, genesCopy[i]);
+            }
+        });
+    }
 
-                for (var i = 0; i < pop.Count; ++i)
-                {
-                    ISeq<DoubleGene> genes = pop[i]
-                        .GetGenotype()
-                        .GetChromosome()
-                        .ToSeq();
-
-                    ISeq<DoubleGene> genesCopy = copy[i]
-                        .GetGenotype()
-                        .GetChromosome()
-                        .ToSeq();
-
-                    foreach (var t in genes)
-                        Assert.NotEqual(t, genesCopy[i]);
-                }
-            });
+    [Fact]
+    public void Recombine()
+    {
+        DoubleGene Factory()
+        {
+            return DoubleGene.Of(0, 100);
         }
 
-        [Fact]
-        public void Recombine()
-        {
-            DoubleGene Factory()
-            {
-                return DoubleGene.Of(0, 100);
-            }
+        var v = MutableSeq.Of(Factory, 10);
+        var w = MutableSeq.Of(Factory, 10);
 
-            var v = MutableSeq.Of(Factory, 10);
-            var w = MutableSeq.Of(Factory, 10);
+        var recombinator = new IntermediateCrossover<DoubleGene, double>(0.1, 10);
+        recombinator.Crossover(v, w);
 
-            var recombinator = new IntermediateCrossover<DoubleGene, double>(0.1, 10);
-            recombinator.Crossover(v, w);
-
-            Assert.True(v.ForAll(dg => dg.IsValid));
-            Assert.True(w.ForAll(dg => dg.IsValid));
-        }}
+        Assert.True(v.ForAll(dg => dg.IsValid));
+        Assert.True(w.ForAll(dg => dg.IsValid));
+    }
 }

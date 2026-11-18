@@ -17,69 +17,69 @@
 //    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
 
 using System;
+using Jenetics.Internal.Math;
 using Jenetics.Internal.Util;
 using Jenetics.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class LineCrossover<TGene, TAllele> : CrossoverBase<TGene, TAllele>
+    where TGene : INumericGene<TAllele, TGene>
+    where TAllele : IComparable<TAllele>, IConvertible
 {
-    public class LineCrossover<TGene, TAllele> : CrossoverBase<TGene, TAllele>
-        where TGene : INumericGene<TAllele, TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
+    private readonly double _p;
+
+    public LineCrossover(double probability, double p = 0) : base(probability)
     {
-        private readonly double _p;
+        _p = Require.NonNegative(p, "p");
+    }
 
-        public LineCrossover(double probability, double p = 0) : base(probability)
+    public LineCrossover() : this(Alterer.DefaultAlterProbability)
+    {
+    }
+
+    protected internal override int Crossover(IMutableSeq<TGene> v, IMutableSeq<TGene> w)
+    {
+        var random = RandomRegistry.GetRandom();
+
+        var min = v[0].Min.ToDouble(null);
+        var max = v[0].Max.ToDouble(null);
+
+        var a = RandomExtensions.NextDouble(random, -_p, 1 + _p);
+        var b = RandomExtensions.NextDouble(random, -_p, 1 + _p);
+
+        var changed = false;
+        for (int i = 0, n = Math.Min(v.Length, w.Length); i < n; ++i)
         {
-            _p = Require.NonNegative(p, "p");
-        }
+            var vi = v[i].DoubleValue();
+            var wi = w[i].DoubleValue();
 
-        public LineCrossover() : this(Alterer.DefaultAlterProbability)
-        {
-        }
+            dynamic t = a * vi + (1 - a) * wi;
+            dynamic s = b * wi + (1 - b) * vi;
 
-        protected internal override int Crossover(IMutableSeq<TGene> v, IMutableSeq<TGene> w)
-        {
-            var random = RandomRegistry.GetRandom();
-
-            var min = v[0].Min.ToDouble(null);
-            var max = v[0].Max.ToDouble(null);
-
-            var a = Internal.Math.random.NextDouble(random, -_p, 1 + _p);
-            var b = Internal.Math.random.NextDouble(random, -_p, 1 + _p);
-
-            var changed = false;
-            for (int i = 0, n = Math.Min(v.Length, w.Length); i < n; ++i)
+            if (t >= min && s >= min && t < max && s < max)
             {
-                var vi = v[i].DoubleValue();
-                var wi = w[i].DoubleValue();
-
-                dynamic t = a * vi + (1 - a) * wi;
-                dynamic s = b * wi + (1 - b) * vi;
-
-                if (t >= min && s >= min && t < max && s < max)
-                {
-                    v[i] = v[i].NewInstance(t);
-                    w[i] = w[i].NewInstance(s);
-                    changed = true;
-                }
+                v[i] = v[i].NewInstance(t);
+                w[i] = w[i].NewInstance(s);
+                changed = true;
             }
-
-            return changed ? 2 : 0;
         }
 
-        public override bool Equals(object obj)
-        {
-            return obj is LineCrossover<TGene, TAllele> && base.Equals(obj);
-        }
+        return changed ? 2 : 0;
+    }
 
-        public override int GetHashCode()
-        {
-            return Hash.Of(GetType()).And(base.GetHashCode()).Value;
-        }
+    public override bool Equals(object? obj)
+    {
+        return obj is LineCrossover<TGene, TAllele> && base.Equals(obj);
+    }
 
-        public override string ToString()
-        {
-            return $"{GetType().Name}[p={Probability}]";
-        }
+    public override int GetHashCode()
+    {
+        return Hash.Of(GetType()).And(base.GetHashCode()).Value;
+    }
+
+    public override string ToString()
+    {
+        return $"{GetType().Name}[p={Probability}]";
     }
 }

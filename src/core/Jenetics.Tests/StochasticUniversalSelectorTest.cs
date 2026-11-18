@@ -25,80 +25,79 @@ using Jenetics.Stat;
 using Jenetics.Util;
 using Xunit;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class
+    StochasticUniversalSelectorTest : ProbabilitySelectorTesterBase<StochasticUniversalSelector<DoubleGene, double>>
 {
-    public class
-        StochasticUniversalSelectorTest : ProbabilitySelectorTesterBase<StochasticUniversalSelector<DoubleGene, double>>
+    protected override Factory<StochasticUniversalSelector<DoubleGene, double>> Factory()
     {
-        protected override Factory<StochasticUniversalSelector<DoubleGene, double>> Factory()
-        {
-            return () => new StochasticUniversalSelector<DoubleGene, double>();
-        }
+        return () => new StochasticUniversalSelector<DoubleGene, double>();
+    }
 
-        protected override bool IsSorted()
-        {
-            return true;
-        }
+    protected override bool IsSorted()
+    {
+        return true;
+    }
 
-        [Theory]
-        [MemberData(nameof(ExpectedDistribution))]
-        public void SelectDistribution(Named<double[]> expected, Optimize opt)
+    [Theory]
+    [MemberData(nameof(ExpectedDistribution))]
+    public void SelectDistribution(Named<double[]> expected, Optimize opt)
+    {
+        Retry<Exception>(3, () =>
         {
-            Retry<Exception>(3, () =>
+            const int loops = 50;
+            const int npopulation = PopulationCount;
+
+            //ThreadLocal<LCG64ShiftRandom> random = new LCG64ShiftRandom.ThreadLocal();
+            var random = RandomRegistry.GetRandom();
+            RandomRegistry.Using(random, _ =>
             {
-                const int loops = 50;
-                const int npopulation = PopulationCount;
+                var distribution = Distribution(
+                    new StochasticUniversalSelector<DoubleGene, double>(),
+                    opt,
+                    npopulation,
+                    loops
+                );
 
-                //ThreadLocal<LCG64ShiftRandom> random = new LCG64ShiftRandom.ThreadLocal();
-                var random = RandomRegistry.GetRandom();
-                RandomRegistry.Using(random, r =>
-                {
-                    var distribution = Distribution(
-                        new StochasticUniversalSelector<DoubleGene, double>(),
-                        opt,
-                        npopulation,
-                        loops
-                    );
-
-                    StatisticsAssert.AssertDistribution(distribution, expected.Value, 0.001, 5);
-                });
+                StatisticsAssert.AssertDistribution(distribution, expected.Value, 0.001, 5);
             });
-        }
+        });
+    }
 
-        public static IEnumerable<object[]> ExpectedDistribution()
-        {
-            const string resource = "Jenetics.resources.StochasticUniversalSelector";
+    public static IEnumerable<object[]> ExpectedDistribution()
+    {
+        const string resource = "Jenetics.resources.StochasticUniversalSelector";
 
-            return new[] {Optimize.Maximum, Optimize.Minimum}
-                .Select(opt =>
-                {
-                    var data = TestData.Of(resource, opt.ToString().ToUpper());
-                    var expected = data
-                        .Select(line => double.Parse(line[0]))
-                        .ToArray();
-
-                    return new object[] {Named<double[]>.Of("distribution", expected), opt};
-                }).ToArray();
-        }
-
-        [Fact]
-        public void SelectMinimum()
-        {
-            int Ff(Genotype<IntegerGene> gt)
+        return new[] { Optimize.Maximum, Optimize.Minimum }
+            .Select(opt =>
             {
-                return gt.GetChromosome().ToSeq().Select(g => g.IntValue()).Sum();
-            }
+                var data = TestData.Of(resource, opt.ToString().ToUpper());
+                var expected = data
+                    .Select(line => double.Parse(line[0]))
+                    .ToArray();
 
-            Genotype<IntegerGene> Gtf()
-            {
-                return Genotype.Of(IntegerChromosome.Of(0, 100, 10));
-            }
+                return new object[] { Named<double[]>.Of("distribution", expected), opt };
+            }).ToArray();
+    }
 
-            var population = Enumerable.Range(0, 50).Select(i => Phenotype.Of(Gtf(), 50, Ff)).ToPopulation();
-
-            var selector = new StochasticUniversalSelector<IntegerGene, int>();
-
-            var selection = selector.Select(population, 50, Optimize.Minimum);
+    [Fact]
+    public void SelectMinimum()
+    {
+        int Ff(Genotype<IntegerGene> gt)
+        {
+            return gt.GetChromosome().ToSeq().Select(g => g.IntValue()).Sum();
         }
+
+        Genotype<IntegerGene> Gtf()
+        {
+            return Genotype.Of(IntegerChromosome.Of(0, 100, 10));
+        }
+
+        var population = Enumerable.Range(0, 50).Select(_ => Phenotype.Of(Gtf(), 50, Ff)).ToPopulation();
+
+        var selector = new StochasticUniversalSelector<IntegerGene, int>();
+
+        selector.Select(population, 50, Optimize.Minimum);
     }
 }

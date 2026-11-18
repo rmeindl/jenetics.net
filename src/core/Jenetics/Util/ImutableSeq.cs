@@ -19,40 +19,40 @@
 using System;
 using System.Collections.Generic;
 
-namespace Jenetics.Util
-{
-    public interface IImmutableSeq<T> : ISeq<T>, ICopyable<IMutableSeq<T>>
-    {
-        IImmutableSeq<TR> Map<TR>(Func<T, TR> mapper);
+namespace Jenetics.Util;
 
-        new IImmutableSeq<T> SubSeq(int start, int end);
-        new IImmutableSeq<T> SubSeq(int start);
+public interface IImmutableSeq<T> : ISeq<T>, ICopyable<IMutableSeq<T>>
+{
+    // ReSharper disable once InconsistentNaming
+    IImmutableSeq<TR> Map<TR>(Func<T, TR> mapper);
+
+    new IImmutableSeq<T> SubSeq(int start, int end);
+    new IImmutableSeq<T> SubSeq(int start);
+}
+
+public static class ImmutableSeq
+{
+    public static IImmutableSeq<T> Empty<T>()
+    {
+        return Internal.Collection.Empty.ImmutableSeq<T>();
     }
 
-    public static class ImmutableSeq
+    public static IImmutableSeq<T> Of<T>(params T[] values)
     {
-        public static IImmutableSeq<T> Empty<T>()
-        {
-            return Internal.Collection.Empty.ImmutableSeq<T>();
-        }
+        return values.Length == 0 ? Empty<T>() : MutableSeq.Of(values).ToImmutableSeq();
+    }
 
-        public static IImmutableSeq<T> Of<T>(params T[] values)
-        {
-            return values.Length == 0 ? Empty<T>() : MutableSeq.Of(values).ToImmutableSeq();
-        }
+    public static IImmutableSeq<T> Of<T>(IEnumerable<T> values)
+    {
+        return values is IImmutableSeq<T> of
+            ? of
+            : values is IMutableSeq<T>
+                ? ((IMutableSeq<T>)values).ToImmutableSeq()
+                : MutableSeq.Of(values).ToImmutableSeq();
+    }
 
-        public static IImmutableSeq<T> Of<T>(IEnumerable<T> values)
-        {
-            return values is IImmutableSeq<T> of
-                ? of
-                : values is IMutableSeq<T>
-                    ? ((IMutableSeq<T>) values).ToImmutableSeq()
-                    : MutableSeq.Of(values).ToImmutableSeq();
-        }
-
-        public static IImmutableSeq<T> ToImmutableSeq<T>(this IEnumerable<T> source)
-        {
-            return Of(source);
-        }
+    public static IImmutableSeq<T> ToImmutableSeq<T>(this IEnumerable<T> source)
+    {
+        return Of(source);
     }
 }

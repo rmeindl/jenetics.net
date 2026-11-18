@@ -16,13 +16,12 @@
 // Author:
 //    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
 
-namespace Jenetics
+namespace Jenetics;
+
+public class GaussianMutatorTest : MutatorTesterBase
 {
-    public class GaussianMutatorTest : MutatorTesterBase
+    protected override IAlterer<DoubleGene, double> NewAlterer(double p)
     {
-        protected override IAlterer<DoubleGene, double> NewAlterer(double p)
-        {
-            return new GaussianMutator<DoubleGene, double>(p);
-        }
+        return new GaussianMutator<DoubleGene, double>(p);
     }
 }

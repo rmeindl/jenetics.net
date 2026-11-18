@@ -19,51 +19,50 @@
 using System;
 using Xunit;
 
-namespace Jenetics
+namespace Jenetics;
+
+public abstract class NumericGeneTesterBase<TAllele, TGene> : GeneTesterBase<TAllele, TGene>
+    where TAllele : IComparable<TAllele>, IConvertible
+    where TGene : class, INumericGene<TAllele, TGene>
 {
-    public abstract class NumericGeneTesterBase<TAllele, TGene> : GeneTesterBase<TAllele, TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
-        where TGene : class, INumericGene<TAllele, TGene>
+    [Fact]
+    public void CompareTo()
     {
-        [Fact]
-        public void CompareTo()
+        for (var i = 0; i < 100; ++i)
         {
-            for (var i = 0; i < 100; ++i)
-            {
-                var gene1 = Factory()();
-                var gene2 = Factory()();
+            var gene1 = Factory()();
+            var gene2 = Factory()();
 
-                if (gene1.Allele.CompareTo(gene2.Allele) > 0)
-                    Assert.True(gene1.CompareTo(gene2) > 0);
-                else if (gene1.Allele.CompareTo(gene2.Allele) < 0)
-                    Assert.True(gene1.CompareTo(gene2) < 0);
-                else
-                    Assert.True(gene1.CompareTo(gene2) == 0);
-            }
+            if (gene1.Allele.CompareTo(gene2.Allele) > 0)
+                Assert.True(gene1.CompareTo(gene2) > 0);
+            else if (gene1.Allele.CompareTo(gene2.Allele) < 0)
+                Assert.True(gene1.CompareTo(gene2) < 0);
+            else
+                Assert.True(gene1.CompareTo(gene2) == 0);
         }
+    }
 
-        [Fact]
-        public void MinMax()
+    [Fact]
+    public void MinMax()
+    {
+        for (var i = 0; i < 100; ++i)
         {
-            for (var i = 0; i < 100; ++i)
-            {
-                var gene = Factory()();
+            var gene = Factory()();
 
-                Assert.True(gene.Allele.CompareTo(gene.Min) >= 0);
-                Assert.True(gene.Allele.CompareTo(gene.Max) <= 0);
-            }
+            Assert.True(gene.Allele.CompareTo(gene.Min) >= 0);
+            Assert.True(gene.Allele.CompareTo(gene.Max) <= 0);
         }
+    }
 
-        [Fact]
-        public void NewInstanceFromNumber()
+    [Fact]
+    public void NewInstanceFromNumber()
+    {
+        for (var i = 0; i < 100; ++i)
         {
-            for (var i = 0; i < 100; ++i)
-            {
-                var gene1 = Factory()();
-                var gene2 = gene1.NewInstance(gene1.Allele);
+            var gene1 = Factory()();
+            var gene2 = gene1.NewInstance(gene1.Allele);
 
-                Assert.Equal(gene2, gene1);
-            }
+            Assert.Equal(gene2, gene1);
         }
     }
 }

@@ -18,12 +18,11 @@
 
 using System;
 
-namespace Jenetics
+namespace Jenetics;
+
+public interface ISelector<TGene, TAllele>
+    where TGene : IGene<TGene>
+    where TAllele : IComparable<TAllele>
 {
-    public interface ISelector<TGene, TAllele>
-        where TGene : IGene<TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
-    {
-        Population<TGene, TAllele> Select(Population<TGene, TAllele> population, int count, Optimize opt);
-    }
+    Population<TGene, TAllele> Select(Population<TGene, TAllele> population, int count, Optimize opt);
 }

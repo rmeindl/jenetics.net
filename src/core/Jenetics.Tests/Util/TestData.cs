@@ -23,58 +23,57 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace Jenetics.Util
+namespace Jenetics.Util;
+
+public class TestData : IEnumerable<string[]>
 {
-    public class TestData : IEnumerable<string[]>
+    private readonly string[] _parameters;
+    private readonly string _resource;
+
+    private TestData(string resource, params string[] parameters)
     {
-        private readonly string[] _parameters;
-        private readonly string _resource;
+        _resource = resource;
+        _parameters = parameters;
+    }
 
-        private TestData(string resource, params string[] parameters)
+    public IEnumerator<string[]> GetEnumerator()
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+
+        using (var stream = assembly.GetManifestResourceStream(GetResourcePath()))
         {
-            _resource = resource;
-            _parameters = parameters;
-        }
-
-        public IEnumerator<string[]> GetEnumerator()
-        {
-            var assembly = Assembly.GetExecutingAssembly();
-
-            using (var stream = assembly.GetManifestResourceStream(GetResourcePath()))
+            using (var reader = new StreamReader(stream))
             {
-                using (var reader = new StreamReader(stream))
+                while (true)
                 {
-                    while (true)
-                    {
-                        var line = reader.ReadLine();
-                        if (line == null)
-                            yield break;
-                        if (!line.Trim().StartsWith("#") && line.Trim().Length != 0)
-                            yield return line.Split(",");
-                    }
+                    var line = reader.ReadLine();
+                    if (line == null)
+                        yield break;
+                    if (!line.Trim().StartsWith("#") && line.Trim().Length != 0)
+                        yield return line.Split(",");
                 }
             }
         }
+    }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 
-        public string GetResourcePath()
-        {
-            var param = _parameters.Length == 0 ? "" : "[" + string.Join(",", _parameters) + "]";
-            return _resource + param + ".dat";
-        }
+    public string GetResourcePath()
+    {
+        var param = _parameters.Length == 0 ? "" : "[" + string.Join(",", _parameters) + "]";
+        return _resource + param + ".dat";
+    }
 
-        public static TestData Of(string resource, params string[] parameters)
-        {
-            return new TestData(resource, parameters);
-        }
+    public static TestData Of(string resource, params string[] parameters)
+    {
+        return new TestData(resource, parameters);
+    }
 
-        public static double[] ToDouble(string[] line)
-        {
-            return line.Select(l => double.Parse(l, CultureInfo.InvariantCulture)).ToArray();
-        }
+    public static double[] ToDouble(string[] line)
+    {
+        return line.Select(l => double.Parse(l, CultureInfo.InvariantCulture)).ToArray();
     }
 }

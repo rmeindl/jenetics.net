@@ -16,13 +16,12 @@
 // Author:
 //    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
 
-namespace Jenetics
+namespace Jenetics;
+
+public class MonteCarloSelectorTest : SelectorTesterBase<MonteCarloSelector<DoubleGene, double>>
 {
-    public class MonteCarloSelectorTest : SelectorTesterBase<MonteCarloSelector<DoubleGene, double>>
+    protected override Factory<MonteCarloSelector<DoubleGene, double>> Factory()
     {
-        protected override Factory<MonteCarloSelector<DoubleGene, double>> Factory()
-        {
-            return () => new MonteCarloSelector<DoubleGene, double>();
-        }
+        return () => new MonteCarloSelector<DoubleGene, double>();
     }
 }

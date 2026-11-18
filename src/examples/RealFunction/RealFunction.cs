@@ -21,40 +21,38 @@ using System.Linq;
 using Jenetics.Engine;
 using Jenetics.Util;
 using static Jenetics.Engine.Limits;
+using JeneticsEngine = Jenetics.Engine.Engine;
 
-namespace Jenetics.Example
+namespace Jenetics.Example;
+public static class RealFunction
 {
-    public static class RealFunction
+    private static double Fitness(double x)
     {
-        private static double Fitness(double x)
-        {
-            return Math.Cos(0.5 + Math.Sin(x)) * Math.Cos(x);
-        }
+        return Math.Cos(0.5 + Math.Sin(x)) * Math.Cos(x);
+    }
 
-        public static void Main()
-        {
-            var engine = Engine.Engine
-                .Builder(
-                    Fitness,
-                    Codecs.OfScalar(DoubleRange.Of(0.0, 2.0 * Math.PI)))
-                .PopulationSize(500)
-                .Optimize(Optimize.Minimum)
-                .Alterers(
-                    new Mutator<DoubleGene, double>(0.03),
-                    new MeanAlterer<DoubleGene, double>(0.6))
-                .Build();
+    public static void Main()
+    {
+        var engine = JeneticsEngine
+            .Builder(
+                Fitness,
+                Codecs.OfScalar(DoubleRange.Of(0.0, 2.0 * Math.PI)))
+            .PopulationSize(500)
+            .Optimize(Optimize.Minimum)
+            .Alterers(
+                new Mutator<DoubleGene, double>(0.03),
+                new MeanAlterer<DoubleGene, double>(0.6))
+            .Build();
 
-            var
-                statistics = EvolutionStatistics.OfNumber<double>();
+        var statistics = EvolutionStatistics.OfNumber<double>();
 
-            var best = engine.Stream()
-                .TakeWhile(BySteadyFitness<DoubleGene, double>(7))
-                .Take(100)
-                .Peek(statistics.Accept)
-                .ToBestPhenotype();
+        var best = engine.Stream()
+            .TakeWhile(BySteadyFitness<DoubleGene, double>(7))
+            .Take(100)
+            .Peek(statistics.Accept)
+            .ToBestPhenotype();
 
-            Console.WriteLine(statistics);
-            Console.WriteLine(best);
-        }
+        Console.WriteLine(statistics);
+        Console.WriteLine(best);
     }
 }

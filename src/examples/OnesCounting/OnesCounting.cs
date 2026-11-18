@@ -20,39 +20,38 @@ using System;
 using System.Linq;
 using Jenetics.Engine;
 using static Jenetics.Engine.Limits;
+using JeneticsEngine = Jenetics.Engine.Engine;
 
-namespace Jenetics.Example
+namespace Jenetics.Example;
+public static class OnesCounting
 {
-    public static class OnesCounting
+    private static int Count(Genotype<BitGene> gt)
     {
-        private static int Count(Genotype<BitGene> gt)
-        {
-            return ((BitChromosome) gt.GetChromosome()).BitCount();
-        }
+        return gt.GetChromosome().As<BitChromosome>().BitCount();
+    }
 
-        public static void Main()
-        {
-            var engine = Engine.Engine
-                .Builder(
-                    Count,
-                    BitChromosome.Of(20, 0.15))
-                .PopulationSize(500)
-                .Selector(new RouletteWheelSelector<BitGene, int>())
-                .Alterers(
-                    new Mutator<BitGene, int>(0.55),
-                    new SinglePointCrossover<BitGene, int>(0.06))
-                .Build();
+    public static void Main()
+    {
+        var engine = JeneticsEngine
+            .Builder(
+                Count,
+                BitChromosome.Of(20, 0.15))
+            .PopulationSize(500)
+            .Selector(new RouletteWheelSelector<BitGene, int>())
+            .Alterers(
+                new Mutator<BitGene, int>(0.55),
+                new SinglePointCrossover<BitGene, int>(0.06))
+            .Build();
 
-            var statistics = EvolutionStatistics.OfNumber<int>();
+        var statistics = EvolutionStatistics.OfNumber<int>();
 
-            var best = engine.Stream()
-                .TakeWhile(BySteadyFitness<BitGene, int>(7))
-                .Take(100)
-                .Peek(statistics.Accept)
-                .ToBestPhenotype();
+        var best = engine.Stream()
+            .TakeWhile(BySteadyFitness<BitGene, int>(7))
+            .Take(100)
+            .Peek(statistics.Accept)
+            .ToBestPhenotype();
 
-            Console.WriteLine(statistics);
-            Console.WriteLine(best);
-        }
+        Console.WriteLine(statistics);
+        Console.WriteLine(best);
     }
 }

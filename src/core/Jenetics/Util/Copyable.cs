@@ -16,10 +16,9 @@
 // Author:
 //    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
 
-namespace Jenetics.Util
+namespace Jenetics.Util;
+
+public interface ICopyable<out T>
 {
-    public interface ICopyable<out T>
-    {
-        T Copy();
-    }
+    T Copy();
 }

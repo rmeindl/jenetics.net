@@ -22,83 +22,242 @@ using Jenetics.Internal.Math;
 using Jenetics.Util;
 using static Jenetics.Internal.Util.Require;
 
-namespace Jenetics.Engine
+namespace Jenetics.Engine;
+
+public static class Codecs
 {
-    public static class Codecs
+    public static ICodec<double, DoubleGene> OfScalar(DoubleRange domain)
     {
-        public static ICodec<double, DoubleGene> OfScalar(DoubleRange domain)
-        {
-            return Codec.Of(
-                () => Genotype.Of(DoubleChromosome.Of(domain)),
-                gt => gt.GetChromosome().GetGene().Allele
-            );
-        }
+        NonNull(domain);
+        return Codec.Of(
+            () => Genotype.Of(DoubleChromosome.Of(domain)),
+            gt => gt.GetChromosome().GetGene().Allele
+        );
+    }
 
-        public static ICodec<int, IntegerGene> OfScalar(IntRange domain)
-        {
+    public static ICodec<int, IntegerGene> OfScalar(IntRange domain)
+    {
+        NonNull(domain);
+
+        return Codec.Of(
+            () => Genotype.Of(IntegerChromosome.Of(domain)),
+            gt => gt.GetChromosome().GetGene().Allele
+        );
+    }
+
+    public static ICodec<long, LongGene> OfScalar(LongRange domain)
+    {
+        NonNull(domain);
+
+        return Codec.Of(
+            () => Genotype.Of(LongChromosome.Of(domain)),
+            gt => gt.GetChromosome().GetGene().Allele
+        );
+    }
+
+    public static ICodec<TAllele, AnyGene<TAllele>> OfScalar<TAllele>(
+        Func<TAllele> supplier
+    )
+    {
+        NonNull(supplier);
+        return Codec.Of(
+            () => Genotype.Of(AnyChromosome.Of(supplier)),
+            gt => gt.Gene.Allele
+        );
+    }
+
+    public static ICodec<TAllele, AnyGene<TAllele>> OfScalar<TAllele>(
+        Func<TAllele> supplier,
+        Func<TAllele, bool> validator
+    )
+    {
+        NonNull(supplier);
+        NonNull(validator);
+        return Codec.Of(
+            () => Genotype.Of(AnyChromosome.Of(supplier, validator, 1)),
+            gt => gt.Gene.Allele
+        );
+    }
+
+    public static ICodec<int[], IntegerGene> OfVector(IntRange domain, int length)
+    {
+        NonNull(domain);
+        Positive(length);
+        return Codec.Of(
+            () => Genotype.Of(IntegerChromosome.Of(domain.Min, domain.Max, length)),
+            gt => gt.GetChromosome().Select(gene => gene.Allele).ToArray()
+        );
+    }
+
+    public static ICodec<long[], LongGene> OfVector(LongRange domain, int length)
+    {
+        NonNull(domain);
+        Positive(length);
+        return Codec.Of(
+            () => Genotype.Of(LongChromosome.Of(domain.Min, domain.Max, length)),
+            gt => gt.GetChromosome().Select(gene => gene.Allele).ToArray()
+        );
+    }
+
+    public static ICodec<double[], DoubleGene> OfVector(DoubleRange domain, int length)
+    {
+        NonNull(domain);
+        Positive(length);
+        return Codec.Of(
+            () => Genotype.Of(DoubleChromosome.Of(domain.Min, domain.Max, length)),
+            gt => gt.GetChromosome().Select(gene => gene.Allele).ToArray()
+        );
+    }
+
+    public static ICodec<int[], IntegerGene> OfVector(params IntRange[] domains)
+    {
+        NonNull(domains);
+        if (domains.Length == 0)
+            throw new ArgumentException("Domains must not be empty.", nameof(domains));
+        foreach (var domain in domains)
             NonNull(domain);
 
-            return Codec.Of(
-                () => Genotype.Of(IntegerChromosome.Of(domain)),
-                gt => gt.GetChromosome().GetGene().Allele
-            );
-        }
+        var ranges = domains.ToArray();
+        return Codec.Of(
+            () => Genotype.Of(ranges.Select(domain =>
+                (IChromosome<IntegerGene>)IntegerChromosome.Of(domain.Min, domain.Max))),
+            gt => ranges.Select((_, index) => gt.GetChromosome(index).GetGene().Allele).ToArray()
+        );
+    }
 
-        public static ICodec<long, LongGene> OfScalar(LongRange domain)
-        {
+    public static ICodec<long[], LongGene> OfVector(params LongRange[] domains)
+    {
+        NonNull(domains);
+        if (domains.Length == 0)
+            throw new ArgumentException("Domains must not be empty.", nameof(domains));
+        foreach (var domain in domains)
             NonNull(domain);
 
-            return Codec.Of(
-                () => Genotype.Of(LongChromosome.Of(domain)),
-                gt => gt.GetChromosome().GetGene().Allele
-            );
-        }
+        var ranges = domains.ToArray();
+        return Codec.Of(
+            () => Genotype.Of(ranges.Select(domain =>
+                (IChromosome<LongGene>)new LongChromosome(domain.Min, domain.Max))),
+            gt => ranges.Select((_, index) => gt.GetChromosome(index).GetGene().Allele).ToArray()
+        );
+    }
 
-        public static ICodec<TAllele, AnyGene<TAllele>> OfScalar<TAllele>(
-            Func<TAllele> supplier
-        )
-        {
-            return Codec.Of(
-                () => Genotype.Of(AnyChromosome.Of(supplier)),
-                gt => gt.Gene.Allele
-            );
-        }
+    public static ICodec<double[], DoubleGene> OfVector(params DoubleRange[] domains)
+    {
+        NonNull(domains);
+        if (domains.Length == 0)
+            throw new ArgumentException("Domains must not be empty.", nameof(domains));
+        foreach (var domain in domains)
+            NonNull(domain);
 
-        public static ICodec<IImmutableSeq<T>, BitGene> OfSubSet<T>(IImmutableSeq<T> basicSet)
-        {
-            Positive(basicSet.Length);
+        var ranges = domains.ToArray();
+        return Codec.Of(
+            () => Genotype.Of(ranges.Select(domain =>
+                (IChromosome<DoubleGene>)DoubleChromosome.Of(domain.Min, domain.Max))),
+            gt => ranges.Select((_, index) => gt.GetChromosome(index).GetGene().Allele).ToArray()
+        );
+    }
 
-            return Codec.Of(
-                () => Genotype.Of(BitChromosome.Of(basicSet.Length)),
-                gt => ((BitChromosome) gt.GetChromosome()).Ones().Select(i => basicSet[i]).ToImmutableSeq()
-            );
-        }
+    public static ICodec<IImmutableSeq<TAllele>, AnyGene<TAllele>> OfVector<TAllele>(
+        Func<TAllele> supplier,
+        int length
+    )
+    {
+        NonNull(supplier);
+        Positive(length);
+        return Codec.Of(
+            () => Genotype.Of(AnyChromosome.Of(supplier, length)),
+            gt => gt.GetChromosome().Select(gene => gene.Allele).ToImmutableSeq()
+        );
+    }
 
-        public static ICodec<IImmutableSeq<T>, EnumGene<T>> OfSubSet<T>(
-            IImmutableSeq<T> basicSet,
-            int size
-        )
-        {
-            NonNull(basicSet);
-            Base.CheckSubSet(basicSet.Length, size);
+    public static ICodec<IImmutableSeq<TAllele>, AnyGene<TAllele>> OfVector<TAllele>(
+        Func<TAllele> supplier,
+        Func<TAllele, bool> validator,
+        int length
+    )
+    {
+        NonNull(supplier);
+        NonNull(validator);
+        Positive(length);
+        return Codec.Of(
+            () => Genotype.Of(AnyChromosome.Of(supplier, validator, length)),
+            gt => gt.GetChromosome().Select(gene => gene.Allele).ToImmutableSeq()
+        );
+    }
 
-            return Codec.Of(
-                () => Genotype.Of(PermutationChromosome.Of(basicSet, size)),
-                gt => gt.GetChromosome()
-                    .Select(g => g.Allele)
-                    .ToImmutableSeq());
-        }
+    public static ICodec<IImmutableSeq<TAllele>, AnyGene<TAllele>> OfVector<TAllele>(
+        Func<TAllele> supplier,
+        Func<TAllele, bool> alleleValidator,
+        Func<IImmutableSeq<TAllele>, bool> alleleSeqValidator,
+        int length
+    )
+    {
+        NonNull(supplier);
+        NonNull(alleleValidator);
+        NonNull(alleleSeqValidator);
+        Positive(length);
+        return Codec.Of(
+            () => Genotype.Of(AnyChromosome.Of(
+                supplier,
+                alleleValidator,
+                alleleSeqValidator,
+                length
+            )),
+            gt => gt.GetChromosome().Select(gene => gene.Allele).ToImmutableSeq()
+        );
+    }
 
-        public static ICodec<int[], EnumGene<int>> OfPermutation(int length)
-        {
-            Positive(length);
+    public static ICodec<IImmutableSeq<T>, BitGene> OfSubSet<T>(IImmutableSeq<T> basicSet)
+    {
+        NonNull(basicSet);
+        Positive(basicSet.Length);
 
-            return Codec.Of(
-                () => Genotype.Of(PermutationChromosome.OfInteger(length)),
-                gt => gt.GetChromosome().ToSeq()
-                    .Select(g => g.Allele)
-                    .ToArray()
-            );
-        }
+        return Codec.Of(
+            () => Genotype.Of(BitChromosome.Of(basicSet.Length)),
+            gt => ((BitChromosome)gt.GetChromosome()).Ones().Select(i => basicSet[i]).ToImmutableSeq()
+        );
+    }
+
+    public static ICodec<IImmutableSeq<T>, EnumGene<T>> OfSubSet<T>(
+        IImmutableSeq<T> basicSet,
+        int size
+    )
+    {
+        NonNull(basicSet);
+        Base.CheckSubSet(basicSet.Length, size);
+
+        return Codec.Of(
+            () => Genotype.Of(PermutationChromosome.Of(basicSet, size)),
+            gt => gt.GetChromosome()
+                .Select(g => g.Allele)
+                .ToImmutableSeq());
+    }
+
+    public static ICodec<int[], EnumGene<int>> OfPermutation(int length)
+    {
+        Positive(length);
+
+        return Codec.Of(
+            () => Genotype.Of(PermutationChromosome.OfInteger(length)),
+            gt => gt.GetChromosome().ToSeq()
+                .Select(g => g.Allele)
+                .ToArray()
+        );
+    }
+
+    public static ICodec<IImmutableSeq<T>, EnumGene<T>> OfPermutation<T>(IImmutableSeq<T> alleles)
+    {
+        NonNull(alleles);
+        Positive(alleles.Length);
+        return Codec.Of(
+            () => Genotype.Of(PermutationChromosome.Of(alleles)),
+            gt => gt.GetChromosome().Select(gene => gene.Allele).ToImmutableSeq()
+        );
+    }
+
+    public static ICodec<IImmutableSeq<T>, EnumGene<T>> OfPermutation<T>(params T[] alleles)
+    {
+        NonNull(alleles);
+        return OfPermutation(ImmutableSeq.Of(alleles));
     }
 }

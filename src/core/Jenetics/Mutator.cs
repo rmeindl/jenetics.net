@@ -20,82 +20,81 @@ using System;
 using System.Linq;
 using Jenetics.Internal.Util;
 using Jenetics.Util;
-using static Jenetics.Internal.Math.random;
+using static Jenetics.Internal.Math.RandomExtensions;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class Mutator<TGene, TAllele> : AltererBase<TGene, TAllele>
+    where TGene : IGene<TGene>
+    where TAllele : IComparable<TAllele>
 {
-    public class Mutator<TGene, TAllele> : AltererBase<TGene, TAllele>
-        where TGene : IGene<TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
+    public Mutator() : this(0.01)
     {
-        public Mutator() : this(0.01)
+    }
+
+    public Mutator(double probability) : base(probability)
+    {
+    }
+
+    public override int Alter(Population<TGene, TAllele> population, long generation)
+    {
+        var p = Math.Pow(Probability, 1.0 / 3.0);
+        var alterations = new IntRef(0);
+
+        foreach (var i in Indexes(RandomRegistry.GetRandom(), population.Count, p))
         {
+            var pt = population[i];
+
+            var gt = pt.GetGenotype();
+            var mgt = Mutate(gt, p, alterations);
+
+            var mpt = pt.NewInstance(mgt, generation);
+            population[i] = mpt;
         }
 
-        public Mutator(double probability) : base(probability)
-        {
-        }
+        return alterations.Value;
+    }
 
-        public override int Alter(Population<TGene, TAllele> population, long generation)
-        {
-            var p = Math.Pow(Probability, 1.0 / 3.0);
-            var alterations = new IntRef(0);
+    protected int Mutate(IMutableSeq<IChromosome<TGene>> c, int i, double p)
+    {
+        var chromosome = c[i];
+        var genes = MutableSeq.Of<TGene>(chromosome.ToSeq());
 
-            foreach (var i in Indexes(RandomRegistry.GetRandom(), population.Count, p))
-            {
-                var pt = population[i];
+        var mutations = Mutate(genes, p);
+        if (mutations > 0)
+            c[i] = chromosome.NewInstance(genes.ToImmutableSeq());
+        return mutations;
+    }
 
-                var gt = pt.GetGenotype();
-                var mgt = Mutate(gt, p, alterations);
+    protected virtual int Mutate(IMutableSeq<TGene> genes, double p)
+    {
+        return Indexes(RandomRegistry.GetRandom(), genes.Length, p)
+            .Select(i => genes[i] = genes[i].NewInstance())
+            .Count();
+    }
 
-                var mpt = pt.NewInstance(mgt, generation);
-                population[i] = mpt;
-            }
+    public override bool Equals(object? obj)
+    {
+        return Equality.Of(this, obj)(base.Equals);
+    }
 
-            return alterations.Value;
-        }
+    public override int GetHashCode()
+    {
+        return Hash.Of(GetType()).And(base.GetHashCode()).Value;
+    }
 
-        protected int Mutate(IMutableSeq<IChromosome<TGene>> c, int i, double p)
-        {
-            var chromosome = c[i];
-            var genes = MutableSeq.Of<TGene>(chromosome.ToSeq());
+    public override string ToString()
+    {
+        return $"{GetType().Name}[p={Probability}]";
+    }
 
-            var mutations = Mutate(genes, p);
-            if (mutations > 0)
-                c[i] = chromosome.NewInstance(genes.ToImmutableSeq());
-            return mutations;
-        }
+    private Genotype<TGene> Mutate(Genotype<TGene> genotype, double p, IntRef alterations)
+    {
+        var chromosomes = genotype.ToSeq().Copy();
 
-        protected virtual int Mutate(IMutableSeq<TGene> genes, double p)
-        {
-            return Indexes(RandomRegistry.GetRandom(), genes.Length, p)
-                .Select(i => genes[i] = genes[i].NewInstance())
-                .Count();
-        }
+        alterations.Value += Indexes(RandomRegistry.GetRandom(), genotype.Length, p)
+            .Select(i => Mutate(chromosomes, i, p)).Sum();
 
-        public override bool Equals(object obj)
-        {
-            return Equality.Of(this, obj)(base.Equals);
-        }
-
-        public override int GetHashCode()
-        {
-            return Hash.Of(GetType()).And(base.GetHashCode()).Value;
-        }
-
-        public override string ToString()
-        {
-            return $"{GetType().Name}[p={Probability}]";
-        }
-
-        private Genotype<TGene> Mutate(Genotype<TGene> genotype, double p, IntRef alterations)
-        {
-            var chromosomes = genotype.ToSeq().Copy();
-
-            alterations.Value += Indexes(RandomRegistry.GetRandom(), genotype.Length, p)
-                .Select(i => Mutate(chromosomes, i, p)).Sum();
-
-            return genotype.NewInstance(chromosomes.ToImmutableSeq());
-        }
+        return genotype.NewInstance(chromosomes.ToImmutableSeq());
     }
 }

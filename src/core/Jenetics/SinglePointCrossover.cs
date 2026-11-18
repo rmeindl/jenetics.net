@@ -19,35 +19,34 @@
 using System;
 using Jenetics.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class SinglePointCrossover<TGene, TAllele> : MultiPointCrossover<TGene, TAllele>
+    where TGene : IGene<TGene>
+    where TAllele : IComparable<TAllele>
 {
-    public class SinglePointCrossover<TGene, TAllele> : MultiPointCrossover<TGene, TAllele>
-        where TGene : IGene<TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
+    public SinglePointCrossover() : this(0.05)
     {
-        public SinglePointCrossover() : this(0.05)
-        {
-        }
-
-        public SinglePointCrossover(double probability) : base(probability, 1)
-        {
-        }
-
-        protected internal override int Crossover(IMutableSeq<TGene> that, IMutableSeq<TGene> other)
-        {
-            var random = RandomRegistry.GetRandom();
-
-            var index = random.NextInt(Math.Min(that.Length, other.Length));
-            SinglePointCrossover.Crossover(that, other, index);
-            return 2;
-        }
     }
 
-    public static class SinglePointCrossover
+    public SinglePointCrossover(double probability) : base(probability, 1)
     {
-        internal static void Crossover<T>(IMutableSeq<T> that, IMutableSeq<T> other, int index)
-        {
-            that.Swap(index, Math.Min(that.Length, other.Length), other, index);
-        }
+    }
+
+    protected internal override int Crossover(IMutableSeq<TGene> that, IMutableSeq<TGene> other)
+    {
+        var random = RandomRegistry.GetRandom();
+
+        var index = random.NextInt(Math.Min(that.Length, other.Length));
+        SinglePointCrossover.Crossover(that, other, index);
+        return 2;
+    }
+}
+
+public static class SinglePointCrossover
+{
+    internal static void Crossover<T>(IMutableSeq<T> that, IMutableSeq<T> other, int index)
+    {
+        that.Swap(index, Math.Min(that.Length, other.Length), other, index);
     }
 }

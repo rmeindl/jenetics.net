@@ -18,40 +18,58 @@
 
 using System;
 
-namespace Jenetics.Engine
+namespace Jenetics.Engine;
+
+public class Timer
 {
-    public class Timer
+    private readonly Func<long> _nanoClock;
+    private readonly Func<long, long, TimeSpan> _elapsedTime;
+
+    private long _start;
+    private long _stop;
+
+    public Timer(Func<long> nanoClock)
+        : this(nanoClock, (start, stop) => TimeSpan.FromTicks(stop - start))
     {
-        private readonly Func<long> _nanoClock;
+    }
 
-        private long _start;
-        private long _stop;
+    private Timer(
+        Func<long> nanoClock,
+        Func<long, long, TimeSpan> elapsedTime
+    )
+    {
+        _nanoClock = nanoClock ?? throw new ArgumentNullException(nameof(nanoClock));
+        _elapsedTime = elapsedTime ?? throw new ArgumentNullException(nameof(elapsedTime));
+    }
 
-        public Timer(Func<long> nanoClock)
-        {
-            _nanoClock = nanoClock;
-        }
+    public Timer Start()
+    {
+        _start = _nanoClock();
+        return this;
+    }
 
-        public Timer Start()
-        {
-            _start = _nanoClock();
-            return this;
-        }
+    public Timer Stop()
+    {
+        _stop = _nanoClock();
+        return this;
+    }
 
-        public Timer Stop()
-        {
-            _stop = _nanoClock();
-            return this;
-        }
+    public TimeSpan GetTime()
+    {
+        return _elapsedTime(_start, _stop);
+    }
 
-        public TimeSpan GetTime()
-        {
-            return TimeSpan.FromTicks(_stop - _start);
-        }
+    public static Timer Of()
+    {
+        return Of(TimeProvider.System);
+    }
 
-        public static Timer Of()
-        {
-            return new Timer(() => DateTime.Now.Ticks);
-        }
+    public static Timer Of(TimeProvider timeProvider)
+    {
+        ArgumentNullException.ThrowIfNull(timeProvider);
+        return new Timer(
+            timeProvider.GetTimestamp,
+            (start, stop) => timeProvider.GetElapsedTime(start, stop)
+        );
     }
 }

@@ -20,28 +20,27 @@ using System;
 using System.Collections.Generic;
 using Jenetics.Util;
 
-namespace Jenetics.Internal.Util
-{
-    public interface IHash
-    {
-        int Value { get; }
-        IHash And(byte[] values);
-        IHash And(char[] values);
-        IHash And<T>(List<T> values);
-        IHash And<T>(ISeq<T> values);
-        IHash And<T>(IImmutableSeq<T> values);
-        IHash And(char value);
-        IHash And(double value);
-        IHash And(int value);
-        IHash And(long value);
-        IHash And<T>(T obj);
-    }
+namespace Jenetics.Internal.Util;
 
-    public static class Hash
+public interface IHash
+{
+    int Value { get; }
+    IHash And(byte[] values);
+    IHash And(char[] values);
+    IHash And<T>(List<T> values);
+    IHash And<T>(ISeq<T> values);
+    IHash And<T>(IImmutableSeq<T> values);
+    IHash And(char value);
+    IHash And(double value);
+    IHash And(int value);
+    IHash And(long value);
+    IHash And<T>(T obj);
+}
+
+public static class Hash
+{
+    public static IHash Of(Type type)
     {
-        public static IHash Of(Type type)
-        {
-            return new DefaultHashCodeBuilder(type);
-        }
+        return new DefaultHashCodeBuilder(type);
     }
 }

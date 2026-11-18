@@ -18,15 +18,14 @@
 
 using System;
 
-namespace Jenetics.Util
+namespace Jenetics.Util;
+
+public class Range<T>
+    where T : IComparable<T>
 {
-    public class Range<T>
-        where T : IComparable<T>
+    public Range(T min, T max)
     {
-        public Range(T min, T max)
-        {
-            if (min.CompareTo(max) >= 0)
-                throw new ArgumentOutOfRangeException($"Min value must be smaller the max value: [{min}, {max}]");
-        }
+        if (min.CompareTo(max) >= 0)
+            throw new ArgumentOutOfRangeException($"Min value must be smaller the max value: [{min}, {max}]");
     }
 }

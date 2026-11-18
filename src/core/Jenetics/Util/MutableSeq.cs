@@ -23,140 +23,139 @@ using Jenetics.Internal.Collection;
 using Jenetics.Internal.Util;
 using Array = Jenetics.Internal.Collection.Array;
 
-namespace Jenetics.Util
+namespace Jenetics.Util;
+
+public interface IToImmutableSeq<out T>
 {
-    public interface IToImmutableSeq<out T>
+    T ToImmutableSeq();
+}
+
+public interface IMutableSeq<T> : ISeq<T>, ICopyable<IMutableSeq<T>>, IToImmutableSeq<IImmutableSeq<T>>
+{
+    new T this[int index] { get; set; }
+
+    new IMutableSeq<T> SubSeq(int start, int end);
+    new IMutableSeq<T> SubSeq(int start);
+}
+
+public static class MutableSeq
+{
+    public static void Swap<T>(this IMutableSeq<T> seq, int i, int j)
     {
-        T ToImmutableSeq();
+        var temp = seq[i];
+        seq[i] = seq[j];
+        seq[j] = temp;
     }
 
-    public interface IMutableSeq<T> : ISeq<T>, ICopyable<IMutableSeq<T>>, IToImmutableSeq<IImmutableSeq<T>>
+    public static IMutableSeq<T> OfLength<T>(int length)
     {
-        new T this[int index] { get; set; }
-
-        new IMutableSeq<T> SubSeq(int start, int end);
-        new IMutableSeq<T> SubSeq(int start);
+        return length == 0
+            ? Empty<T>()
+            : new ArrayMutableSeq<T>(Array.Of(ObjectStore.OfLength<T>(length)));
     }
 
-    public static class MutableSeq
+    public static IMutableSeq<T> Empty<T>()
     {
-        public static void Swap<T>(this IMutableSeq<T> seq, int i, int j)
-        {
-            var temp = seq[i];
-            seq[i] = seq[j];
-            seq[j] = temp;
-        }
-
-        public static IMutableSeq<T> OfLength<T>(int length)
-        {
-            return length == 0
-                ? Empty<T>()
-                : new ArrayMutableSeq<T>(Array.Of(ObjectStore.OfLength<T>(length)));
-        }
-
-        public static IMutableSeq<T> Empty<T>()
-        {
-            return Internal.Collection.Empty.MutableSeq<T>();
-        }
-
-        public static IMutableSeq<T> Of<T>(params T[] values)
-        {
-            return values.Length == 0
-                ? Empty<T>()
-                : new ArrayMutableSeq<T>(Array.Of(ObjectStore.Of((T[]) values.Clone())));
-        }
-
-        public static IMutableSeq<T> Of<T>(IEnumerable<T> values)
-        {
-            IMutableSeq<T> mseq;
-            if (values is IImmutableSeq<T> immutableSeq)
-            {
-                var seq = immutableSeq;
-                mseq = seq.IsEmpty ? Empty<T>() : Of<T>(seq);
-            }
-            else if (values is IMutableSeq<T>)
-            {
-                var seq = (IMutableSeq<T>) values;
-                mseq = seq.IsEmpty ? Empty<T>() : Of<T>(seq);
-            }
-            else if (values is ICollection<T>)
-            {
-                var collection = (ICollection<T>) values;
-                mseq = collection.Count == 0
-                    ? Empty<T>()
-                    : OfLength<T>(collection.Count).SetAll(values);
-            }
-            else
-            {
-                var array = values.ToArray();
-                mseq = array.Length == 0 ? Empty<T>() : new ArrayMutableSeq<T>(Array.Of(ObjectStore.Of(array)));
-            }
-
-            return mseq;
-        }
-
-        public static IMutableSeq<T> Of<T>(ISeq<T> values)
-        {
-            return values is ArrayMutableSeq<T> seq ? seq.Copy() : OfLength<T>(values.Count()).SetAll(values);
-        }
-
-        public static IMutableSeq<T> Of<T>(Func<T> supplier, int length)
-        {
-            Require.NonNull(supplier);
-
-            return length == 0
-                ? Empty<T>()
-                : OfLength<T>(length).Fill(supplier);
-        }
+        return Internal.Collection.Empty.MutableSeq<T>();
     }
 
-    public static class MutableSeqExtensions
+    public static IMutableSeq<T> Of<T>(params T[] values)
     {
-        public static IMutableSeq<T> Fill<T>(this IMutableSeq<T> seq, Func<T> supplier)
+        return values.Length == 0
+            ? Empty<T>()
+            : new ArrayMutableSeq<T>(Array.Of(ObjectStore.Of((T[])values.Clone())));
+    }
+
+    public static IMutableSeq<T> Of<T>(IEnumerable<T> values)
+    {
+        IMutableSeq<T> mseq;
+        if (values is IImmutableSeq<T> immutableSeq)
         {
-            for (int i = 0, n = seq.Length; i < n; ++i)
-                seq[i] = supplier();
-            return seq;
+            var seq = immutableSeq;
+            mseq = seq.IsEmpty ? Empty<T>() : Of<T>(seq);
+        }
+        else if (values is IMutableSeq<T>)
+        {
+            var seq = (IMutableSeq<T>)values;
+            mseq = seq.IsEmpty ? Empty<T>() : Of<T>(seq);
+        }
+        else if (values is ICollection<T>)
+        {
+            var collection = (ICollection<T>)values;
+            mseq = collection.Count == 0
+                ? Empty<T>()
+                : OfLength<T>(collection.Count).SetAll(values);
+        }
+        else
+        {
+            var array = values.ToArray();
+            mseq = array.Length == 0 ? Empty<T>() : new ArrayMutableSeq<T>(Array.Of(ObjectStore.Of(array)));
         }
 
-        public static IMutableSeq<T> SetAll<T>(this IMutableSeq<T> seq, IEnumerable<T> values)
-        {
-            var i = 0;
-            foreach (var value in values)
-                seq[i++] = value;
-            return seq;
-        }
+        return mseq;
+    }
 
-        public static void Swap<T>(this IMutableSeq<T> seq, int start, int end, IMutableSeq<T> other, int otherStart)
-        {
-            if (otherStart < 0 || otherStart + (end - start) > seq.Length)
-                throw new IndexOutOfRangeException(
-                    $"Invalid index range: [{otherStart}, {otherStart + (end - start)})");
+    public static IMutableSeq<T> Of<T>(ISeq<T> values)
+    {
+        return values is ArrayMutableSeq<T> seq ? seq.Copy() : OfLength<T>(values.Count()).SetAll(values);
+    }
 
-            if (start < end)
-                for (var i = end - start; --i >= 0;)
-                {
-                    var temp = seq[start + i];
-                    seq[start + i] = other[otherStart + i];
-                    other[otherStart + i] = temp;
-                }
-        }
+    public static IMutableSeq<T> Of<T>(Func<T> supplier, int length)
+    {
+        Require.NonNull(supplier);
 
-        public static IMutableSeq<T> ToMutableSeq<T>(this IEnumerable<T> source)
-        {
-            return MutableSeq.Of(source);
-        }
+        return length == 0
+            ? Empty<T>()
+            : OfLength<T>(length).Fill(supplier);
+    }
+}
 
-        public static IMutableSeq<T> Shuffle<T>(this IMutableSeq<T> seq)
-        {
-            return Shuffle(seq, RandomRegistry.GetRandom());
-        }
+public static class MutableSeqExtensions
+{
+    public static IMutableSeq<T> Fill<T>(this IMutableSeq<T> seq, Func<T> supplier)
+    {
+        for (int i = 0, n = seq.Length; i < n; ++i)
+            seq[i] = supplier();
+        return seq;
+    }
 
-        public static IMutableSeq<T> Shuffle<T>(this IMutableSeq<T> seq, Random randomSource)
-        {
-            for (var j = seq.Length - 1; j > 0; --j)
-                seq.Swap(j, randomSource.NextInt(j + 1));
-            return seq;
-        }
+    public static IMutableSeq<T> SetAll<T>(this IMutableSeq<T> seq, IEnumerable<T> values)
+    {
+        var i = 0;
+        foreach (var value in values)
+            seq[i++] = value;
+        return seq;
+    }
+
+    public static void Swap<T>(this IMutableSeq<T> seq, int start, int end, IMutableSeq<T> other, int otherStart)
+    {
+        if (otherStart < 0 || otherStart + (end - start) > seq.Length)
+            throw new IndexOutOfRangeException(
+                $"Invalid index range: [{otherStart}, {otherStart + (end - start)})");
+
+        if (start < end)
+            for (var i = end - start; --i >= 0;)
+            {
+                var temp = seq[start + i];
+                seq[start + i] = other[otherStart + i];
+                other[otherStart + i] = temp;
+            }
+    }
+
+    public static IMutableSeq<T> ToMutableSeq<T>(this IEnumerable<T> source)
+    {
+        return MutableSeq.Of(source);
+    }
+
+    public static IMutableSeq<T> Shuffle<T>(this IMutableSeq<T> seq)
+    {
+        return seq.Shuffle(RandomRegistry.GetRandom());
+    }
+
+    public static IMutableSeq<T> Shuffle<T>(this IMutableSeq<T> seq, Random randomSource)
+    {
+        for (var j = seq.Length - 1; j > 0; --j)
+            seq.Swap(j, randomSource.NextInt(j + 1));
+        return seq;
     }
 }

@@ -16,17 +16,16 @@
 // Author:
 //    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
 
-namespace Jenetics
-{
-    public class IntegerChromosomeTest : NumericChromosomeTesterBase<int, IntegerGene>
-    {
-        private readonly IntegerChromosome _factory = new IntegerChromosome(
-            0, int.MaxValue, 500
-        );
+namespace Jenetics;
 
-        protected override Factory<IChromosome<IntegerGene>> Factory()
-        {
-            return () => _factory;
-        }
+public class IntegerChromosomeTest : NumericChromosomeTesterBase<int, IntegerGene>
+{
+    private readonly IntegerChromosome _factory = new(
+        0, int.MaxValue, 500
+    );
+
+    protected override Factory<IChromosome<IntegerGene>> Factory()
+    {
+        return () => _factory;
     }
 }

@@ -22,65 +22,66 @@ using Jenetics.Engine;
 using Jenetics.Internal.Math;
 using Jenetics.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class GaussianMutator<TGene, TAllele> : Mutator<TGene, TAllele>
+    where TGene : INumericGene<TAllele, TGene>
+    where TAllele : IComparable<TAllele>, IConvertible
 {
-    public class GaussianMutator<TGene, TAllele> : Mutator<TGene, TAllele>
-        where TGene : INumericGene<TAllele, TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
+    private bool _haveNextNextGaussian;
+
+    private double _nextNextGaussian;
+
+    public GaussianMutator(double probability) : base(probability)
     {
-        private bool _haveNextNextGaussian;
+    }
 
-        private double _nextNextGaussian;
+    public GaussianMutator() : this(Alterer.DefaultAlterProbability)
+    {
+    }
 
-        public GaussianMutator(double probability) : base(probability)
+    protected override int Mutate(IMutableSeq<TGene> genes, double p)
+    {
+        var random = RandomRegistry.GetRandom();
+
+        return RandomExtensions.Indexes(random, genes.Length, p)
+            .Peek(i => genes[i] = Mutate(genes[i], random))
+            .Count();
+    }
+
+    private TGene Mutate(TGene gene, Random random)
+    {
+        var min = gene.Min.ToDouble(null);
+        var max = gene.Max.ToDouble(null);
+        var std = (max - min) * 0.25;
+
+        var value = gene.DoubleValue();
+        var gaussian = NextGaussian(random);
+
+        dynamic clamped = Base.Clamp(gaussian * std + value, min, max);
+        return gene.NewInstance(clamped);
+    }
+
+    private double NextGaussian(Random random)
+    {
+        // See Knuth, ACP, Section 3.4.1 Algorithm C.
+        if (_haveNextNextGaussian)
         {
+            _haveNextNextGaussian = false;
+            return _nextNextGaussian;
         }
 
-        public GaussianMutator() : this(Alterer.DefaultAlterProbability)
+        double v1, v2, s;
+        do
         {
-        }
+            v1 = 2 * random.NextDouble() - 1; // between -1 and 1
+            v2 = 2 * random.NextDouble() - 1; // between -1 and 1
+            s = v1 * v1 + v2 * v2;
+        } while (s >= 1 || s.Equals(0.0));
 
-        protected override int Mutate(IMutableSeq<TGene> genes, double p)
-        {
-            var random = RandomRegistry.GetRandom();
-
-            return Internal.Math.random.Indexes(random, genes.Length, p)
-                .Peek(i => genes[i] = Mutate(genes[i], random))
-                .Count();
-        }
-
-        private TGene Mutate(TGene gene, Random random)
-        {
-            var min = gene.Min.ToDouble(null);
-            var max = gene.Max.ToDouble(null);
-            var std = (max - min) * 0.25;
-
-            var value = gene.DoubleValue();
-            var gaussian = NextGaussian(random);
-
-            dynamic clamped = Base.Clamp(gaussian * std + value, min, max);
-            return gene.NewInstance(clamped);
-        }
-
-        private double NextGaussian(Random random)
-        {
-            // See Knuth, ACP, Section 3.4.1 Algorithm C.
-            if (_haveNextNextGaussian)
-            {
-                _haveNextNextGaussian = false;
-                return _nextNextGaussian;
-            }
-            double v1, v2, s;
-            do
-            {
-                v1 = 2 * random.NextDouble() - 1; // between -1 and 1
-                v2 = 2 * random.NextDouble() - 1; // between -1 and 1
-                s = v1 * v1 + v2 * v2;
-            } while (s >= 1 || s.Equals(0.0));
-            var multiplier = Math.Sqrt(-2 * Math.Log(s) / s);
-            _nextNextGaussian = v2 * multiplier;
-            _haveNextNextGaussian = true;
-            return v1 * multiplier;
-        }
+        var multiplier = Math.Sqrt(-2 * Math.Log(s) / s);
+        _nextNextGaussian = v2 * multiplier;
+        _haveNextNextGaussian = true;
+        return v1 * multiplier;
     }
 }
