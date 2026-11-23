@@ -20,91 +20,83 @@ using System;
 using Jenetics.Util;
 using Xunit;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class SinglePointCrossoverTest : AltererTesterBase
 {
-    public class SinglePointCrossoverTest : AltererTesterBase
+    protected override IAlterer<DoubleGene, double> NewAlterer(double p)
     {
-        private class ConstRandom : Random
+        return new SinglePointCrossover<DoubleGene, double>(p);
+    }
+
+    [Fact]
+    public void Crossover()
+    {
+        var chars = CharSeq.Of("a-zA-Z");
+
+        var g1 = new CharacterChromosome(chars, 20).ToSeq();
+        var g2 = new CharacterChromosome(chars, 20).ToSeq();
+
+        const int rv1 = 12;
+        RandomRegistry.Using(new ConstRandom(rv1), _ =>
         {
-            private readonly int _value;
+            var crossover = new SinglePointCrossover<CharacterGene, double>();
 
-            public ConstRandom(int value)
+            var g1C = MutableSeq.Of<CharacterGene>(g1);
+            var g2C = MutableSeq.Of<CharacterGene>(g2);
+            crossover.Crossover(g1C, g2C);
+
+            Assert.Equal(g1C.ToImmutableSeq().SubSeq(0, rv1), g1.SubSeq(0, rv1));
+            Assert.Equal(g1C.SubSeq(rv1), g2.SubSeq(rv1));
+            Assert.NotEqual(g1C, g2);
+            Assert.NotEqual(g2C, g1);
+
+            const int rv2 = 0;
+            RandomRegistry.Using(new ConstRandom(rv2), _ =>
             {
-                _value = value;
-            }
+                var g1C2 = MutableSeq.Of<CharacterGene>(g1);
+                var g2C2 = MutableSeq.Of<CharacterGene>(g2);
+                crossover.Crossover(g1C2, g2C2);
+                Assert.Equal(g1C2, g2);
+                Assert.Equal(g2C2, g1);
+                Assert.Equal(g1C2.SubSeq(0, rv2), g1.SubSeq(0, rv2));
+                Assert.Equal(g1C2.SubSeq(rv2), g2.SubSeq(rv2));
 
-            public override int Next()
-            {
-                return _value;
-            }
-
-            public override int Next(int maxValue)
-            {
-                return _value;
-            }
-        }
-
-        protected override IAlterer<DoubleGene, double> NewAlterer(double p)
-        {
-            return new SinglePointCrossover<DoubleGene, double>(p);
-        }
-
-        [Fact]
-        public void Crossover()
-        {
-            var chars = CharSeq.Of("a-zA-Z");
-
-            var g1 = new CharacterChromosome(chars, 20).ToSeq();
-            var g2 = new CharacterChromosome(chars, 20).ToSeq();
-
-            const int rv1 = 12;
-            RandomRegistry.Using(new ConstRandom(rv1), r =>
-            {
-                var crossover = new SinglePointCrossover<CharacterGene, double>();
-
-                var g1C = MutableSeq.Of<CharacterGene>(g1);
-                var g2C = MutableSeq.Of<CharacterGene>(g2);
-                crossover.Crossover(g1C, g2C);
-
-                Assert.Equal(g1C.ToImmutableSeq().SubSeq(0, rv1), g1.SubSeq(0, rv1));
-                Assert.Equal(g1C.SubSeq(rv1), g2.SubSeq(rv1));
-                Assert.NotEqual(g1C, g2);
-                Assert.NotEqual(g2C, g1);
-
-                const int rv2 = 0;
-                RandomRegistry.Using(new ConstRandom(rv2), r2 =>
+                const int rv3 = 1;
+                RandomRegistry.Using(new ConstRandom(rv3), _ =>
                 {
-                    var g1C2 = MutableSeq.Of<CharacterGene>(g1);
-                    var g2C2 = MutableSeq.Of<CharacterGene>(g2);
-                    crossover.Crossover(g1C2, g2C2);
-                    Assert.Equal(g1C2, g2);
-                    Assert.Equal(g2C2, g1);
-                    Assert.Equal(g1C2.SubSeq(0, rv2), g1.SubSeq(0, rv2));
-                    Assert.Equal(g1C2.SubSeq(rv2), g2.SubSeq(rv2));
+                    var g1C3 = MutableSeq.Of<CharacterGene>(g1);
+                    var g2C3 = MutableSeq.Of<CharacterGene>(g2);
+                    crossover.Crossover(g1C3, g2C3);
+                    Assert.Equal(g1C3.SubSeq(0, rv3), g1.SubSeq(0, rv3));
+                    Assert.Equal(g1C3.SubSeq(rv3), g2.SubSeq(rv3));
 
-                    const int rv3 = 1;
-                    RandomRegistry.Using(new ConstRandom(rv3), r3 =>
+                    var rv4 = g1.Length;
+                    RandomRegistry.Using(new ConstRandom(rv4), _ =>
                     {
-                        var g1C3 = MutableSeq.Of<CharacterGene>(g1);
-                        var g2C3 = MutableSeq.Of<CharacterGene>(g2);
-                        crossover.Crossover(g1C3, g2C3);
-                        Assert.Equal(g1C3.SubSeq(0, rv3), g1.SubSeq(0, rv3));
-                        Assert.Equal(g1C3.SubSeq(rv3), g2.SubSeq(rv3));
-
-                        var rv4 = g1.Length;
-                        RandomRegistry.Using(new ConstRandom(rv4), r4 =>
-                        {
-                            var g1C4 = MutableSeq.Of<CharacterGene>(g1);
-                            var g2C4 = MutableSeq.Of<CharacterGene>(g2);
-                            crossover.Crossover(g1C4, g2C);
-                            Assert.Equal(g1C4, g1);
-                            Assert.Equal(g2C4, g2);
-                            Assert.Equal(g1C4.SubSeq(0, rv4), g1.SubSeq(0, rv4));
-                            Assert.Equal(g1C4.SubSeq(rv4), g2.SubSeq(rv4));
-                        });
+                        var g1C4 = MutableSeq.Of<CharacterGene>(g1);
+                        var g2C4 = MutableSeq.Of<CharacterGene>(g2);
+                        crossover.Crossover(g1C4, g2C);
+                        Assert.Equal(g1C4, g1);
+                        Assert.Equal(g2C4, g2);
+                        Assert.Equal(g1C4.SubSeq(0, rv4), g1.SubSeq(0, rv4));
+                        Assert.Equal(g1C4.SubSeq(rv4), g2.SubSeq(rv4));
                     });
                 });
             });
+        });
+    }
+
+    private class ConstRandom(int value) : Random
+    {
+        public override int Next()
+        {
+            return value;
+        }
+
+        public override int Next(int maxValue)
+        {
+            return value;
         }
     }
 }

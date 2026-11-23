@@ -19,46 +19,44 @@
 using System;
 using System.Linq;
 using Jenetics.Engine;
-using Jenetics.Internal.Math;
 using Jenetics.Internal.Util;
 using Jenetics.Util;
+using static Jenetics.Internal.Math.RandomExtensions;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class UniformCrossover<TGene, TAllele> : CrossoverBase<TGene, TAllele>
+    where TGene : IGene<TAllele, TGene>
+    where TAllele : IComparable<TAllele>
 {
-    public class UniformCrossover<TGene, TAllele> : CrossoverBase<TGene, TAllele>
-        where TGene : IGene<TAllele, TGene>
-        where TAllele : IComparable<TAllele>
+    private readonly double _swapProbability;
+
+    public UniformCrossover(double crossoverProbability, double swapProbability = Alterer.DefaultAlterProbability) :
+        base(crossoverProbability)
     {
-        private readonly double _swapProbability;
+        _swapProbability = Require.Probability(swapProbability);
+    }
 
-        public UniformCrossover(double crossoverProbability, double swapProbability = Alterer.DefaultAlterProbability) :
-            base(crossoverProbability)
-        {
-            _swapProbability = Require.Probability(swapProbability);
-        }
+    public UniformCrossover() : this(Alterer.DefaultAlterProbability)
+    {
+    }
 
-        public UniformCrossover() : this(Alterer.DefaultAlterProbability)
-        {
-        }
+    protected internal override int Crossover(IMutableSeq<TGene> that, IMutableSeq<TGene> other)
+    {
+        var length = Math.Min(that.Length, other.Length);
+        return Indexes(RandomRegistry.GetRandom(), length, _swapProbability)
+            .Peek(i => Swap(i, that, other))
+            .Count();
+    }
 
-        protected internal override int Crossover(IMutableSeq<TGene> that, IMutableSeq<TGene> other)
-        {
-            var length = Math.Min(that.Length, other.Length);
-            return random
-                .Indexes(RandomRegistry.GetRandom(), length, _swapProbability)
-                .Peek(i => Swap(i, that, other))
-                .Count();
-        }
-
-        private static void Swap<T>(
-            int index,
-            IMutableSeq<T> that,
-            IMutableSeq<T> other
-        )
-        {
-            var temp = that[index];
-            that[index] = other[index];
-            other[index] = temp;
-        }
+    private static void Swap<T>(
+        int index,
+        IMutableSeq<T> that,
+        IMutableSeq<T> other
+    )
+    {
+        var temp = that[index];
+        that[index] = other[index];
+        other[index] = temp;
     }
 }

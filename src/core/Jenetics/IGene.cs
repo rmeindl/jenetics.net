@@ -16,36 +16,35 @@
 // Author:
 //    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
 
-namespace Jenetics
+namespace Jenetics;
+
+/// <summary>
+///     Genes are the atoms of the <em>Jenetics</em> library. They contain the actual
+///     information(alleles) of the encoded solution.All implementations of the
+///     this interface are final, immutable and can be only created via static
+///     factory methods which have the name <c>Of</c>. When extending the library
+///     with own <c>IGene</c> implementations, it is recommended to also implement it
+///     as <a href="https://en.wikipedia.org/wiki/Value_object"> value objects</a>.
+/// </summary>
+/// <typeparam name="TAllele">the <a href="http://en.wikipedia.org/wiki/Allele">Allele</a> type of this gene.</typeparam>
+/// <typeparam name="TGene"></typeparam>
+public interface IGene<TAllele, out TGene> : IVerifiable, IGene<TGene>
+    where TGene : IGene<TAllele, TGene>
 {
     /// <summary>
-    ///     Genes are the atoms of the <em>Jenetics</em> library. They contain the actual
-    ///     information(alleles) of the encoded solution.All implementations of the
-    ///     this interface are final, immutable and can be only created via static
-    ///     factory methods which have the name <c>Of</c>. When extending the library
-    ///     with own <c>IGene</c> implementations, it is recommended to also implement it
-    ///     as <a href="https://en.wikipedia.org/wiki/Value_object"> value objects</a>.
+    ///     Return the allele of this gene.
     /// </summary>
-    /// <typeparam name="TAllele">the <a href="http://en.wikipedia.org/wiki/Allele">Allele</a> type of this gene.</typeparam>
-    /// <typeparam name="TGene"></typeparam>
-    public interface IGene<TAllele, out TGene> : IVerifiable, IGene<TGene>
-        where TGene : IGene<TAllele, TGene>
-    {
-        /// <summary>
-        ///     Return the allele of this gene.
-        /// </summary>
-        TAllele Allele { get; }
+    TAllele Allele { get; }
 
-        /// <summary>
-        ///     Create a new gene from the given <c>value</c> and the gene context.
-        /// </summary>
-        /// <param name="value">the value of the new gene.</param>
-        /// <returns>a new gene with the given value.</returns>
-        TGene NewInstance(TAllele value);
-    }
+    /// <summary>
+    ///     Create a new gene from the given <c>value</c> and the gene context.
+    /// </summary>
+    /// <param name="value">the value of the new gene.</param>
+    /// <returns>a new gene with the given value.</returns>
+    TGene NewInstance(TAllele value);
+}
 
-    public interface IGene<out TGene> : IFactory<TGene>
-        where TGene : IGene<TGene>
-    {
-    }
+public interface IGene<out TGene> : IFactory<TGene>
+    where TGene : IGene<TGene>
+{
 }

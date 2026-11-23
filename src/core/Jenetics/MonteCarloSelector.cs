@@ -21,47 +21,46 @@ using Jenetics.Internal.Util;
 using Jenetics.Util;
 using static Jenetics.Internal.Util.Require;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class MonteCarloSelector<TGene, TAllele> : ISelector<TGene, TAllele>
+    where TGene : IGene<TGene>
+    where TAllele : IComparable<TAllele>
 {
-    public class MonteCarloSelector<TGene, TAllele> : ISelector<TGene, TAllele>
-        where TGene : IGene<TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
+    public Population<TGene, TAllele> Select(Population<TGene, TAllele> population, int count, Optimize opt)
     {
-        public Population<TGene, TAllele> Select(Population<TGene, TAllele> population, int count, Optimize opt)
-        {
-            NonNull(population, "Population");
-            if (count < 0)
-                throw new ArgumentOutOfRangeException(
-                    $"Selection count must be greater or equal then zero, but was {count}");
+        NonNull(population, "Population");
+        if (count < 0)
+            throw new ArgumentOutOfRangeException(
+                $"Selection count must be greater or equal then zero, but was {count}");
 
-            var selection = new Population<TGene, TAllele>(count);
-            if (count > 0 && !population.IsEmpty)
+        var selection = new Population<TGene, TAllele>(count);
+        if (count > 0 && !population.IsEmpty)
+        {
+            var random = RandomRegistry.GetRandom();
+            var size = population.Count;
+            for (var i = 0; i < count; ++i)
             {
-                var random = RandomRegistry.GetRandom();
-                var size = population.Count;
-                for (var i = 0; i < count; ++i)
-                {
-                    var pos = random.NextInt(size);
-                    selection.Add(population[pos]);
-                }
+                var pos = random.NextInt(size);
+                selection.Add(population[pos]);
             }
-
-            return selection;
         }
 
-        public override bool Equals(object obj)
-        {
-            return Equality.OfType(this, obj);
-        }
+        return selection;
+    }
 
-        public override int GetHashCode()
-        {
-            return Hash.Of(GetType()).Value;
-        }
+    public override bool Equals(object? obj)
+    {
+        return Equality.OfType(this, obj);
+    }
 
-        public override string ToString()
-        {
-            return $"{GetType().Name}";
-        }
+    public override int GetHashCode()
+    {
+        return Hash.Of(GetType()).Value;
+    }
+
+    public override string ToString()
+    {
+        return $"{GetType().Name}";
     }
 }

@@ -20,64 +20,63 @@ using System;
 using Jenetics.Internal.Util;
 using static Jenetics.Internal.Util.Require;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class TruncationSelector<TGene, TAllele> : ISelector<TGene, TAllele>
+    where TGene : IGene<TGene>
+    where TAllele : IComparable<TAllele>
 {
-    public class TruncationSelector<TGene, TAllele> : ISelector<TGene, TAllele>
-        where TGene : IGene<TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
+    private readonly int _n;
+
+    public TruncationSelector(int n)
     {
-        private readonly int _n;
+        if (n < 1)
+            throw new ArgumentOutOfRangeException($"n must be greater or equal 1, but was {n}.");
 
-        public TruncationSelector(int n)
+        _n = n;
+    }
+
+    public TruncationSelector() : this(int.MaxValue)
+    {
+    }
+
+    public Population<TGene, TAllele> Select(Population<TGene, TAllele> population, int count, Optimize opt)
+    {
+        NonNull(population, "Population");
+        if (count < 0)
+            throw new ArgumentOutOfRangeException(
+                $"Selection count must be greater or equal then zero, but was {count}");
+
+        var selection = new Population<TGene, TAllele>(count);
+        if (count > 0 && !population.IsEmpty)
         {
-            if (n < 1)
-                throw new ArgumentOutOfRangeException($"n must be greater or equal 1, but was {n}.");
+            var copy = population.Copy();
+            copy.SortWith(opt.Descending<TAllele>());
 
-            _n = n;
-        }
-
-        public TruncationSelector() : this(int.MaxValue)
-        {
-        }
-
-        public Population<TGene, TAllele> Select(Population<TGene, TAllele> population, int count, Optimize opt)
-        {
-            NonNull(population, "Population");
-            if (count < 0)
-                throw new ArgumentOutOfRangeException(
-                    $"Selection count must be greater or equal then zero, but was {count}");
-
-            var selection = new Population<TGene, TAllele>(count);
-            if (count > 0 && !population.IsEmpty)
+            var size = count;
+            do
             {
-                var copy = population.Copy();
-                copy.SortWith(opt.Descending<TAllele>());
-
-                var size = count;
-                do
-                {
-                    var length = Math.Min(Math.Min(copy.Count, size), _n);
-                    selection.AddAll(copy.SubList(0, length));
-                    size -= length;
-                } while (size > 0);
-            }
-
-            return selection;
+                var length = Math.Min(Math.Min(copy.Count, size), _n);
+                selection.AddAll(copy.SubList(0, length));
+                size -= length;
+            } while (size > 0);
         }
 
-        public override bool Equals(object obj)
-        {
-            return Equality.OfType(this, obj);
-        }
+        return selection;
+    }
 
-        public override int GetHashCode()
-        {
-            return Hash.Of(GetType()).Value;
-        }
+    public override bool Equals(object? obj)
+    {
+        return Equality.OfType(this, obj);
+    }
 
-        public override string ToString()
-        {
-            return GetType().Name;
-        }
+    public override int GetHashCode()
+    {
+        return Hash.Of(GetType()).Value;
+    }
+
+    public override string ToString()
+    {
+        return GetType().Name;
     }
 }

@@ -20,54 +20,54 @@ using System;
 using Jenetics.Internal.Math;
 using Jenetics.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+/// <summary>
+///     Integer gene for genetic algorithms.
+///     Modernized with primary constructor syntax (C# 12).
+/// </summary>
+[Serializable]
+public class IntegerGene(int value, int min, int max)
+    : NumericGeneBase<int, IntegerGene>(value, min, max), IMean<IntegerGene>
 {
-    [Serializable]
-    public class IntegerGene : NumericGeneBase<int, IntegerGene>, IMean<IntegerGene>
+    public IntegerGene Mean(IntegerGene that)
     {
-        public IntegerGene(int value, int min, int max) : base(value, min, max)
-        {
-        }
+        return new IntegerGene(Value + (that.Value - Value) / 2, Min, Max);
+    }
 
-        public IntegerGene Mean(IntegerGene that)
-        {
-            return new IntegerGene(Value + (that.Value - Value) / 2, Min, Max);
-        }
+    public override int CompareTo(IntegerGene? other)
+    {
+        return other == null ? 1 : Value.CompareTo(other.Value);
+    }
 
-        public override int CompareTo(IntegerGene other)
-        {
-            return Value.CompareTo(other.Value);
-        }
+    public override IntegerGene NewInstance()
+    {
+        return new IntegerGene(RandomRegistry.GetRandom().NextInt(Min, Max), Min, Max);
+    }
 
-        public override IntegerGene NewInstance()
-        {
-            return new IntegerGene(RandomRegistry.GetRandom().NextInt(Min, Max), Min, Max);
-        }
+    public override IntegerGene NewInstance(int number)
+    {
+        return new IntegerGene(number, Min, Max);
+    }
 
-        public override IntegerGene NewInstance(int number)
-        {
-            return new IntegerGene(number, Min, Max);
-        }
+    internal static IImmutableSeq<IntegerGene> Seq(int minimum, int maximum, int length)
+    {
+        var min = minimum;
+        var max = maximum;
+        var r = RandomRegistry.GetRandom();
 
-        internal static IImmutableSeq<IntegerGene> Seq(int minimum, int maximum, int length)
-        {
-            var min = minimum;
-            var max = maximum;
-            var r = RandomRegistry.GetRandom();
+        return MutableSeq.OfLength<IntegerGene>(length)
+            .Fill(() => new IntegerGene(r.NextInt(min, max), minimum, maximum))
+            .ToImmutableSeq();
+    }
 
-            return MutableSeq.OfLength<IntegerGene>(length)
-                .Fill(() => new IntegerGene(r.NextInt(min, max), minimum, maximum))
-                .ToImmutableSeq();
-        }
+    public static IntegerGene Of(int value, int min, int max)
+    {
+        return new IntegerGene(value, min, max);
+    }
 
-        public static IntegerGene Of(int value, int min, int max)
-        {
-            return new IntegerGene(value, min, max);
-        }
-
-        public static IntegerGene Of(int min, int max)
-        {
-            return Of(random.NextInt(RandomRegistry.GetRandom(), min, max), min, max);
-        }
+    public static IntegerGene Of(int min, int max)
+    {
+        return Of(RandomExtensions.NextInt(RandomRegistry.GetRandom(), min, max), min, max);
     }
 }

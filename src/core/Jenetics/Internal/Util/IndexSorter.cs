@@ -16,89 +16,88 @@
 // Author:
 //    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
 
-namespace Jenetics.Internal.Util
+namespace Jenetics.Internal.Util;
+
+public abstract class IndexSorter
 {
-    public abstract class IndexSorter
+    private const int InsertionSortThreshold = 80;
+
+    protected abstract int[] Sort(double[] array, int[] indexes);
+
+    public static int[] Sort(double[] array)
     {
-        private const int InsertionSortThreshold = 80;
+        var sorter = array.Length < InsertionSortThreshold
+            ? InsertionSorter.Instance
+            : (IndexSorter)HeapSorter.Instance;
 
-        protected abstract int[] Sort(double[] array, int[] indexes);
-
-        public static int[] Sort(double[] array)
-        {
-            var sorter = array.Length < InsertionSortThreshold
-                ? InsertionSorter.Instance
-                : (IndexSorter) HeapSorter.Instance;
-
-            return sorter.Sort(array, Indexes(array.Length));
-        }
-
-        private static int[] Indexes(int length)
-        {
-            var indexes = new int[length];
-            for (var i = 0; i < length; ++i)
-                indexes[i] = i;
-            return indexes;
-        }
+        return sorter.Sort(array, Indexes(array.Length));
     }
 
-    internal class InsertionSorter : IndexSorter
+    private static int[] Indexes(int length)
     {
-        internal static readonly InsertionSorter Instance = new InsertionSorter();
+        var indexes = new int[length];
+        for (var i = 0; i < length; ++i)
+            indexes[i] = i;
+        return indexes;
+    }
+}
 
-        protected override int[] Sort(double[] array, int[] indexes)
+internal class InsertionSorter : IndexSorter
+{
+    internal static readonly InsertionSorter Instance = new();
+
+    protected override int[] Sort(double[] array, int[] indexes)
+    {
+        for (int i = 1, n = array.Length; i < n; ++i)
         {
-            for (int i = 1, n = array.Length; i < n; ++i)
+            var j = i;
+            while (j > 0)
             {
-                var j = i;
-                while (j > 0)
-                {
-                    if (array[indexes[j - 1]] < array[indexes[j]])
-                        Arrays.Swap(indexes, j - 1, j);
-                    else
-                        break;
-                    --j;
-                }
+                if (array[indexes[j - 1]] < array[indexes[j]])
+                    Arrays.Swap(indexes, j - 1, j);
+                else
+                    break;
+                --j;
             }
-
-            return indexes;
         }
+
+        return indexes;
+    }
+}
+
+internal class HeapSorter : IndexSorter
+{
+    internal static readonly HeapSorter Instance = new();
+
+    protected override int[] Sort(double[] array, int[] indexes)
+    {
+        for (var k = array.Length / 2; k >= 0; --k)
+            Sink(array, indexes, k, array.Length);
+
+        for (var i = array.Length; --i >= 1;)
+        {
+            Arrays.Swap(indexes, 0, i);
+            Sink(array, indexes, 0, i);
+        }
+
+        return indexes;
     }
 
-    internal class HeapSorter : IndexSorter
+    private static void Sink(
+        double[] array,
+        int[] indexes,
+        int start,
+        int end
+    )
     {
-        internal static readonly HeapSorter Instance = new HeapSorter();
-
-        protected override int[] Sort(double[] array, int[] indexes)
+        var m = start;
+        while (2 * m < end)
         {
-            for (var k = array.Length / 2; k >= 0; --k)
-                Sink(array, indexes, k, array.Length);
-
-            for (var i = array.Length; --i >= 1;)
-            {
-                Arrays.Swap(indexes, 0, i);
-                Sink(array, indexes, 0, i);
-            }
-
-            return indexes;
-        }
-
-        private static void Sink(
-            double[] array,
-            int[] indexes,
-            int start,
-            int end
-        )
-        {
-            var m = start;
-            while (2 * m < end)
-            {
-                var j = 2 * m;
-                if (j < end - 1 && array[indexes[j]] > array[indexes[j + 1]]) ++j;
-                if (array[indexes[m]] <= array[indexes[j]]) break;
-                Arrays.Swap(indexes, m, j);
-                m = j;
-            }
+            var j = 2 * m;
+            if (j < end - 1 && array[indexes[j]] > array[indexes[j + 1]]) ++j;
+            if (array[indexes[m]] <= array[indexes[j]]) break;
+            Arrays.Swap(indexes, m, j);
+            m = j;
         }
     }
 }

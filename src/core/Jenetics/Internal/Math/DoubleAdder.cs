@@ -19,89 +19,89 @@
 using System;
 using Jenetics.Internal.Util;
 
-namespace Jenetics.Internal.Math
+namespace Jenetics.Internal.Math;
+
+[Serializable]
+public class DoubleAdder : IComparable<DoubleAdder>
 {
-    [Serializable]
-    public class DoubleAdder : IComparable<DoubleAdder>
+    private double _compensation;
+    private double _simpleSum;
+    private double _sum;
+
+    public DoubleAdder()
     {
-        private double _compensation;
-        private double _simpleSum;
-        private double _sum;
+    }
 
-        public DoubleAdder()
+    public DoubleAdder(double value)
+    {
+        Add(value);
+    }
+
+    public double Value
+    {
+        get
         {
+            var result = _sum + _compensation;
+            return double.IsNaN(result) && double.IsInfinity(_simpleSum) ? _simpleSum : result;
         }
+    }
 
-        public DoubleAdder(double value)
-        {
-            Add(value);
-        }
+    public double DoubleValue => Value;
 
-        public double Value
-        {
-            get
-            {
-                var result = _sum + _compensation;
-                return double.IsNaN(result) && double.IsInfinity(_simpleSum) ? _simpleSum : result;
-            }
-        }
+    public int CompareTo(DoubleAdder? other)
+    {
+        if (other != null) return DoubleValue.CompareTo(other.DoubleValue);
+        return 0;
+    }
 
-        public double DoubleValue => Value;
+    public DoubleAdder Add(double value)
+    {
+        AddWithCompensation(value);
+        _simpleSum += value;
+        return this;
+    }
 
-        public int CompareTo(DoubleAdder other)
-        {
-            return DoubleValue.CompareTo(other.DoubleValue);
-        }
+    public DoubleAdder Add(double[] values)
+    {
+        for (var i = values.Length; --i >= 0;)
+            Add(values[i]);
 
-        public DoubleAdder Add(double value)
-        {
-            AddWithCompensation(value);
-            _simpleSum += value;
-            return this;
-        }
+        return this;
+    }
 
-        public DoubleAdder Add(double[] values)
-        {
-            for (var i = values.Length; --i >= 0;)
-                Add(values[i]);
+    private void AddWithCompensation(double value)
+    {
+        var y = value - _compensation;
+        var t = _sum + y;
+        _compensation = t - _sum - y;
+        _sum = t;
+    }
 
-            return this;
-        }
+    public static double Sum(double[] values)
+    {
+        return new DoubleAdder().Add(values).DoubleValue;
+    }
 
-        private void AddWithCompensation(double value)
-        {
-            var y = value - _compensation;
-            var t = _sum + y;
-            _compensation = t - _sum - y;
-            _sum = t;
-        }
+    public bool SameState(DoubleAdder other)
+    {
+        return _sum.CompareTo(other._sum) == 0 &&
+               _simpleSum.CompareTo(other._simpleSum) == 0 &&
+               _compensation.CompareTo(other._compensation) == 0;
+    }
 
-        public static double Sum(double[] values)
-        {
-            return new DoubleAdder().Add(values).DoubleValue;
-        }
+    public override bool Equals(object? obj)
+    {
+        return obj is DoubleAdder adder &&
+               Equality.Eq(DoubleValue, adder.DoubleValue);
+    }
 
-        public bool SameState(DoubleAdder other)
-        {
-            return _sum.CompareTo(other._sum) == 0 &&
-                   _simpleSum.CompareTo(other._simpleSum) == 0 &&
-                   _compensation.CompareTo(other._compensation) == 0;
-        }
+    public override int GetHashCode()
+    {
+        return Hash.Of(GetType()).And(DoubleValue).Value;
+    }
 
-        public override bool Equals(object obj)
-        {
-            return obj is DoubleAdder adder &&
-                   Equality.Eq(DoubleValue, adder.DoubleValue);
-        }
-
-        public override int GetHashCode()
-        {
-            return Hash.Of(GetType()).And(DoubleValue).Value;
-        }
-
-        public override string ToString()
-        {
-            return $"{DoubleValue}";
-        }
+    public override string ToString()
+    {
+        return $"{DoubleValue}";
     }
 }

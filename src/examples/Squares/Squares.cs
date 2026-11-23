@@ -20,45 +20,38 @@ using System;
 using System.Linq;
 using Jenetics.Engine;
 using Jenetics.Util;
+using JeneticsEngine = Jenetics.Engine.Engine;
 
-namespace Jenetics.Example
+namespace Jenetics.Example;
+public static class Squares
 {
-    public static class Squares
+    private static Dimension NextDimension()
     {
-        private static Dimension NextDimension()
-        {
-            var random = RandomRegistry.GetRandom();
-            return new Dimension(random.NextInt(100), random.NextInt(100));
-        }
+        var random = RandomRegistry.GetRandom();
+        return new Dimension(random.NextInt(100), random.NextInt(100));
+    }
 
-        private static double Area(Dimension dim)
-        {
-            return dim.Height * dim.Width;
-        }
+    private static double Area(Dimension dimension)
+    {
+        return dimension.Height * dimension.Width;
+    }
 
-        public static void Main()
-        {
-            var engine = Engine.Engine
-                .Builder(Area, Codecs.OfScalar(NextDimension))
-                .Build();
+    public static void Main()
+    {
+        var engine = JeneticsEngine
+            .Builder(Area, Codecs.OfScalar(NextDimension))
+            .Build();
 
-            var pt = engine.Stream()
-                .Take(50)
-                .ToBestPhenotype();
+        var pt = engine.Stream()
+            .Take(50)
+            .ToBestPhenotype();
 
-            Console.WriteLine(pt);
-        }
+        Console.WriteLine(pt);
+    }
 
-        private class Dimension
-        {
-            public Dimension(int width, int height)
-            {
-                Width = width;
-                Height = height;
-            }
-
-            public int Width { get; }
-            public int Height { get; }
-        }
+    private sealed class Dimension(int width, int height)
+    {
+        public int Width { get; } = width;
+        public int Height { get; } = height;
     }
 }

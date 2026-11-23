@@ -16,27 +16,26 @@
 // Author:
 //    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
 
-namespace Jenetics.Internal.Util
+namespace Jenetics.Internal.Util;
+
+public class Named<T>
 {
-    public class Named<T>
+    private Named(string name, T value)
     {
-        private Named(string name, T value)
-        {
-            Name = name;
-            Value = value;
-        }
+        Name = name;
+        Value = value;
+    }
 
-        public string Name { get; }
-        public T Value { get; }
+    public string Name { get; }
+    public T Value { get; }
 
-        public static Named<T> Of(string name, T value)
-        {
-            return new Named<T>(name, value);
-        }
+    public static Named<T> Of(string name, T value)
+    {
+        return new Named<T>(name, value);
+    }
 
-        public override string ToString()
-        {
-            return Name;
-        }
+    public override string ToString()
+    {
+        return Name;
     }
 }

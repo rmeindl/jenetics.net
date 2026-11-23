@@ -16,18 +16,17 @@
 // Author:
 //    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
 
-namespace Jenetics
-{
-    /// <typeparam name="T">the object type this factory creates.</typeparam>
-    public delegate T Factory<out T>();
+namespace Jenetics;
 
-    /// <typeparam name="T">the object type this factory creates.</typeparam>
-    public interface IFactory<out T>
-    {
-        /// <summary>
-        ///     Create a new instance of type T.
-        /// </summary>
-        /// <returns>a new instance of type T</returns>
-        T NewInstance();
-    }
+/// <typeparam name="T">the object type this factory creates.</typeparam>
+public delegate T Factory<out T>();
+
+/// <typeparam name="T">the object type this factory creates.</typeparam>
+public interface IFactory<out T>
+{
+    /// <summary>
+    ///     Create a new instance of type T.
+    /// </summary>
+    /// <returns>a new instance of type T</returns>
+    T NewInstance();
 }

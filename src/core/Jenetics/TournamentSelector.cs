@@ -22,62 +22,61 @@ using System.Linq;
 using Jenetics.Internal.Util;
 using Jenetics.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class TournamentSelector<TGene, TAllele> : ISelector<TGene, TAllele>
+    where TGene : IGene<TGene>
+    where TAllele : IComparable<TAllele>
 {
-    public class TournamentSelector<TGene, TAllele> : ISelector<TGene, TAllele>
-        where TGene : IGene<TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
+    private readonly int _sampleSize;
+
+    public TournamentSelector(int sampleSize)
     {
-        private readonly int _sampleSize;
+        if (sampleSize < 2)
+            throw new ArgumentOutOfRangeException($"Sample size must be greater than one, but was {sampleSize}");
+        _sampleSize = sampleSize;
+    }
 
-        public TournamentSelector(int sampleSize)
-        {
-            if (sampleSize < 2)
-                throw new ArgumentOutOfRangeException($"Sample size must be greater than one, but was {sampleSize}");
-            _sampleSize = sampleSize;
-        }
+    public Population<TGene, TAllele> Select(Population<TGene, TAllele> population, int count, Optimize opt)
+    {
+        if (count < 0)
+            throw new ArgumentOutOfRangeException(
+                $"Selection count must be greater or equal then zero, but was {count}");
+        var random = RandomRegistry.GetRandom();
+        return population.IsEmpty
+            ? new Population<TGene, TAllele>(0)
+            : new Population<TGene, TAllele>(count)
+                .Fill(() => Select(population, opt, _sampleSize, random), count);
+    }
 
-        public Population<TGene, TAllele> Select(Population<TGene, TAllele> population, int count, Optimize opt)
-        {
-            if (count < 0)
-                throw new ArgumentOutOfRangeException(
-                    $"Selection count must be greater or equal then zero, but was {count}");
-            var random = RandomRegistry.GetRandom();
-            return population.IsEmpty
-                ? new Population<TGene, TAllele>(0)
-                : new Population<TGene, TAllele>(count)
-                    .Fill(() => Select(population, opt, _sampleSize, random), count);
-        }
+    private Phenotype<TGene, TAllele> Select(Population<TGene, TAllele> population, Optimize opt, int sampleSize,
+        Random random)
+    {
+        return SelectAtRandom(population, random).Take(sampleSize)
+            .OrderBy(p => p, opt.Descending<Phenotype<TGene, TAllele>>()).FirstOrDefault();
+    }
 
-        private Phenotype<TGene, TAllele> Select(Population<TGene, TAllele> population, Optimize opt, int sampleSize,
-            Random random)
-        {
-            return SelectAtRandom(population, random).Take(sampleSize)
-                .OrderBy(p => p, opt.Descending<Phenotype<TGene, TAllele>>()).FirstOrDefault();
-        }
+    private static IEnumerable<Phenotype<TGene, TAllele>> SelectAtRandom(Population<TGene, TAllele> population,
+        Random random)
+    {
+        var n = population.Count;
 
-        private static IEnumerable<Phenotype<TGene, TAllele>> SelectAtRandom(Population<TGene, TAllele> population,
-            Random random)
-        {
-            var n = population.Count;
+        foreach (var unused in population)
+            yield return population[random.NextInt(n)];
+    }
 
-            foreach (var t in population)
-                yield return population[random.NextInt(n)];
-        }
+    public override bool Equals(object? obj)
+    {
+        return Equality.Of(this, obj)(s => _sampleSize == s._sampleSize);
+    }
 
-        public override bool Equals(object obj)
-        {
-            return Equality.Of(this, obj)(s => _sampleSize == s._sampleSize);
-        }
+    public override int GetHashCode()
+    {
+        return Hash.Of(GetType()).And(_sampleSize).Value;
+    }
 
-        public override int GetHashCode()
-        {
-            return Hash.Of(GetType()).And(_sampleSize).Value;
-        }
-
-        public override string ToString()
-        {
-            return $"{GetType().Name}[s={_sampleSize}]";
-        }
+    public override string ToString()
+    {
+        return $"{GetType().Name}[s={_sampleSize}]";
     }
 }

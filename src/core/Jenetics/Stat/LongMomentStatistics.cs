@@ -18,22 +18,36 @@
 
 using System;
 
-namespace Jenetics.Stat
+namespace Jenetics.Stat;
+
+public class LongMomentStatistics : MomentStatistics
 {
-    public class LongMomentStatistics : MomentStatistics
+    public long Min { get; private set; } = long.MaxValue;
+
+    public long Max { get; private set; } = long.MinValue;
+
+    public long Sum { get; private set; }
+
+    public void Accept(long value)
     {
-        public long Min { get; private set; } = long.MaxValue;
+        base.Accept(value);
+        Min = Math.Min(Min, value);
+        Max = Math.Max(Max, value);
+        Sum += value;
+    }
 
-        public long Max { get; private set; } = long.MinValue;
+    public LongMomentStatistics Combine(LongMomentStatistics other)
+    {
+        ArgumentNullException.ThrowIfNull(other);
+        Combine((MomentStatistics)other);
+        Min = Math.Min(Min, other.Min);
+        Max = Math.Max(Max, other.Max);
+        Sum += other.Sum;
+        return this;
+    }
 
-        public long Sum { get; private set; }
-
-        public void Accept(long value)
-        {
-            base.Accept(value);
-            Min = Math.Min(Min, value);
-            Max = Math.Max(Max, value);
-            Sum += value;
-        }
+    public LongMoments ToLongMoments()
+    {
+        return LongMoments.Of(this);
     }
 }

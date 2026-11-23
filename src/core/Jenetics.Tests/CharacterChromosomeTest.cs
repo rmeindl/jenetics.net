@@ -16,13 +16,12 @@
 // Author:
 //    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
 
-namespace Jenetics
+namespace Jenetics;
+
+public class CharacterChromosomeTest : ChromosomeTesterBase<CharacterGene>
 {
-    public class CharacterChromosomeTest : ChromosomeTesterBase<CharacterGene>
+    protected override Factory<IChromosome<CharacterGene>> Factory()
     {
-        protected override Factory<IChromosome<CharacterGene>> Factory()
-        {
-            return () => CharacterChromosome.Of(500);
-        }
+        return () => CharacterChromosome.Of(500);
     }
 }

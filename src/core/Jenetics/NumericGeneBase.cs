@@ -18,46 +18,45 @@
 
 using System;
 
-namespace Jenetics
+namespace Jenetics;
+
+public interface INumericGene<TAllele, TGene> : IBoundedGene<TAllele, TGene>
+    where TAllele : IComparable<TAllele>, IConvertible
+    where TGene : INumericGene<TAllele, TGene>
 {
-    public interface INumericGene<TAllele, TGene> : IBoundedGene<TAllele, TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
-        where TGene : INumericGene<TAllele, TGene>
+    int IntValue();
+    long LongValue();
+    float FloatValue();
+    double DoubleValue();
+}
+
+[Serializable]
+public abstract class NumericGeneBase<TAllele, TGene> : BoundedGeneBase<TAllele, TGene>,
+    INumericGene<TAllele, TGene>
+    where TAllele : IComparable<TAllele>, IConvertible
+    where TGene : NumericGeneBase<TAllele, TGene>
+{
+    public NumericGeneBase(TAllele value, TAllele min, TAllele max) : base(value, min, max)
     {
-        int IntValue();
-        long LongValue();
-        float FloatValue();
-        double DoubleValue();
     }
 
-    [Serializable]
-    public abstract class NumericGeneBase<TAllele, TGene> : BoundedGeneBase<TAllele, TGene>,
-        INumericGene<TAllele, TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
-        where TGene : NumericGeneBase<TAllele, TGene>
+    public int IntValue()
     {
-        public NumericGeneBase(TAllele value, TAllele min, TAllele max) : base(value, min, max)
-        {
-        }
+        return Allele.ToInt32(null);
+    }
 
-        public int IntValue()
-        {
-            return Allele.ToInt32(null);
-        }
+    public long LongValue()
+    {
+        return Allele.ToInt64(null);
+    }
 
-        public long LongValue()
-        {
-            return Allele.ToInt64(null);
-        }
+    public float FloatValue()
+    {
+        return (float)DoubleValue();
+    }
 
-        public float FloatValue()
-        {
-            return (float) DoubleValue();
-        }
-
-        public double DoubleValue()
-        {
-            return Allele.ToDouble(null);
-        }
+    public double DoubleValue()
+    {
+        return Allele.ToDouble(null);
     }
 }

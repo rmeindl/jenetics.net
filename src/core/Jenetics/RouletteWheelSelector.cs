@@ -20,52 +20,51 @@ using System;
 using Jenetics.Internal.Math;
 using Jenetics.Internal.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class RouletteWheelSelector<TGene, TAllele> : ProbabilitySelectorBase<TGene, TAllele>
+    where TGene : IGene<TGene>
+    where TAllele : IComparable<TAllele>, IConvertible
 {
-    public class RouletteWheelSelector<TGene, TAllele> : ProbabilitySelectorBase<TGene, TAllele>
-        where TGene : IGene<TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
+    public RouletteWheelSelector() : this(false)
     {
-        public RouletteWheelSelector() : this(false)
-        {
-        }
+    }
 
-        protected RouletteWheelSelector(bool sorted) : base(sorted)
-        {
-        }
+    protected RouletteWheelSelector(bool sorted) : base(sorted)
+    {
+    }
 
-        public override double[] Probabilities(Population<TGene, TAllele> population, int count)
-        {
-            var fitness = new double[population.Count];
+    public override double[] Probabilities(Population<TGene, TAllele> population, int count)
+    {
+        var fitness = new double[population.Count];
+        for (var i = population.Count; --i >= 0;)
+            fitness[i] = population[i].GetFitness().ToDouble(null);
+
+        var worst = Math.Min(Statistics.Min(fitness), 0.0);
+        var sum = DoubleAdder.Sum(fitness) - worst * population.Count;
+
+        if (Equality.Eq(sum, 0.0))
+            for (var i = 0; i < fitness.Length; i++)
+                fitness[i] = 1.0 / population.Count;
+        else
             for (var i = population.Count; --i >= 0;)
-                fitness[i] = population[i].GetFitness().ToDouble(null);
+                fitness[i] = (fitness[i] - worst) / sum;
 
-            var worst = Math.Min(Statistics.Min(fitness), 0.0);
-            var sum = DoubleAdder.Sum(fitness) - worst * population.Count;
+        return fitness;
+    }
 
-            if (Equality.Eq(sum, 0.0))
-                for (var i = 0; i < fitness.Length; i++)
-                    fitness[i] = 1.0 / population.Count;
-            else
-                for (var i = population.Count; --i >= 0;)
-                    fitness[i] = (fitness[i] - worst) / sum;
+    public override bool Equals(object? obj)
+    {
+        return Equality.OfType(this, obj);
+    }
 
-            return fitness;
-        }
+    public override int GetHashCode()
+    {
+        return Hash.Of(GetType()).Value;
+    }
 
-        public override bool Equals(object obj)
-        {
-            return Equality.OfType(this, obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return Hash.Of(GetType()).Value;
-        }
-
-        public override string ToString()
-        {
-            return GetType().Name;
-        }
+    public override string ToString()
+    {
+        return GetType().Name;
     }
 }

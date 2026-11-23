@@ -20,58 +20,57 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Jenetics.Util
+namespace Jenetics.Util;
+
+public class LongRange : IEnumerable<long>
 {
-    public class LongRange : IEnumerable<long>
+    private LongRange(long min, long max)
     {
-        private LongRange(long min, long max)
+        if (min > max)
+            throw new ArgumentOutOfRangeException($"Min greater than max: {min} > {max}");
+
+        Min = min;
+        Max = max;
+    }
+
+    public long Min { get; }
+
+    public long Max { get; }
+
+    public IEnumerator<long> GetEnumerator()
+    {
+        var current = Min;
+        while (current < Max)
         {
-            if (min > max)
-                throw new ArgumentOutOfRangeException($"Min greater than max: {min} > {max}");
-
-            Min = min;
-            Max = max;
+            yield return current;
+            current = current + 1;
         }
+    }
 
-        public long Min { get; }
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 
-        public long Max { get; }
+    public static LongRange Of(long min, long max)
+    {
+        return new LongRange(min, max);
+    }
 
-        public static LongRange Of(long min, long max)
-        {
-            return new LongRange(min, max);
-        }
+    public override bool Equals(object? other)
+    {
+        if (other == null || GetType() != other.GetType())
+            return false;
+        return Min == ((LongRange)other).Min && Max == ((LongRange)other).Max;
+    }
 
-        public IEnumerator<long> GetEnumerator()
-        {
-            var current = Min;
-            while (current < Max)
-            {
-                yield return current;
-                current = current + 1;
-            }
-        }
+    public override int GetHashCode()
+    {
+        return (int)(Min + 31 * Max);
+    }
 
-        public override bool Equals(object other)
-        {
-            if (other == null || GetType() != other.GetType())
-                return false;
-            return Min == ((LongRange) other).Min && Max == ((LongRange) other).Max;
-        }
-
-        public override int GetHashCode()
-        {
-            return (int) (Min + 31 * Max);
-        }
-
-        public override string ToString()
-        {
-            return $"[{Min}, {Max}]";
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+    public override string ToString()
+    {
+        return $"[{Min}, {Max}]";
     }
 }

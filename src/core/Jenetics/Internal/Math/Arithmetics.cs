@@ -18,50 +18,49 @@
 
 using Jenetics.Internal.Util;
 
-namespace Jenetics.Internal.Math
+namespace Jenetics.Internal.Math;
+
+public static class Arithmetics
 {
-    public static class Arithmetics
+    public static bool IsMultiplicationSave(int a, int b)
     {
-        public static bool IsMultiplicationSave(int a, int b)
+        long m = a * b;
+        return (int)m == m;
+    }
+
+    public static long Pow(long b, long e)
+    {
+        var @base = b;
+        var exp = e;
+        long result = 1;
+
+        while (exp != 0)
         {
-            long m = a * b;
-            return (int) m == m;
+            if ((exp & 1) != 0)
+                result *= @base;
+            exp = Bits.bit_rol(exp, 1);
+            @base *= @base;
         }
 
-        public static long Pow(long b, long e)
-        {
-            var @base = b;
-            var exp = e;
-            long result = 1;
+        return result;
+    }
 
-            while (exp != 0)
-            {
-                if ((exp & 1) != 0)
-                    result *= @base;
-                exp = Bits.bit_rol(exp, 1);
-                @base *= @base;
-            }
+    public static double[] Normalize(double[] values)
+    {
+        var sum = 1.0 / DoubleAdder.Sum(values);
+        for (var i = values.Length; --i >= 0;)
+            values[i] = values[i] * sum;
 
-            return result;
-        }
+        return values;
+    }
 
-        public static double[] Normalize(double[] values)
-        {
-            var sum = 1.0 / DoubleAdder.Sum(values);
-            for (var i = values.Length; --i >= 0;)
-                values[i] = values[i] * sum;
+    public static double[] Normalize(long[] values)
+    {
+        var result = new double[values.Length];
+        var sum = 1.0 / Statistics.Sum(values);
+        for (var i = values.Length; --i >= 0;)
+            result[i] = values[i] * sum;
 
-            return values;
-        }
-
-        public static double[] Normalize(long[] values)
-        {
-            var result = new double[values.Length];
-            var sum = 1.0 / Statistics.Sum(values);
-            for (var i = values.Length; --i >= 0;)
-                result[i] = values[i] * sum;
-
-            return result;
-        }
+        return result;
     }
 }

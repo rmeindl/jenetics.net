@@ -20,60 +20,62 @@ using System;
 using System.Linq;
 using Jenetics.Engine;
 using static Jenetics.Engine.Limits;
+using JeneticsEngine = Jenetics.Engine.Engine;
 
-namespace Jenetics.Example
+namespace Jenetics.Example;
+public static class TravelingSalesman
 {
-    public static class TravelingSalesman
+    private const int Stops = 20;
+    private static readonly double[,] Distances = Matrix(Stops);
+
+    private static double[,] Matrix(int stops)
     {
-        private const int Stops = 20;
-        private static readonly double[,] Adjacence = Matrix(Stops);
+        const double radius = 10.0;
+        var matrix = new double[stops, stops];
 
-        private static double[,] Matrix(int stops)
+        for (var i = 0; i < stops; ++i)
         {
-            const double radius = 10.0;
-            var matrix = new double[stops, stops];
-
-            for (var i = 0; i < stops; ++i)
             for (var j = 0; j < stops; ++j)
                 matrix[i, j] = Chord(stops, Math.Abs(i - j), radius);
-            return matrix;
         }
 
-        private static double Chord(int stops, int i, double r)
-        {
-            return 2.0 * r * Math.Abs(Math.Sin(Math.PI * i / stops));
-        }
+        return matrix;
+    }
 
-        private static double Dist(int[] path)
-        {
-            return Enumerable.Range(0, Stops)
-                .Select(i => Adjacence[path[i], path[(i + 1) % Stops]])
-                .Sum();
-        }
+    private static double Chord(int stops, int i, double r)
+    {
+        return 2.0 * r * Math.Abs(Math.Sin(Math.PI * i / stops));
+    }
 
-        public static void Main()
-        {
-            var engine = Engine.Engine
-                .Builder(Dist, Codecs.OfPermutation(Stops))
-                .Optimize(Optimize.Minimum)
-                .MaximalPhenotypeAge(11)
-                .PopulationSize(500)
-                .Alterers(
-                    new SwapMutator<EnumGene<int>, double>(0.2),
-                    new PartiallyMatchedCrossover<int, double>(0.35)
-                )
-                .Build();
+    private static double Dist(int[] path)
+    {
+        return Enumerable.Range(0, Stops)
+            .Select(i => Distances[path[i], path[(i + 1) % Stops]])
+            .Sum();
+    }
 
-            var statistics = EvolutionStatistics.OfNumber<double>();
+    public static void Main()
+    {
+        var engine = JeneticsEngine
+            .Builder(Dist, Codecs.OfPermutation(Stops))
+            .Optimize(Optimize.Minimum)
+            .MaximalPhenotypeAge(11)
+            .PopulationSize(500)
+            .Alterers(
+                new SwapMutator<EnumGene<int>, double>(0.2),
+                new PartiallyMatchedCrossover<int, double>(0.35)
+            )
+            .Build();
 
-            var best = engine.Stream()
-                .TakeWhile(BySteadyFitness<EnumGene<int>, double>(15))
-                .Take(250)
-                .Peek(statistics.Accept)
-                .ToBestPhenotype();
+        var statistics = EvolutionStatistics.OfNumber<double>();
 
-            Console.WriteLine(statistics);
-            Console.WriteLine(best);
-        }
+        var best = engine.Stream()
+            .TakeWhile(BySteadyFitness<EnumGene<int>, double>(15))
+            .Take(250)
+            .Peek(statistics.Accept)
+            .ToBestPhenotype();
+
+        Console.WriteLine(statistics);
+        Console.WriteLine(best);
     }
 }

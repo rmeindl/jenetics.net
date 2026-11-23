@@ -21,64 +21,63 @@ using System.Collections.Generic;
 using Jenetics.Internal.Util;
 using Jenetics.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+[Serializable]
+public class IntegerChromosome : BoundedChromosomeBase<int, IntegerGene>, INumericChromosome<int, IntegerGene>
 {
-    [Serializable]
-    public class IntegerChromosome : BoundedChromosomeBase<int, IntegerGene>, INumericChromosome<int, IntegerGene>
+    private IntegerChromosome(IImmutableSeq<IntegerGene> genes) : base(genes)
     {
-        private IntegerChromosome(IImmutableSeq<IntegerGene> genes) : base(genes)
-        {
-        }
+    }
 
-        public IntegerChromosome(int min, int max, int length = 1) : this(IntegerGene.Seq(min, max, length))
-        {
-            Valid = true;
-        }
+    public IntegerChromosome(int min, int max, int length = 1) : this(IntegerGene.Seq(min, max, length))
+    {
+        Valid = true;
+    }
 
-        public override IEnumerator<IntegerGene> GetEnumerator()
-        {
-            return Genes.GetEnumerator();
-        }
+    public override IEnumerator<IntegerGene> GetEnumerator()
+    {
+        return Genes.GetEnumerator();
+    }
 
-        public override IChromosome<IntegerGene> NewInstance()
-        {
-            return new IntegerChromosome(Min, Max, Length);
-        }
+    public override IChromosome<IntegerGene> NewInstance()
+    {
+        return new IntegerChromosome(Min, Max, Length);
+    }
 
-        public override IChromosome<IntegerGene> NewInstance(IImmutableSeq<IntegerGene> genes)
-        {
-            return new IntegerChromosome(genes);
-        }
+    public override IChromosome<IntegerGene> NewInstance(IImmutableSeq<IntegerGene> genes)
+    {
+        return new IntegerChromosome(genes);
+    }
 
-        public static IntegerChromosome Of(int min, int max, int length
-        )
-        {
-            return new IntegerChromosome(min, max, length);
-        }
+    public static IntegerChromosome Of(int min, int max, int length
+    )
+    {
+        return new IntegerChromosome(min, max, length);
+    }
 
-        public static IntegerChromosome Of(IntRange range)
-        {
-            return new IntegerChromosome(range.Min, range.Max);
-        }
+    public static IntegerChromosome Of(IntRange range)
+    {
+        return new IntegerChromosome(range.Min, range.Max);
+    }
 
-        public static IntegerChromosome Of(params IntegerGene[] genes)
-        {
-            return new IntegerChromosome(ImmutableSeq.Of(genes));
-        }
+    public static IntegerChromosome Of(params IntegerGene[] genes)
+    {
+        return new IntegerChromosome(ImmutableSeq.Of(genes));
+    }
 
-        public static IntegerChromosome Of(int min, int max)
-        {
-            return new IntegerChromosome(min, max);
-        }
+    public static IntegerChromosome Of(int min, int max)
+    {
+        return new IntegerChromosome(min, max);
+    }
 
-        public override bool Equals(object obj)
-        {
-            return Equality.Of(this, obj)(base.Equals);
-        }
+    public override bool Equals(object obj)
+    {
+        return Equality.Of(this, obj)(base.Equals);
+    }
 
-        public override int GetHashCode()
-        {
-            return Hash.Of(GetType()).And(base.GetHashCode()).Value;
-        }
+    public override int GetHashCode()
+    {
+        return Hash.Of(GetType()).And(base.GetHashCode()).Value;
     }
 }

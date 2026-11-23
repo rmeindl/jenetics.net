@@ -18,49 +18,48 @@
 
 using System;
 
-namespace Jenetics.Engine
+namespace Jenetics.Engine;
+
+public interface IProblem<T, TGene, out TAllele>
+    where TGene : IGene<TGene>
+    where TAllele : IComparable<TAllele>
 {
-    public interface IProblem<T, TGene, out TAllele>
+    Func<T, TAllele> Fitness();
+
+    ICodec<T, TGene> Codec();
+}
+
+public static class Problem
+{
+    public static IProblem<T, TGene, TAllele> Of<T, TGene, TAllele>(Func<T, TAllele> fitness,
+        ICodec<T, TGene> codec)
         where TGene : IGene<TGene>
         where TAllele : IComparable<TAllele>
     {
-        Func<T, TAllele> Fitness();
+        return new DefaultProblem<T, TGene, TAllele>(fitness, codec);
+    }
+}
 
-        ICodec<T, TGene> Codec();
+internal class DefaultProblem<T, TGene, TAllele> : IProblem<T, TGene, TAllele>
+    where TGene : IGene<TGene>
+    where TAllele : IComparable<TAllele>
+{
+    private readonly ICodec<T, TGene> _codec;
+    private readonly Func<T, TAllele> _fitness;
+
+    public DefaultProblem(Func<T, TAllele> fitness, ICodec<T, TGene> codec)
+    {
+        _fitness = fitness;
+        _codec = codec;
     }
 
-    public static class Problem
+    public Func<T, TAllele> Fitness()
     {
-        public static IProblem<T, TGene, TAllele> Of<T, TGene, TAllele>(Func<T, TAllele> fitness,
-            ICodec<T, TGene> codec)
-            where TGene : IGene<TGene>
-            where TAllele : IComparable<TAllele>
-        {
-            return new DefaultProblem<T, TGene, TAllele>(fitness, codec);
-        }
+        return _fitness;
     }
 
-    internal class DefaultProblem<T, TGene, TAllele> : IProblem<T, TGene, TAllele>
-        where TGene : IGene<TGene>
-        where TAllele : IComparable<TAllele>
+    public ICodec<T, TGene> Codec()
     {
-        private readonly ICodec<T, TGene> _codec;
-        private readonly Func<T, TAllele> _fitness;
-
-        public DefaultProblem(Func<T, TAllele> fitness, ICodec<T, TGene> codec)
-        {
-            _fitness = fitness;
-            _codec = codec;
-        }
-
-        public Func<T, TAllele> Fitness()
-        {
-            return _fitness;
-        }
-
-        public ICodec<T, TGene> Codec()
-        {
-            return _codec;
-        }
+        return _codec;
     }
 }

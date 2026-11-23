@@ -20,105 +20,104 @@ using System;
 using Jenetics.Util;
 using Xunit;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class GenotypeTest : ObjectTesterBase<Genotype<DoubleGene>>
 {
-    public class GenotypeTest : ObjectTesterBase<Genotype<DoubleGene>>
+    private readonly Factory<Genotype<DoubleGene>> _factory = () => Genotype.Of(
+        DoubleChromosome.Of(0, 1, 50),
+        DoubleChromosome.Of(0, 1, 500),
+        DoubleChromosome.Of(0, 1, 100),
+        DoubleChromosome.Of(0, 1, 50)
+    );
+
+    protected override Factory<Genotype<DoubleGene>> Factory()
     {
-        private readonly Factory<Genotype<DoubleGene>> _factory = () => Genotype.Of(
-            DoubleChromosome.Of(0, 1, 50),
-            DoubleChromosome.Of(0, 1, 500),
-            DoubleChromosome.Of(0, 1, 100),
-            DoubleChromosome.Of(0, 1, 50)
+        return _factory;
+    }
+
+    [Fact]
+    public void FactoryTest()
+    {
+        var factory = _factory;
+        var gt = _factory();
+
+        Assert.Equal(gt.Length, factory().Length);
+        Assert.Equal(gt.GetNumberOfGenes(), factory().GetNumberOfGenes());
+        for (var i = 0; i < factory().Length; ++i)
+            Assert.Equal(
+                gt.GetChromosome(i).Length,
+                factory().GetChromosome(i).Length
+            );
+    }
+
+    [Fact]
+    public void NewInstance()
+    {
+        var gt1 = Genotype.Of(
+            //Rotation
+            DoubleChromosome.Of(DoubleGene.Of(-Math.PI, Math.PI)),
+
+            //Translation
+            DoubleChromosome.Of(DoubleGene.Of(-300, 300), DoubleGene.Of(-300, 300)),
+
+            //Shear
+            DoubleChromosome.Of(DoubleGene.Of(-0.5, 0.5), DoubleGene.Of(-0.5, 0.5))
         );
 
-        protected override Factory<Genotype<DoubleGene>> Factory()
+        var gt2 = gt1.NewInstance();
+
+        Assert.Equal(gt1.Length, gt2.Length);
+        for (var i = 0; i < gt1.Length; ++i)
         {
-            return _factory;
+            var ch1 = gt1.GetChromosome(i);
+            var ch2 = gt2.GetChromosome(i);
+            Assert.Equal(ch1.Length, ch2.Length);
         }
+    }
 
-        [Fact]
-        public void FactoryTest()
-        {
-            var factory = _factory;
-            var gt = _factory();
+    [Fact]
+    public void NumberOfGenes()
+    {
+        var genotype = Genotype.Of(
+            DoubleChromosome.Of(0.0, 1.0, 8),
+            DoubleChromosome.Of(1.0, 2.0, 10),
+            DoubleChromosome.Of(0.0, 10.0, 9),
+            DoubleChromosome.Of(0.1, 0.9, 5)
+        );
+        Assert.Equal(32, genotype.GetNumberOfGenes());
+    }
 
-            Assert.Equal(gt.Length, factory().Length);
-            Assert.Equal(gt.GetNumberOfGenes(), factory().GetNumberOfGenes());
-            for (var i = 0; i < factory().Length; ++i)
-                Assert.Equal(
-                    gt.GetChromosome(i).Length,
-                    factory().GetChromosome(i).Length
-                );
-        }
+    [Fact]
+    public void TestCreate()
+    {
+        var c1 = LongChromosome.Of(0, 100, 10);
+        var c2 = LongChromosome.Of(0, 100, 10);
+        var g1 = Genotype.Of(c1, c2);
+        var g2 = g1.NewInstance();
 
-        [Fact]
-        public void NewInstance()
-        {
-            var gt1 = Genotype.Of(
-                //Rotation
-                DoubleChromosome.Of(DoubleGene.Of(-Math.PI, Math.PI)),
+        Assert.False(ReferenceEquals(g1, g2));
+        Assert.False(g1.Equals(g2));
+    }
 
-                //Translation
-                DoubleChromosome.Of(DoubleGene.Of(-300, 300), DoubleGene.Of(-300, 300)),
+    [Fact]
+    public void TestGenotypeGenotypeOfT()
+    {
+        var c1 = BitChromosome.Of(12);
+        var c2 = BitChromosome.Of(12);
+        var g2 = Genotype.Of(c1, c2, c2);
+        var g4 = g2;
 
-                //Shear
-                DoubleChromosome.Of(DoubleGene.Of(-0.5, 0.5), DoubleGene.Of(-0.5, 0.5))
-            );
+        Assert.Equal(g4, g2);
+        Assert.Equal(g4.GetHashCode(), g2.GetHashCode());
+    }
 
-            var gt2 = gt1.NewInstance();
-
-            Assert.Equal(gt1.Length, gt2.Length);
-            for (var i = 0; i < gt1.Length; ++i)
-            {
-                var ch1 = gt1.GetChromosome(i);
-                var ch2 = gt2.GetChromosome(i);
-                Assert.Equal(ch1.Length, ch2.Length);
-            }
-        }
-
-        [Fact]
-        public void NumberOfGenes()
-        {
-            var genotype = Genotype.Of(
-                DoubleChromosome.Of(0.0, 1.0, 8),
-                DoubleChromosome.Of(1.0, 2.0, 10),
-                DoubleChromosome.Of(0.0, 10.0, 9),
-                DoubleChromosome.Of(0.1, 0.9, 5)
-            );
-            Assert.Equal(32, genotype.GetNumberOfGenes());
-        }
-
-        [Fact]
-        public void TestCreate()
-        {
-            var c1 = LongChromosome.Of(0, 100, 10);
-            var c2 = LongChromosome.Of(0, 100, 10);
-            var g1 = Genotype.Of(c1, c2);
-            var g2 = g1.NewInstance();
-
-            Assert.False(ReferenceEquals(g1, g2));
-            Assert.False(g1.Equals(g2));
-        }
-
-        [Fact]
-        public void TestGenotypeGenotypeOfT()
-        {
-            var c1 = BitChromosome.Of(12);
-            var c2 = BitChromosome.Of(12);
-            var g2 = Genotype.Of(c1, c2, c2);
-            var g4 = g2;
-
-            Assert.Equal(g4, g2);
-            Assert.Equal(g4.GetHashCode(), g2.GetHashCode());
-        }
-
-        [Fact]
-        public void TestSetGetChromosome()
-        {
-            var c1 = LongChromosome.Of(0, 100, 10);
-            var c2 = LongChromosome.Of(0, 100, 10);
-            var c3 = LongChromosome.Of(0, 100, 10);
-            var g = Genotype.Of(c1, c2);
-        }
+    [Fact]
+    public void TestSetGetChromosome()
+    {
+        var c1 = LongChromosome.Of(0, 100, 10);
+        var c2 = LongChromosome.Of(0, 100, 10);
+        LongChromosome.Of(0, 100, 10);
+        Genotype.Of(c1, c2);
     }
 }

@@ -18,22 +18,36 @@
 
 using System;
 
-namespace Jenetics.Stat
+namespace Jenetics.Stat;
+
+public class IntMomentStatistics : MomentStatistics
 {
-    public class IntMomentStatistics : MomentStatistics
+    public int Min { get; private set; } = int.MaxValue;
+
+    public int Max { get; private set; } = int.MinValue;
+
+    public long Sum { get; private set; }
+
+    public void Accept(int value)
     {
-        public int Min { get; private set; } = int.MaxValue;
+        base.Accept(value);
+        Min = Math.Min(Min, value);
+        Max = Math.Max(Max, value);
+        Sum += value;
+    }
 
-        public int Max { get; private set; } = int.MinValue;
+    public IntMomentStatistics Combine(IntMomentStatistics other)
+    {
+        ArgumentNullException.ThrowIfNull(other);
+        Combine((MomentStatistics)other);
+        Min = Math.Min(Min, other.Min);
+        Max = Math.Max(Max, other.Max);
+        Sum += other.Sum;
+        return this;
+    }
 
-        public long Sum { get; private set; }
-
-        public void Accept(int value)
-        {
-            base.Accept(value);
-            Min = Math.Min(Min, value);
-            Max = Math.Max(Max, value);
-            Sum += value;
-        }
+    public IntMoments ToIntMoments()
+    {
+        return IntMoments.Of(this);
     }
 }

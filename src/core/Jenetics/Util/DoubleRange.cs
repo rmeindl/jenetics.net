@@ -20,58 +20,57 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Jenetics.Util
+namespace Jenetics.Util;
+
+public class DoubleRange : IEnumerable<double>
 {
-    public class DoubleRange : IEnumerable<double>
+    private DoubleRange(double min, double max)
     {
-        private DoubleRange(double min, double max)
+        if (min > max)
+            throw new ArgumentOutOfRangeException($"Min greater than max: {min} > {max}");
+
+        Min = min;
+        Max = max;
+    }
+
+    public double Min { get; }
+
+    public double Max { get; }
+
+    public IEnumerator<double> GetEnumerator()
+    {
+        var current = Min;
+        while (current < Max)
         {
-            if (min > max)
-                throw new ArgumentOutOfRangeException($"Min greater than max: {min} > {max}");
-
-            Min = min;
-            Max = max;
+            yield return current;
+            current = current + 1;
         }
+    }
 
-        public double Min { get; }
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 
-        public double Max { get; }
+    public static DoubleRange Of(double min, double max)
+    {
+        return new DoubleRange(min, max);
+    }
 
-        public IEnumerator<double> GetEnumerator()
-        {
-            var current = Min;
-            while (current < Max)
-            {
-                yield return current;
-                current = current + 1;
-            }
-        }
+    public override bool Equals(object? other)
+    {
+        if (other == null || GetType() != other.GetType())
+            return false;
+        return Min.CompareTo(((DoubleRange)other).Min) == 0 && Max.CompareTo(((DoubleRange)other).Max) == 0;
+    }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+    public override int GetHashCode()
+    {
+        return (int)(Min + 31 * Max);
+    }
 
-        public static DoubleRange Of(double min, double max)
-        {
-            return new DoubleRange(min, max);
-        }
-
-        public override bool Equals(object other)
-        {
-            if (other == null || GetType() != other.GetType())
-                return false;
-            return Min.CompareTo(((DoubleRange) other).Min) == 0 && Max.CompareTo(((DoubleRange) other).Max) == 0;
-        }
-
-        public override int GetHashCode()
-        {
-            return (int) (Min + 31 * Max);
-        }
-
-        public override string ToString()
-        {
-            return $"[{Min}, {Max}]";
-        }
+    public override string ToString()
+    {
+        return $"[{Min}, {Max}]";
     }
 }

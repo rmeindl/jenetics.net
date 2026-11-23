@@ -24,76 +24,75 @@ using Jenetics.Stat;
 using Jenetics.Util;
 using Xunit;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class TruncationSelectorTest : SelectorTesterBase<TruncationSelector<DoubleGene, double>>
 {
-    public class TruncationSelectorTest : SelectorTesterBase<TruncationSelector<DoubleGene, double>>
+    protected override Factory<TruncationSelector<DoubleGene, double>> Factory()
     {
-        protected override Factory<TruncationSelector<DoubleGene, double>> Factory()
-        {
-            return () => new TruncationSelector<DoubleGene, double>();
-        }
+        return () => new TruncationSelector<DoubleGene, double>();
+    }
 
-        [Theory]
-        [MemberData(nameof(ExpectedDistribution))]
-        public void SelectDistribution(Named<double[]> expected, Optimize opt)
+    [Theory]
+    [MemberData(nameof(ExpectedDistribution))]
+    public void SelectDistribution(Named<double[]> expected, Optimize opt)
+    {
+        Retry<Exception>(3, () =>
         {
-            Retry<Exception>(3, () =>
+            const int loops = 50;
+            var npopulation = PopulationCount;
+
+            //ThreadLocal<LCG64ShiftRandom> random = new LCG64ShiftRandom.ThreadLocal();
+            var random = RandomRegistry.GetRandom();
+            RandomRegistry.Using(random, _ =>
             {
-                const int loops = 50;
-                var npopulation = PopulationCount;
+                var distribution = Distribution(
+                    new TruncationSelector<DoubleGene, double>(),
+                    opt,
+                    npopulation,
+                    loops
+                );
 
-                //ThreadLocal<LCG64ShiftRandom> random = new LCG64ShiftRandom.ThreadLocal();
-                var random = RandomRegistry.GetRandom();
-                RandomRegistry.Using(random, r =>
-                {
-                    var distribution = Distribution(
-                        new TruncationSelector<DoubleGene, double>(),
-                        opt,
-                        npopulation,
-                        loops
-                    );
-
-                    StatisticsAssert.AssertDistribution(distribution, expected.Value, 0.001, 10);
-                });
+                StatisticsAssert.AssertDistribution(distribution, expected.Value, 0.001, 10);
             });
-        }
+        });
+    }
 
-        public static IEnumerable<object[]> ExpectedDistribution()
-        {
-            const string resource = "Jenetics.resources.TruncationSelector";
+    public static IEnumerable<object[]> ExpectedDistribution()
+    {
+        const string resource = "Jenetics.resources.TruncationSelector";
 
-            return new[] {Optimize.Maximum, Optimize.Minimum}
-                .Select(opt =>
-                {
-                    var data = TestData.Of(resource, opt.ToString().ToUpper());
-                    var expected = data
-                        .Select(line => double.Parse(line[0]))
-                        .ToArray();
-
-                    return new object[] {Named<double[]>.Of("distribution", expected), opt};
-                }).ToArray();
-        }
-
-        [Fact]
-        public void WorstIndividual()
-        {
-            const int size = 20;
-            var population = new Population<DoubleGene, int>(size);
-            for (var i = 0; i < size; ++i)
+        return new[] { Optimize.Maximum, Optimize.Minimum }
+            .Select(opt =>
             {
-                var gene = DoubleGene.Of(i, 0, size + 10);
-                var ch = DoubleChromosome.Of(gene);
-                var gt = Genotype.Of(ch);
-                var pt = Phenotype.Of(gt, 1, g => g.Gene.IntValue());
+                var data = TestData.Of(resource, opt.ToString().ToUpper());
+                var expected = data
+                    .Select(line => double.Parse(line[0]))
+                    .ToArray();
 
-                population.Add(pt);
-            }
+                return new object[] { Named<double[]>.Of("distribution", expected), opt };
+            }).ToArray();
+    }
 
-            var selector = new TruncationSelector<DoubleGene, int>(5);
-            var selected = selector.Select(population, 10, Optimize.Minimum);
+    [Fact]
+    public void WorstIndividual()
+    {
+        const int size = 20;
+        var population = new Population<DoubleGene, int>(size);
+        for (var i = 0; i < size; ++i)
+        {
+            var gene = DoubleGene.Of(i, 0, size + 10);
+            var ch = DoubleChromosome.Of(gene);
+            var gt = Genotype.Of(ch);
+            var pt = Phenotype.Of(gt, 1, g => g.Gene.IntValue());
 
-            foreach (var pt in selected)
-                Assert.True(pt.GetFitness() < 5);
+            population.Add(pt);
         }
+
+        var selector = new TruncationSelector<DoubleGene, int>(5);
+        var selected = selector.Select(population, 10, Optimize.Minimum);
+
+        foreach (var pt in selected)
+            Assert.True(pt.GetFitness() < 5);
     }
 }

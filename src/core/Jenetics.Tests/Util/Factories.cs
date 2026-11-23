@@ -18,32 +18,31 @@
 
 using System;
 
-namespace Jenetics.Util
+namespace Jenetics.Util;
+
+public static class Factories
 {
-    public static class Factories
+    public static Func<int> Int()
     {
-        public static Func<int> Int()
+        return Int(1);
+    }
+
+    public static Func<int> Int(int step)
+    {
+        return Int(0, step);
+    }
+
+    public static Func<int> Int(int start, int step)
+    {
+        var value = start;
+
+        int Next()
         {
-            return Int(1);
+            var next = value;
+            value += step;
+            return next;
         }
 
-        public static Func<int> Int(int step)
-        {
-            return Int(0, step);
-        }
-
-        public static Func<int> Int(int start, int step)
-        {
-            var value = start;
-
-            int Next()
-            {
-                var next = value;
-                value += step;
-                return next;
-            }
-
-            return Next;
-        }
+        return Next;
     }
 }

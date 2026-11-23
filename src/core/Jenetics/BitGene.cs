@@ -20,90 +20,89 @@ using System;
 using System.Collections.Generic;
 using Jenetics.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+/// <summary>
+///     Implementation of a BitGene.
+/// </summary>
+public class BitGene : IGene<bool, BitGene>, IComparable<BitGene>
 {
-    /// <summary>
-    ///     Implementation of a BitGene.
-    /// </summary>
-    public class BitGene : IGene<bool, BitGene>, IComparable<BitGene>
+    public static readonly BitGene True = new(true);
+    public static readonly BitGene False = new(false);
+    public static readonly BitGene Zero = False;
+    public static readonly BitGene One = True;
+
+    private BitGene(bool value)
     {
-        public static readonly BitGene True = new BitGene(true);
-        public static readonly BitGene False = new BitGene(false);
-        public static readonly BitGene Zero = False;
-        public static readonly BitGene One = True;
+        Allele = value;
+    }
 
-        private BitGene(bool value)
-        {
-            Allele = value;
-        }
+    /// <inheritdoc />
+    public int CompareTo(BitGene? other)
+    {
+        return other == null ? 1 : Comparer<bool>.Default.Compare(Allele, other.Allele);
+    }
 
-        /// <inheritdoc />
-        public int CompareTo(BitGene other)
-        {
-            return Comparer<bool>.Default.Compare(Allele, other.Allele);
-        }
+    /// <inheritdoc />
+    /// <summary>
+    ///     Return alwas <c>true.</c>
+    /// </summary>
+    /// <returns>always <c>true</c>.</returns>
+    public bool IsValid => true;
 
-        /// <inheritdoc />
-        /// <summary>
-        ///     Return alwas <c>true.</c>
-        /// </summary>
-        /// <returns>always <c>true</c>.</returns>
-        public bool IsValid => true;
+    /// <inheritdoc />
+    /// <summary>
+    ///     Create a new, <em>random</em> gene.
+    /// </summary>
+    public BitGene NewInstance()
+    {
+        return RandomRegistry.GetRandom().Next(1) == 1 ? True : False;
+    }
 
-        /// <inheritdoc />
-        /// <summary>
-        ///     Create a new, <em>random</em> gene.
-        /// </summary>
-        public BitGene NewInstance()
-        {
-            return RandomRegistry.GetRandom().Next(1) == 1 ? True : False;
-        }
+    /// <inheritdoc />
+    /// <summary>
+    ///     Create a new gene from the given <c>value</c>.
+    /// </summary>
+    public BitGene NewInstance(bool value)
+    {
+        return Of(value);
+    }
 
-        /// <inheritdoc />
-        /// <summary>
-        ///     Create a new gene from the given <c>value</c>.
-        /// </summary>
-        public BitGene NewInstance(bool value)
-        {
-            return Of(value);
-        }
+    /// <inheritdoc />
+    public bool Allele { get; }
 
-        /// <inheritdoc />
-        public bool Allele { get; }
+    /// <summary>
+    ///     Return the <c>boolean</c> value of this gene.
+    /// </summary>
+    /// <see cref="Allele" />
+    /// <returns>the <c>boolean</c> value of this gene.></returns>
+    public bool BooleanValue()
+    {
+        return Allele;
+    }
 
-        /// <summary>
-        ///     Return the <c>boolean</c> value of this gene.
-        /// </summary>
-        /// <see cref="Allele" />
-        /// <returns>the <c>boolean</c> value of this gene.></returns>
-        public bool BooleanValue()
-        {
-            return Allele;
-        }
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        return $"{Allele}";
+    }
 
-        /// <inheritdoc />
-        public override string ToString()
-        {
-            return $"{Allele}";
-        }
+    /// <summary>
+    ///     Return the corresponding <c>BitGene</c> for the given <c>boolean</c> value.
+    /// </summary>
+    /// <param name="value">the value of the returned <c>BitGene</c>.</param>
+    /// <returns>the <c>BitGene</c> for the given <c>boolean</c> value.</returns>
+    public static BitGene Of(bool value)
+    {
+        return value ? True : False;
+    }
 
-        /// <summary>
-        ///     Return the corresponding <c>BitGene</c> for the given <c>boolean</c> value.
-        /// </summary>
-        /// <param name="value">the value of the returned <c>BitGene</c>.</param>
-        /// <returns>the <c>BitGene</c> for the given <c>boolean</c> value.</returns>
-        public static BitGene Of(bool value)
-        {
-            return value ? True : False;
-        }
-
-        /// <summary>
-        ///     Return the value of the BitGene.
-        /// </summary>
-        /// <returns>The value of the BitGene.</returns>
-        public bool GetBit()
-        {
-            return Allele;
-        }
+    /// <summary>
+    ///     Return the value of the BitGene.
+    /// </summary>
+    /// <returns>The value of the BitGene.</returns>
+    public bool GetBit()
+    {
+        return Allele;
     }
 }

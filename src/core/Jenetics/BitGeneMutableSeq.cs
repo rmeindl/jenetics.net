@@ -19,27 +19,26 @@
 using Jenetics.Internal.Collection;
 using Jenetics.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class BitGeneMutableSeq : ArrayMutableSeq<BitGene>, IToImmutableSeq<BitGeneImmutableSeq>
 {
-    public class BitGeneMutableSeq : ArrayMutableSeq<BitGene>, IToImmutableSeq<BitGeneImmutableSeq>
+    internal BitGeneMutableSeq(Array<BitGene> array) : base(array)
     {
-        internal BitGeneMutableSeq(Array<BitGene> array) : base(array)
-        {
-        }
+    }
 
-        public new BitGeneImmutableSeq ToImmutableSeq()
-        {
-            return new BitGeneImmutableSeq(Values.Copy().Seal());
-        }
+    public new BitGeneImmutableSeq ToImmutableSeq()
+    {
+        return new BitGeneImmutableSeq(Values.Copy().Seal());
+    }
 
-        internal static BitGeneMutableSeq Of(byte[] genes, int length)
-        {
-            return new BitGeneMutableSeq(Array.Of(BitGeneStore.Of(genes, length)));
-        }
+    internal static BitGeneMutableSeq Of(byte[] genes, int length)
+    {
+        return new BitGeneMutableSeq(Array.Of(BitGeneStore.Of(genes, length)));
+    }
 
-        public static BitGeneMutableSeq Of(Array<BitGene> array)
-        {
-            return new BitGeneMutableSeq(array);
-        }
+    public static BitGeneMutableSeq Of(Array<BitGene> array)
+    {
+        return new BitGeneMutableSeq(array);
     }
 }

@@ -21,99 +21,98 @@ using System.Collections.Generic;
 using System.Threading;
 using static Jenetics.Internal.Util.Require;
 
-namespace Jenetics.Util
+namespace Jenetics.Util;
+
+public static class RandomRegistry
 {
-    public static class RandomRegistry
+    private static readonly Context<Func<Random>> Context = new(() => new Random());
+
+    public static Random GetRandom()
     {
-        private static readonly Context<Func<Random>> Context = new Context<Func<Random>>(() => new Random());
+        return Context.Get()();
+    }
 
-        public static Random GetRandom()
+    public static void SetRandom(ThreadLocal<Random> random)
+    {
+        NonNull(random, "Random must not be null.");
+        Context.Set(() => random.Value!);
+    }
+
+    public static void Using<TRandom>(TRandom random, Action<TRandom> consumer)
+        where TRandom : Random
+    {
+        Context.With<TRandom>(() => random, _ =>
         {
-            return Context.Get()();
-        }
+            consumer(random);
+            return null;
+        });
+    }
 
-        public static void SetRandom(ThreadLocal<Random> random)
+    public static bool NextBoolean(this Random random)
+    {
+        return random.Next(0, 2) != 0;
+    }
+
+    public static byte NextByte(this Random random)
+    {
+        return (byte)random.Next(0, 8);
+    }
+
+    public static int NextInt(this Random random)
+    {
+        return random.Next(int.MinValue, int.MaxValue);
+    }
+
+    public static int NextInt(this Random random, int maxValue)
+    {
+        return random.Next(maxValue);
+    }
+
+    public static int NextInt(this Random random, int minValue, int maxValue)
+    {
+        return random.Next(minValue, maxValue);
+    }
+
+    public static long NextLong(this Random random, long minValue, long maxValue)
+    {
+        if (maxValue <= minValue)
+            throw new ArgumentOutOfRangeException(nameof(maxValue), "maxValue must be > minValue!");
+
+        var uRange = (ulong)(maxValue - minValue);
+
+        ulong ulongRand;
+        do
         {
-            NonNull(random, "Random must not be null.");
-            Context.Set(() => random.Value);
-        }
+            var buf = new byte[8];
+            random.NextBytes(buf);
+            ulongRand = (ulong)BitConverter.ToInt64(buf, 0);
+        } while (ulongRand > ulong.MaxValue - (ulong.MaxValue % uRange + 1) % uRange);
 
-        public static void Using<TRandom>(TRandom random, Action<TRandom> consumer)
-            where TRandom : Random
-        {
-            Context.With<TRandom>(() => random, r =>
-            {
-                consumer(random);
-                return null;
-            });
-        }
+        return (long)(ulongRand % uRange) + minValue;
+    }
 
-        public static bool NextBoolean(this Random random)
-        {
-            return random.Next(0, 2) != 0;
-        }
+    public static long NextLong(this Random random, long maxValue)
+    {
+        return random.NextLong(0, maxValue);
+    }
 
-        public static byte NextByte(this Random random)
-        {
-            return (byte) random.Next(0, 8);
-        }
+    public static long NextLong(this Random random)
+    {
+        return random.NextLong(long.MinValue, long.MaxValue);
+    }
 
-        public static int NextInt(this Random random)
-        {
-            return random.Next(int.MinValue, int.MaxValue);
-        }
+    public static IEnumerable<double> Doubles(this Random random)
+    {
+        while (true)
+            yield return random.NextDouble();
+    }
 
-        public static int NextInt(this Random random, int maxValue)
-        {
-            return random.Next(maxValue);
-        }
-
-        public static int NextInt(this Random random, int minValue, int maxValue)
-        {
-            return random.Next(minValue, maxValue);
-        }
-
-        public static long NextLong(this Random random, long minValue, long maxValue)
-        {
-            if (maxValue <= minValue)
-                throw new ArgumentOutOfRangeException(nameof(maxValue), "maxValue must be > minValue!");
-
-            var uRange = (ulong) (maxValue - minValue);
-
-            ulong ulongRand;
-            do
-            {
-                var buf = new byte[8];
-                random.NextBytes(buf);
-                ulongRand = (ulong) BitConverter.ToInt64(buf, 0);
-            } while (ulongRand > ulong.MaxValue - (ulong.MaxValue % uRange + 1) % uRange);
-
-            return (long) (ulongRand % uRange) + minValue;
-        }
-
-        public static long NextLong(this Random random, long maxValue)
-        {
-            return random.NextLong(0, maxValue);
-        }
-
-        public static long NextLong(this Random random)
-        {
-            return random.NextLong(long.MinValue, long.MaxValue);
-        }
-
-        public static IEnumerable<double> Doubles(this Random random)
-        {
-            while (true)
-                yield return random.NextDouble();
-        }
-
-        public static T With<TRandom, T>(
-            TRandom random,
-            Func<TRandom, T> function
-        )
-            where TRandom : Random
-        {
-            return Context.With(() => random, s => function(random));
-        }
+    public static T With<TRandom, T>(
+        TRandom random,
+        Func<TRandom, T> function
+    )
+        where TRandom : Random
+    {
+        return Context.With(() => random, _ => function(random));
     }
 }

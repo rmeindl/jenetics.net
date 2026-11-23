@@ -19,58 +19,57 @@
 using System;
 using Jenetics.Internal.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class LinearRankSelector<TGene, TAllele> : ProbabilitySelectorBase<TGene, TAllele>
+    where TGene : IGene<TGene>
+    where TAllele : IComparable<TAllele>
 {
-    public class LinearRankSelector<TGene, TAllele> : ProbabilitySelectorBase<TGene, TAllele>
-        where TGene : IGene<TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
+    private readonly double _nminus;
+    private readonly double _nplus;
+
+    public LinearRankSelector(double nminus) : base(true)
     {
-        private readonly double _nminus;
-        private readonly double _nplus;
+        if (nminus < 0)
+            throw new ArgumentOutOfRangeException(nameof(nminus), $"nminus is smaller than zero: {nminus}");
 
-        public LinearRankSelector(double nminus) : base(true)
-        {
-            if (nminus < 0)
-                throw new ArgumentOutOfRangeException(nameof(nminus), $"nminus is smaller than zero: {nminus}");
+        _nminus = nminus;
+        _nplus = 2 - _nminus;
+    }
 
-            _nminus = nminus;
-            _nplus = 2 - _nminus;
-        }
+    public LinearRankSelector() : this(0.5)
+    {
+    }
 
-        public LinearRankSelector() : this(0.5)
-        {
-        }
+    public override double[] Probabilities(Population<TGene, TAllele> population, int count)
+    {
+        double n = population.Count;
+        var probabilities = new double[population.Count];
 
-        public override double[] Probabilities(Population<TGene, TAllele> population, int count)
-        {
-            double n = population.Count;
-            var probabilities = new double[population.Count];
+        if (n.Equals(1))
+            probabilities[0] = 1;
+        else
+            for (var i = probabilities.Length; --i >= 0;)
+                probabilities[probabilities.Length - i - 1] =
+                    (_nminus + (_nplus - _nminus) * i / (n - 1)) / n;
 
-            if (n.Equals(1))
-                probabilities[0] = 1;
-            else
-                for (var i = probabilities.Length; --i >= 0;)
-                    probabilities[probabilities.Length - i - 1] =
-                        (_nminus + (_nplus - _nminus) * i / (n - 1)) / n;
+        return probabilities;
+    }
 
-            return probabilities;
-        }
+    public override bool Equals(object? obj)
+    {
+        return obj is LinearRankSelector<TGene, TAllele> selector &&
+               ProbabilitySelector.Eq(selector._nminus, _nminus) &&
+               ProbabilitySelector.Eq(selector._nplus, _nplus);
+    }
 
-        public override bool Equals(object obj)
-        {
-            return obj is LinearRankSelector<TGene, TAllele> selector &&
-                   ProbabilitySelector.Eq(selector._nminus, _nminus) &&
-                   ProbabilitySelector.Eq(selector._nplus, _nplus);
-        }
+    public override int GetHashCode()
+    {
+        return Hash.Of(GetType()).And(_nminus).And(_nplus).Value;
+    }
 
-        public override int GetHashCode()
-        {
-            return Hash.Of(GetType()).And(_nminus).And(_nplus).Value;
-        }
-
-        public override string ToString()
-        {
-            return $"{GetType().Name}[(n-)={_nminus}, (n+)={_nplus}]";
-        }
+    public override string ToString()
+    {
+        return $"{GetType().Name}[(n-)={_nminus}, (n+)={_nplus}]";
     }
 }

@@ -22,324 +22,317 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading;
 
-namespace Jenetics.Engine
+namespace Jenetics.Engine;
+
+public static class EvolutionResult
 {
-    public static class EvolutionResult
+    public static EvolutionResult<TGene, TAllele> Of<TGene, TAllele>(
+        Optimize optimize,
+        Population<TGene, TAllele> population,
+        long generation,
+        EvolutionDurations durations,
+        int killCount,
+        int invalidCount,
+        int alterCount
+    )
+        where TGene : IGene<TGene>
+        where TAllele : IComparable<TAllele>
     {
-        public static EvolutionResult<TGene, TAllele> Of<TGene, TAllele>(
-            Optimize optimize,
-            Population<TGene, TAllele> population,
-            long generation,
-            EvolutionDurations durations,
-            int killCount,
-            int invalidCount,
-            int alterCount
-        )
-            where TGene : IGene<TGene>
-            where TAllele : IComparable<TAllele>, IConvertible
-        {
-            return new EvolutionResult<TGene, TAllele>(
-                optimize,
-                population,
-                generation,
-                generation,
-                durations,
-                killCount,
-                invalidCount,
-                alterCount
-            );
-        }
-
-        public static EvolutionResult<TGene, TAllele> Of<TGene, TAllele>(
-            Optimize optimize,
-            Population<TGene, TAllele> population,
-            long generation,
-            long totalGenerations,
-            EvolutionDurations durations,
-            int killCount,
-            int invalidCount,
-            int alterCount
-        )
-            where TGene : IGene<TGene>
-            where TAllele : IComparable<TAllele>, IConvertible
-        {
-            return new EvolutionResult<TGene, TAllele>(
-                optimize,
-                population,
-                generation,
-                totalGenerations,
-                durations,
-                killCount,
-                invalidCount,
-                alterCount
-            );
-        }
-
-        public static EvolutionResult<TGene, TAllele> ToBestEvolutionResult<TGene, TAllele>(
-            this IEnumerable<EvolutionResult<TGene, TAllele>> source)
-            where TGene : IGene<TGene>
-            where TAllele : IComparable<TAllele>, IConvertible
-        {
-            var count = 0;
-            EvolutionResult<TGene, TAllele> bestResult = null;
-            foreach (var result in source)
-            {
-                if (Interlocked.CompareExchange(ref bestResult, result, null) != null)
-                {
-                    var oldValue = bestResult;
-                    EvolutionResult<TGene, TAllele> newValue;
-                    do
-                    {
-                        if (result.GetOptimize().Compare(result.GetBestPhenotype(), oldValue.GetBestPhenotype()) > 0)
-                        {
-                            newValue = result;
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    } while (ReferenceEquals(Interlocked.CompareExchange(ref bestResult, newValue, oldValue), oldValue));
-                }
-                Interlocked.Increment(ref count);
-            }
-            return bestResult?.WithTotalGenerations(count);
-        }
-
-        public static Phenotype<TGene, TAllele> ToBestPhenotype<TGene, TAllele>(
-            this IEnumerable<EvolutionResult<TGene, TAllele>> source)
-            where TGene : IGene<TGene>
-            where TAllele : IComparable<TAllele>, IConvertible
-        {
-            Phenotype<TGene, TAllele> bestPhenotype = null;
-            foreach (var result in source)
-            {
-                if (Interlocked.CompareExchange(ref bestPhenotype, result.GetBestPhenotype(), null) != null)
-                {
-                    var oldValue = bestPhenotype;
-                    Phenotype<TGene, TAllele> newValue;
-                    do
-                    {
-                        if (result.GetOptimize().Compare(result.GetBestPhenotype().GetFitness(), oldValue.GetFitness()) > 0)
-                        {
-                            newValue = result.GetBestPhenotype();
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    } while (ReferenceEquals(Interlocked.CompareExchange(ref bestPhenotype, newValue, oldValue), oldValue));
-                }
-            }
-            return bestPhenotype;
-        }
-
-        public static Genotype<TGene> ToBestGenotype<TGene, TAllele>(
-            this IEnumerable<EvolutionResult<TGene, TAllele>> source)
-            where TGene : IGene<TGene>
-            where TAllele : IComparable<TAllele>, IConvertible
-        {
-            return ToBestPhenotype(source)?.GetGenotype();
-        }
+        return new EvolutionResult<TGene, TAllele>(
+            optimize,
+            population,
+            generation,
+            generation,
+            durations,
+            killCount,
+            invalidCount,
+            alterCount
+        );
     }
 
-    [Serializable]
-    public class EvolutionResult<TGene, TAllele> : IComparable<EvolutionResult<TGene, TAllele>>, ISerializable
+    public static EvolutionResult<TGene, TAllele> Of<TGene, TAllele>(
+        Optimize optimize,
+        Population<TGene, TAllele> population,
+        long generation,
+        long totalGenerations,
+        EvolutionDurations durations,
+        int killCount,
+        int invalidCount,
+        int alterCount
+    )
         where TGene : IGene<TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
+        where TAllele : IComparable<TAllele>
     {
-        private readonly int _alterCount;
+        return new EvolutionResult<TGene, TAllele>(
+            optimize,
+            population,
+            generation,
+            totalGenerations,
+            durations,
+            killCount,
+            invalidCount,
+            alterCount
+        );
+    }
 
-        [NonSerialized] private readonly Lazy<Phenotype<TGene, TAllele>> _best;
-
-        private readonly EvolutionDurations _durations;
-        private readonly long _generation;
-        private readonly int _invalidCount;
-        private readonly int _killCount;
-        private readonly Optimize _optimize;
-        private readonly Population<TGene, TAllele> _population;
-        private readonly long _totalGenerations;
-        [NonSerialized] private readonly Lazy<Phenotype<TGene, TAllele>> _worst;
-
-        public EvolutionResult(
-            Optimize optimize,
-            Population<TGene, TAllele> population,
-            long generation,
-            long totalGenerations,
-            EvolutionDurations durations,
-            int killCount,
-            int invalidCount,
-            int alterCount
-        )
+    public static EvolutionResult<TGene, TAllele> ToBestEvolutionResult<TGene, TAllele>(
+        this IEnumerable<EvolutionResult<TGene, TAllele>> source)
+        where TGene : IGene<TGene>
+        where TAllele : IComparable<TAllele>
+    {
+        var count = 0;
+        EvolutionResult<TGene, TAllele> bestResult = null;
+        foreach (var result in source)
         {
-            _optimize = optimize;
-            _population = population;
-            _generation = generation;
-            _totalGenerations = totalGenerations;
-            _durations = durations;
-            _killCount = killCount;
-            _invalidCount = invalidCount;
-            _alterCount = alterCount;
+            if (Interlocked.CompareExchange(ref bestResult, result, null) != null)
+            {
+                var oldValue = bestResult;
+                EvolutionResult<TGene, TAllele> newValue;
+                do
+                {
+                    if (result.GetOptimize().Compare(result.GetBestPhenotype(), oldValue.GetBestPhenotype()) > 0)
+                        newValue = result;
+                    else
+                        break;
+                } while (ReferenceEquals(Interlocked.CompareExchange(ref bestResult, newValue, oldValue), oldValue));
+            }
 
-            _best = new Lazy<Phenotype<TGene, TAllele>>(() =>
-                _population.OrderBy(p => p, _optimize.Descending<Phenotype<TGene, TAllele>>()).FirstOrDefault());
-
-            _worst = new Lazy<Phenotype<TGene, TAllele>>(() =>
-                _population.OrderBy(p => p, _optimize.Ascending<Phenotype<TGene, TAllele>>()).FirstOrDefault());
+            Interlocked.Increment(ref count);
         }
 
-        protected EvolutionResult(SerializationInfo info, StreamingContext context)
-        {
-            _optimize = (Optimize) info.GetValue("_optimize", typeof(Optimize));
-            _population = (Population<TGene, TAllele>) info.GetValue("_population", typeof(Population<TGene, TAllele>));
-            _generation = info.GetInt64("_generation");
-            _totalGenerations = info.GetInt64("_totalGenerations");
-            _durations = (EvolutionDurations) info.GetValue("_durations", typeof(EvolutionDurations));
-            _killCount = info.GetInt32("_killCount");
-            _invalidCount = info.GetInt32("_invalidCount");
-            _alterCount = info.GetInt32("_alterCount");
+        return bestResult?.WithTotalGenerations(count);
+    }
 
-            _best = new Lazy<Phenotype<TGene, TAllele>>(
-                (Phenotype<TGene, TAllele>) info.GetValue("_best", typeof(Phenotype<TGene, TAllele>)));
-            _worst = new Lazy<Phenotype<TGene, TAllele>>(
-                (Phenotype<TGene, TAllele>) info.GetValue("_worst", typeof(Phenotype<TGene, TAllele>)));
-        }
+    public static Phenotype<TGene, TAllele> ToBestPhenotype<TGene, TAllele>(
+        this IEnumerable<EvolutionResult<TGene, TAllele>> source)
+        where TGene : IGene<TGene>
+        where TAllele : IComparable<TAllele>
+    {
+        Phenotype<TGene, TAllele> bestPhenotype = null;
+        foreach (var result in source)
+            if (Interlocked.CompareExchange(ref bestPhenotype, result.GetBestPhenotype(), null) != null)
+            {
+                var oldValue = bestPhenotype;
+                Phenotype<TGene, TAllele> newValue;
+                do
+                {
+                    if (result.GetOptimize().Compare(result.GetBestPhenotype().GetFitness(), oldValue.GetFitness()) > 0)
+                        newValue = result.GetBestPhenotype();
+                    else
+                        break;
+                } while (ReferenceEquals(Interlocked.CompareExchange(ref bestPhenotype, newValue, oldValue), oldValue));
+            }
 
-        public int CompareTo(EvolutionResult<TGene, TAllele> other)
-        {
-            return _optimize.Compare(_best.Value, other._best.Value);
-        }
+        return bestPhenotype;
+    }
 
-        public void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            info.AddValue("_optimize", _optimize);
-            info.AddValue("_population", _population);
-            info.AddValue("_generation", _generation);
-            info.AddValue("_totalGenerations", _totalGenerations);
-            info.AddValue("_durations", _durations);
-            info.AddValue("_killCount", _killCount);
-            info.AddValue("_invalidCount", _invalidCount);
-            info.AddValue("_alterCount", _alterCount);
+    public static Genotype<TGene> ToBestGenotype<TGene, TAllele>(
+        this IEnumerable<EvolutionResult<TGene, TAllele>> source)
+        where TGene : IGene<TGene>
+        where TAllele : IComparable<TAllele>
+    {
+        return source.ToBestPhenotype()?.GetGenotype();
+    }
+}
 
-            info.AddValue("_best", _best.Value);
-            info.AddValue("_worst", _best.Value);
-        }
+[Serializable]
+public class EvolutionResult<TGene, TAllele> : IComparable<EvolutionResult<TGene, TAllele>>, ISerializable
+    where TGene : IGene<TGene>
+    where TAllele : IComparable<TAllele>
+{
+    private readonly int _alterCount;
 
-        public int GetKillCount()
-        {
-            return _killCount;
-        }
+    [NonSerialized] private readonly Lazy<Phenotype<TGene, TAllele>> _best;
 
-        public int GetAlterCount()
-        {
-            return _alterCount;
-        }
+    private readonly EvolutionDurations _durations;
+    private readonly long _generation;
+    private readonly int _invalidCount;
+    private readonly int _killCount;
+    private readonly Optimize _optimize;
+    private readonly Population<TGene, TAllele> _population;
+    private readonly long _totalGenerations;
+    [NonSerialized] private readonly Lazy<Phenotype<TGene, TAllele>> _worst;
 
-        public long GetGeneration()
-        {
-            return _generation;
-        }
+    public EvolutionResult(
+        Optimize optimize,
+        Population<TGene, TAllele> population,
+        long generation,
+        long totalGenerations,
+        EvolutionDurations durations,
+        int killCount,
+        int invalidCount,
+        int alterCount
+    )
+    {
+        _optimize = optimize;
+        _population = population;
+        _generation = generation;
+        _totalGenerations = totalGenerations;
+        _durations = durations;
+        _killCount = killCount;
+        _invalidCount = invalidCount;
+        _alterCount = alterCount;
 
-        internal EvolutionStart<TGene, TAllele> Next()
-        {
-            return EvolutionStart.Of(_population, _generation + 1);
-        }
+        _best = new Lazy<Phenotype<TGene, TAllele>>(() =>
+            _population.OrderBy(p => p, _optimize.Descending<Phenotype<TGene, TAllele>>()).FirstOrDefault());
 
-        public Phenotype<TGene, TAllele> GetBestPhenotype()
-        {
-            return _best.Value;
-        }
+        _worst = new Lazy<Phenotype<TGene, TAllele>>(() =>
+            _population.OrderBy(p => p, _optimize.Ascending<Phenotype<TGene, TAllele>>()).FirstOrDefault());
+    }
 
-        public Phenotype<TGene, TAllele> GetWorstPhenotype()
-        {
-            return _worst.Value;
-        }
+    protected EvolutionResult(SerializationInfo info, StreamingContext context)
+    {
+        _optimize = (Optimize)info.GetValue("_optimize", typeof(Optimize));
+        _population = (Population<TGene, TAllele>)info.GetValue("_population", typeof(Population<TGene, TAllele>));
+        _generation = info.GetInt64("_generation");
+        _totalGenerations = info.GetInt64("_totalGenerations");
+        _durations = (EvolutionDurations)info.GetValue("_durations", typeof(EvolutionDurations));
+        _killCount = info.GetInt32("_killCount");
+        _invalidCount = info.GetInt32("_invalidCount");
+        _alterCount = info.GetInt32("_alterCount");
 
-        public EvolutionDurations GetDurations()
-        {
-            return _durations;
-        }
+        _best = new Lazy<Phenotype<TGene, TAllele>>(
+            (Phenotype<TGene, TAllele>)info.GetValue("_best", typeof(Phenotype<TGene, TAllele>)));
+        _worst = new Lazy<Phenotype<TGene, TAllele>>(
+            (Phenotype<TGene, TAllele>)info.GetValue("_worst", typeof(Phenotype<TGene, TAllele>)));
+    }
 
-        public Population<TGene, TAllele> GetPopulation()
-        {
-            return _population.Copy();
-        }
+    public int CompareTo(EvolutionResult<TGene, TAllele>? other)
+    {
+        if (other == null) return 1;
+        return GetOptimize().Compare(GetBestPhenotype(), other.GetBestPhenotype());
+    }
 
-        public TAllele GetBestFitness()
-        {
-            return _best.Value != null ? _best.Value.GetFitness() : default;
-        }
+    public void GetObjectData(SerializationInfo info, StreamingContext context)
+    {
+        info.AddValue("_optimize", _optimize);
+        info.AddValue("_population", _population);
+        info.AddValue("_generation", _generation);
+        info.AddValue("_totalGenerations", _totalGenerations);
+        info.AddValue("_durations", _durations);
+        info.AddValue("_killCount", _killCount);
+        info.AddValue("_invalidCount", _invalidCount);
+        info.AddValue("_alterCount", _alterCount);
 
-        public TAllele GetWorstFitness()
-        {
-            return _worst.Value != null ? _worst.Value.GetFitness() : default;
-        }
+        info.AddValue("_best", _best.Value);
+        info.AddValue("_worst", _best.Value);
+    }
 
-        public Optimize GetOptimize()
-        {
-            return _optimize;
-        }
+    public int GetKillCount()
+    {
+        return _killCount;
+    }
 
-        public long GetTotalGenerations()
-        {
-            return _totalGenerations;
-        }
+    public int GetAlterCount()
+    {
+        return _alterCount;
+    }
 
-        public int GetInvalidCount()
-        {
-            return _invalidCount;
-        }
+    public long GetGeneration()
+    {
+        return _generation;
+    }
 
-        public override bool Equals(object obj)
-        {
-            return obj is EvolutionResult<TGene, TAllele> result &&
-                   Equals(_optimize,
-                       result._optimize) &&
-                   Equals(_population,
-                       result._population) &&
-                   Equals(_generation,
-                       result._generation) &&
-                   Equals(_totalGenerations,
-                       result._totalGenerations) &&
-                   Equals(_durations,
-                       result._durations) &&
-                   Equals(_killCount,
-                       result._killCount) &&
-                   Equals(_invalidCount,
-                       result._invalidCount) &&
-                   Equals(_alterCount,
-                       result._alterCount) &&
-                   Equals(GetBestFitness(),
-                       result.GetBestFitness()
-                   );
-        }
+    internal EvolutionStart<TGene, TAllele> Next()
+    {
+        return EvolutionStart.Of(_population, _generation + 1);
+    }
 
-        public override int GetHashCode()
-        {
-            var hash = 17;
-            hash += 31 * _optimize.GetHashCode() + 17;
-            hash += 31 * _population.GetHashCode() + 17;
-            hash += 31 * _generation.GetHashCode() + 17;
-            hash += 31 * _totalGenerations.GetHashCode() + 17;
-            hash += 31 * _durations.GetHashCode() + 17;
-            hash += 31 * _killCount.GetHashCode() + 17;
-            hash += 31 * _invalidCount.GetHashCode() + 17;
-            hash += 31 * _alterCount.GetHashCode() + 17;
-            hash += 31 * GetBestFitness().GetHashCode() + 17;
-            return hash;
-        }
+    public Phenotype<TGene, TAllele> GetBestPhenotype()
+    {
+        return _best.Value;
+    }
 
-        internal EvolutionResult<TGene, TAllele> WithTotalGenerations(long total)
-        {
-            return EvolutionResult.Of(
-                _optimize,
-                _population,
-                _generation,
-                total,
-                _durations,
-                _killCount,
-                _invalidCount,
-                _alterCount
-            );
-        }
+    public Phenotype<TGene, TAllele> GetWorstPhenotype()
+    {
+        return _worst.Value;
+    }
+
+    public EvolutionDurations GetDurations()
+    {
+        return _durations;
+    }
+
+    public Population<TGene, TAllele> GetPopulation()
+    {
+        return _population.Copy();
+    }
+
+    public TAllele GetBestFitness()
+    {
+        return _best.Value != null ? _best.Value.GetFitness() : default;
+    }
+
+    public TAllele GetWorstFitness()
+    {
+        return _worst.Value != null ? _worst.Value.GetFitness() : default;
+    }
+
+    public Optimize GetOptimize()
+    {
+        return _optimize;
+    }
+
+    public long GetTotalGenerations()
+    {
+        return _totalGenerations;
+    }
+
+    public int GetInvalidCount()
+    {
+        return _invalidCount;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is EvolutionResult<TGene, TAllele> result &&
+               Equals(_optimize,
+                   result._optimize) &&
+               Equals(_population,
+                   result._population) &&
+               Equals(_generation,
+                   result._generation) &&
+               Equals(_totalGenerations,
+                   result._totalGenerations) &&
+               Equals(_durations,
+                   result._durations) &&
+               Equals(_killCount,
+                   result._killCount) &&
+               Equals(_invalidCount,
+                   result._invalidCount) &&
+               Equals(_alterCount,
+                   result._alterCount) &&
+               Equals(GetBestFitness(),
+                   result.GetBestFitness()
+               );
+    }
+
+    public override int GetHashCode()
+    {
+        var hash = 17;
+        hash += 31 * _optimize.GetHashCode() + 17;
+        hash += 31 * _population.GetHashCode() + 17;
+        hash += 31 * _generation.GetHashCode() + 17;
+        hash += 31 * _totalGenerations.GetHashCode() + 17;
+        hash += 31 * _durations.GetHashCode() + 17;
+        hash += 31 * _killCount.GetHashCode() + 17;
+        hash += 31 * _invalidCount.GetHashCode() + 17;
+        hash += 31 * _alterCount.GetHashCode() + 17;
+        hash += 31 * GetBestFitness().GetHashCode() + 17;
+        return hash;
+    }
+
+    internal EvolutionResult<TGene, TAllele> WithTotalGenerations(long total)
+    {
+        return EvolutionResult.Of(
+            _optimize,
+            _population,
+            _generation,
+            total,
+            _durations,
+            _killCount,
+            _invalidCount,
+            _alterCount
+        );
     }
 }

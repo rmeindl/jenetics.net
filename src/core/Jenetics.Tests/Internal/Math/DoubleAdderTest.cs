@@ -22,59 +22,58 @@ using System.Linq;
 using Jenetics.Util;
 using Xunit;
 
-namespace Jenetics.Internal.Math
+namespace Jenetics.Internal.Math;
+
+public class DoubleAdderTest : ObjectTesterBase<DoubleAdder>
 {
-    public class DoubleAdderTest : ObjectTesterBase<DoubleAdder>
+    protected override Factory<DoubleAdder> Factory()
     {
-        protected override Factory<DoubleAdder> Factory()
+        return () =>
         {
-            return () =>
-            {
-                var random = RandomRegistry.GetRandom();
-                var adder = new DoubleAdder();
-                for (var i = 0; i < 20; ++i)
-                    adder.Add(random.NextDouble());
-
-                return adder;
-            };
-        }
-
-        [Fact]
-        public void Add()
-        {
-            const int size = 1_000_000;
-            var random = new Random(12349);
-            var numbers = new List<double>(size);
-
-            for (var i = 1; i <= size; ++i)
-                numbers.Add(random.NextDouble() * i * 1_000_000);
-
+            var random = RandomRegistry.GetRandom();
             var adder = new DoubleAdder();
-            foreach (var n in numbers)
-                adder.Add(n);
+            for (var i = 0; i < 20; ++i)
+                adder.Add(random.NextDouble());
 
-            var expectedSum = numbers.Sum();
+            return adder;
+        };
+    }
 
-            Assert.True(expectedSum > adder.DoubleValue);
-        }
+    [Fact]
+    public void Add()
+    {
+        const int size = 1_000_000;
+        var random = new Random(12349);
+        var numbers = new List<double>(size);
 
-        [Fact]
-        public void SameState()
+        for (var i = 1; i <= size; ++i)
+            numbers.Add(random.NextDouble() * i * 1_000_000);
+
+        var adder = new DoubleAdder();
+        foreach (var n in numbers)
+            adder.Add(n);
+
+        var expectedSum = numbers.Sum();
+
+        Assert.True(expectedSum > adder.DoubleValue);
+    }
+
+    [Fact]
+    public void SameState()
+    {
+        var da1 = RandomRegistry.With(new Random(589), _ => Factory()());
+        var da2 = RandomRegistry.With(new Random(589), _ => Factory()());
+
+        Assert.True(da1.SameState(da2));
+
+        var random = new Random();
+        for (var i = 0; i < 100; ++i)
         {
-            var da1 = RandomRegistry.With(new Random(589), r => Factory()());
-            var da2 = RandomRegistry.With(new Random(589), r => Factory()());
+            var value = random.NextDouble();
+            da1.Add(value);
+            da2.Add(value);
 
             Assert.True(da1.SameState(da2));
-
-            var random = new Random();
-            for (var i = 0; i < 100; ++i)
-            {
-                var value = random.NextDouble();
-                da1.Add(value);
-                da2.Add(value);
-
-                Assert.True(da1.SameState(da2));
-            }
         }
     }
 }

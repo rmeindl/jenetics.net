@@ -19,77 +19,76 @@
 using Jenetics.Util;
 using Xunit;
 
-namespace Jenetics
+namespace Jenetics;
+
+public abstract class GeneTesterBase<TAllele, TGene> : ObjectTesterBase<TGene>
+    where TGene : class, IGene<TAllele, TGene>
 {
-    public abstract class GeneTesterBase<TAllele, TGene> : ObjectTesterBase<TGene>
-        where TGene : class, IGene<TAllele, TGene>
+    [Fact]
+    public void AlleleNotNull()
     {
-        [Fact]
-        public void AlleleNotNull()
+        for (var i = 0; i < 1000; ++i)
+            Assert.NotNull(Factory()().Allele);
+    }
+
+    [Fact]
+    public void EqualsAllele()
+    {
+        var same = NewEqualObjects(5);
+
+        var that = same[0];
+        for (var i = 1; i < same.Length; ++i)
         {
-            for (var i = 0; i < 1000; ++i)
-                Assert.NotNull(Factory()().Allele);
-        }
+            var other = same[i];
 
-        [Fact]
-        public void EqualsAllele()
+            Assert.Equal(other.Allele, other.Allele);
+            Assert.Equal(other.Allele, that.Allele);
+            Assert.Equal(that.Allele, other.Allele);
+        }
+    }
+
+    [Fact]
+    public virtual void NewInstance()
+    {
+        for (var i = 0; i < 1000; ++i)
         {
-            var same = NewEqualObjects(5);
+            var gene = Factory()();
+            Assert.NotNull(gene);
+            Assert.NotNull(gene.Allele);
+            Assert.True(gene.IsValid);
 
-            var that = same[0];
-            for (var i = 1; i < same.Length; ++i)
-            {
-                var other = same[i];
-
-                Assert.Equal(other.Allele, other.Allele);
-                Assert.Equal(other.Allele, that.Allele);
-                Assert.Equal(that.Allele, other.Allele);
-            }
+            var gene2 = gene.NewInstance();
+            Assert.NotNull(gene2);
+            Assert.NotNull(gene2.Allele);
+            Assert.True(gene2.IsValid);
         }
+    }
 
-        [Fact]
-        public virtual void NewInstance()
-        {
-            for (var i = 0; i < 1000; ++i)
-            {
-                var gene = Factory()();
-                Assert.NotNull(gene);
-                Assert.NotNull(gene.Allele);
-                Assert.True(gene.IsValid);
-
-                var gene2 = gene.NewInstance();
-                Assert.NotNull(gene2);
-                Assert.NotNull(gene2.Allele);
-                Assert.True(gene2.IsValid);
-            }
-        }
-
-        [Fact]
-        public void NotEqualsAllele()
-        {
-            for (var i = 0; i < 1000; ++i)
-            {
-                var that = Factory()().Allele;
-                var other = Factory()().Allele;
-
-                if (that.Equals(other))
-                {
-                    Assert.True(other.Equals(that));
-                    Assert.Equal(that.GetHashCode(), other.GetHashCode());
-                }
-                else
-                {
-                    Assert.False(other.Equals(that));
-                    Assert.False(that.Equals(other));
-                }
-            }
-        }
-
-        [Fact]
-        public void NotEqualsAlleleNull()
+    [Fact]
+    public void NotEqualsAllele()
+    {
+        for (var i = 0; i < 1000; ++i)
         {
             var that = Factory()().Allele;
-            Assert.False(that.Equals(null));
+            var other = Factory()().Allele;
+
+            if (that.Equals(other))
+            {
+                Assert.True(other.Equals(that));
+                Assert.Equal(that.GetHashCode(), other.GetHashCode());
+            }
+            else
+            {
+                Assert.False(other.Equals(that));
+                Assert.False(that.Equals(other));
+            }
         }
+    }
+
+    [Fact]
+    public void NotEqualsAlleleNull()
+    {
+        var that = Factory()().Allele;
+        Assert.False(that.Equals(null));
     }
 }

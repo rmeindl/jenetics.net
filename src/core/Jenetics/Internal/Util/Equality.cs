@@ -22,50 +22,49 @@ using System.Linq;
 using Jenetics.Util;
 using static Jenetics.Internal.Util.Require;
 
-namespace Jenetics.Internal.Util
+namespace Jenetics.Internal.Util;
+
+public static class Equality
 {
-    public static class Equality
+    public static Func<Func<T, bool>, bool> Of<T>(T self, object? other)
+        where T : class
     {
-        public static Func<Func<T, bool>, bool> Of<T>(T self, object other)
-            where T : class
-        {
-            if (ReferenceEquals(self, other))
-                return p => true;
-            if (other == null || self.GetType() != other.GetType())
-                return p => false;
-            return p => p((T) other);
-        }
+        if (ReferenceEquals(self, other))
+            return _ => true;
+        if (other == null || self.GetType() != other.GetType())
+            return _ => false;
+        return p => p((T)other);
+    }
 
-        public static bool Eq<T>(IEnumerable<T> a, IEnumerable<T> b)
-        {
-            return a.SequenceEqual(b);
-        }
+    public static bool Eq<T>(IEnumerable<T> a, IEnumerable<T> b)
+    {
+        return a.SequenceEqual(b);
+    }
 
-        public static bool Eq(object a, object b)
-        {
-            return a != null ? a.Equals(b) : b == null;
-        }
+    public static bool Eq(object? a, object? b)
+    {
+        return a?.Equals(b) ?? b == null;
+    }
 
-        public static bool Eq(double a, double b)
-        {
-            return a.CompareTo(b) == 0;
-        }
+    public static bool Eq(double a, double b)
+    {
+        return a.CompareTo(b) == 0;
+    }
 
-        public static bool Eq(int a, int b)
-        {
-            return a.CompareTo(b) == 0;
-        }
+    public static bool Eq(int a, int b)
+    {
+        return a.CompareTo(b) == 0;
+    }
 
-        public static bool Eq<T>(ISeq<T> a, ISeq<T> b)
-        {
-            return Seq.Equals(a, b);
-        }
+    public static bool Eq<T>(ISeq<T> a, ISeq<T> b)
+    {
+        return Seq.Equals(a, b);
+    }
 
-        public static bool OfType(object self, object other)
-        {
-            NonNull(self);
-            return self == other ||
-                   other != null && self.GetType() == other.GetType();
-        }
+    public static bool OfType(object self, object? other)
+    {
+        NonNull(self);
+        return self == other ||
+               self.GetType() == other?.GetType();
     }
 }

@@ -19,47 +19,47 @@
 using System;
 using System.Linq;
 using Jenetics.Engine;
+using Jenetics.Internal.Math;
 using Jenetics.Internal.Util;
 using Jenetics.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class SwapMutator<TGene, TAllele> : Mutator<TGene, TAllele>
+    where TGene : IGene<TGene>
+    where TAllele : IComparable<TAllele>
 {
-    public class SwapMutator<TGene, TAllele> : Mutator<TGene, TAllele>
-        where TGene : IGene<TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
+    public SwapMutator() : this(Alterer.DefaultAlterProbability)
     {
-        public SwapMutator() : this(Alterer.DefaultAlterProbability)
-        {
-        }
+    }
 
-        public SwapMutator(double probability) : base(probability)
-        {
-        }
+    public SwapMutator(double probability) : base(probability)
+    {
+    }
 
-        protected override int Mutate(IMutableSeq<TGene> genes, double p)
-        {
-            var random = RandomRegistry.GetRandom();
+    protected override int Mutate(IMutableSeq<TGene> genes, double p)
+    {
+        var random = RandomRegistry.GetRandom();
 
-            if (genes.Length > 1)
-                return Internal.Math.random.Indexes(random, genes.Length, p)
-                    .Peek(i => genes.Swap(i, random.NextInt(genes.Length)))
-                    .Count();
-            return 0;
-        }
+        if (genes.Length > 1)
+            return RandomExtensions.Indexes(random, genes.Length, p)
+                .Peek(i => genes.Swap(i, random.NextInt(genes.Length)))
+                .Count();
+        return 0;
+    }
 
-        public override bool Equals(object obj)
-        {
-            return Equality.Of(this, obj)(base.Equals);
-        }
+    public override bool Equals(object? obj)
+    {
+        return Equality.Of(this, obj)(base.Equals);
+    }
 
-        public override int GetHashCode()
-        {
-            return Hash.Of(GetType()).And(base.GetHashCode()).Value;
-        }
+    public override int GetHashCode()
+    {
+        return Hash.Of(GetType()).And(base.GetHashCode()).Value;
+    }
 
-        public override string ToString()
-        {
-            return $"{GetType().Name}[p={Probability}]";
-        }
+    public override string ToString()
+    {
+        return $"{GetType().Name}[p={Probability}]";
     }
 }

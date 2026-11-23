@@ -18,30 +18,36 @@
 
 using System;
 
-namespace Jenetics.Engine
+namespace Jenetics.Engine;
+
+public static class TimedResult
 {
-    public static class TimedResult
+    public static Func<TimedResult<T>> Of<T>(Func<T> supplier)
     {
-        public static Func<TimedResult<T>> Of<T>(Func<T> supplier)
-        {
-            return () =>
-            {
-                var timer = Timer.Of().Start();
-                var result = supplier();
-                return new TimedResult<T>(timer.Stop().GetTime(), result);
-            };
-        }
+        return Of(supplier, TimeProvider.System);
     }
 
-    public class TimedResult<T>
+    public static Func<TimedResult<T>> Of<T>(Func<T> supplier, TimeProvider timeProvider)
     {
-        internal readonly T Result;
-        internal TimeSpan Duration;
-
-        public TimedResult(TimeSpan duration, T result)
+        ArgumentNullException.ThrowIfNull(supplier);
+        ArgumentNullException.ThrowIfNull(timeProvider);
+        return () =>
         {
-            Duration = duration;
-            Result = result;
-        }
+            var timer = Timer.Of(timeProvider).Start();
+            var result = supplier();
+            return new TimedResult<T>(timer.Stop().GetTime(), result);
+        };
+    }
+}
+
+public class TimedResult<T>
+{
+    internal readonly T Result;
+    internal TimeSpan Duration;
+
+    public TimedResult(TimeSpan duration, T result)
+    {
+        Duration = duration;
+        Result = result;
     }
 }

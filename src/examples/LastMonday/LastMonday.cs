@@ -20,40 +20,39 @@ using System;
 using System.Linq;
 using Jenetics.Engine;
 using Jenetics.Util;
+using JeneticsEngine = Jenetics.Engine.Engine;
 
-namespace Jenetics.Example
+namespace Jenetics.Example;
+public static class LastMonday
 {
-    public static class LastMonday
+    private static readonly DateTime MinMonday = new(2015, 1, 5);
+
+    private static readonly ICodec<DateTime, AnyGene<DateTime>> Codec = Engine.Codec.Of(
+        () => Genotype.Of(AnyChromosome.Of(NextRandomMonday)),
+        gt => gt.Gene.Allele
+    );
+
+    private static DateTime NextRandomMonday()
     {
-        private static DateTime _minMonday = new DateTime(2015, 1, 5);
+        return MinMonday.AddDays(RandomRegistry.GetRandom().NextInt(1000) * 7);
+    }
 
-        private static readonly ICodec<DateTime, AnyGene<DateTime>> Codec = Engine.Codec.Of(
-            () => Genotype.Of(AnyChromosome.Of(NextRandomMonday)),
-            gt => gt.Gene.Allele
-        );
+    private static int Fitness(DateTime date)
+    {
+        return date.Day;
+    }
 
-        private static DateTime NextRandomMonday()
-        {
-            return _minMonday.AddDays(RandomRegistry.GetRandom().NextInt(1000) * 7);
-        }
+    public static void Main()
+    {
+        var engine = JeneticsEngine
+            .Builder(Fitness, Codec)
+            .OffspringSelector(new RouletteWheelSelector<AnyGene<DateTime>, int>())
+            .Build();
 
-        private static int Fitness(DateTime date)
-        {
-            return date.Day;
-        }
+        var best = engine.Stream()
+            .Take(50)
+            .ToBestPhenotype();
 
-        public static void Main()
-        {
-            var engine = Engine.Engine
-                .Builder(Fitness, Codec)
-                .OffspringSelector(new RouletteWheelSelector<AnyGene<DateTime>, int>())
-                .Build();
-
-            var best = engine.Stream()
-                .Take(50)
-                .ToBestPhenotype();
-
-            Console.WriteLine(best);
-        }
+        Console.WriteLine(best);
     }
 }

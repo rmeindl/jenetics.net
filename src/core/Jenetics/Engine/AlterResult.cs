@@ -18,19 +18,18 @@
 
 using System;
 
-namespace Jenetics.Engine
-{
-    internal class AlterResult<TGene, TAllele>
-        where TGene : IGene<TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
-    {
-        internal readonly int AlterCount;
-        internal readonly Population<TGene, TAllele> Population;
+namespace Jenetics.Engine;
 
-        internal AlterResult(Population<TGene, TAllele> population, int alterCount)
-        {
-            Population = population;
-            AlterCount = alterCount;
-        }
+internal class AlterResult<TGene, TAllele>
+    where TGene : IGene<TGene>
+    where TAllele : IComparable<TAllele>
+{
+    internal readonly int AlterCount;
+    internal readonly Population<TGene, TAllele> Population;
+
+    internal AlterResult(Population<TGene, TAllele> population, int alterCount)
+    {
+        Population = population;
+        AlterCount = alterCount;
     }
 }

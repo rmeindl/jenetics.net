@@ -21,50 +21,49 @@ using System.Collections.Generic;
 using Jenetics.Internal.Collection;
 using Jenetics.Internal.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+[Serializable]
+public class BitGeneStore : IStore<BitGene>
 {
-    [Serializable]
-    public class BitGeneStore : IStore<BitGene>
+    internal readonly byte[] Array;
+
+    private BitGeneStore(byte[] array, int length)
     {
-        internal readonly byte[] Array;
+        Array = array;
+        Length = length;
+    }
 
-        private BitGeneStore(byte[] array, int length)
-        {
-            Array = array;
-            Length = length;
-        }
+    public int Length { get; }
 
-        public int Length { get; }
+    public BitGene this[int index]
+    {
+        get => BitGene.Of(Bits.Get(Array, index));
+        set => Bits.Set(Array, index, value.BooleanValue());
+    }
 
-        public BitGene this[int index]
-        {
-            get => BitGene.Of(Bits.Get(Array, index));
-            set => Bits.Set(Array, index, value.BooleanValue());
-        }
+    public void Sort(int from, int until, IComparer<BitGene> comparator)
+    {
+        throw new NotSupportedException();
+    }
 
-        public void Sort(int from, int until, IComparer<BitGene> comparator)
-        {
-            throw new NotSupportedException();
-        }
+    public IStore<BitGene> Copy(int from, int until)
+    {
+        return new BitGeneStore(Bits.Copy(Array, from, until), until - from);
+    }
 
-        public IStore<BitGene> Copy(int from, int until)
-        {
-            return new BitGeneStore(Bits.Copy(Array, from, until), until - from);
-        }
+    public IStore<BitGene> NewInstance(int length)
+    {
+        return OfLength(length);
+    }
 
-        public IStore<BitGene> NewInstance(int length)
-        {
-            return OfLength(length);
-        }
+    internal static BitGeneStore Of(byte[] array, int length)
+    {
+        return new BitGeneStore(array, length);
+    }
 
-        internal static BitGeneStore Of(byte[] array, int length)
-        {
-            return new BitGeneStore(array, length);
-        }
-
-        public static BitGeneStore OfLength(int length)
-        {
-            return new BitGeneStore(Bits.NewArray(length), length);
-        }
+    public static BitGeneStore OfLength(int length)
+    {
+        return new BitGeneStore(Bits.NewArray(length), length);
     }
 }

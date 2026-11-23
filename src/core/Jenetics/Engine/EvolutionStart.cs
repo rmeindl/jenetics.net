@@ -18,31 +18,28 @@
 
 using System;
 
-namespace Jenetics.Engine
+namespace Jenetics.Engine;
+
+/// <summary>
+///     Represents the starting state for an evolutionary algorithm: an initial population and generation number.
+///     Modernized with primary constructor and init-only properties (C# 12).
+/// </summary>
+public class EvolutionStart<TGene, TAllele>(
+    Population<TGene, TAllele> population,
+    long generation
+) where TGene : IGene<TGene> where TAllele : IComparable<TAllele>
 {
-    public class EvolutionStart<TGene, TAllele>
+    public Population<TGene, TAllele> Population { get; } = population;
+    public long Generation { get; } = generation;
+}
+
+public static class EvolutionStart
+{
+    public static EvolutionStart<TGene, TAllele> Of<TGene, TAllele>(Population<TGene, TAllele> population,
+        long generation)
         where TGene : IGene<TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
+        where TAllele : IComparable<TAllele>
     {
-        public EvolutionStart(Population<TGene, TAllele> population, long generation)
-        {
-            Population = population;
-            Generation = generation;
-        }
-
-        public Population<TGene, TAllele> Population { get; }
-
-        public long Generation { get; }
-    }
-
-    public static class EvolutionStart
-    {
-        public static EvolutionStart<TGene, TAllele> Of<TGene, TAllele>(Population<TGene, TAllele> population,
-            long generation)
-            where TGene : IGene<TGene>
-            where TAllele : IComparable<TAllele>, IConvertible
-        {
-            return new EvolutionStart<TGene, TAllele>(population, generation);
-        }
+        return new EvolutionStart<TGene, TAllele>(population, generation);
     }
 }

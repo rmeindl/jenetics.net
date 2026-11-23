@@ -22,70 +22,69 @@ using System.Linq;
 using Jenetics.Internal.Util;
 using Jenetics.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class CompositeAlterer<TGene, TAllele> : AltererBase<TGene, TAllele>
+    where TGene : IGene<TGene>
+    where TAllele : IComparable<TAllele>
 {
-    public class CompositeAlterer<TGene, TAllele> : AltererBase<TGene, TAllele>
-        where TGene : IGene<TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
+    public CompositeAlterer(ISeq<IAlterer<TGene, TAllele>> alterers) : base(1.0)
     {
-        public CompositeAlterer(ISeq<IAlterer<TGene, TAllele>> alterers) : base(1.0)
-        {
-            Alterers = Normalize(alterers);
-        }
-
-        public IImmutableSeq<IAlterer<TGene, TAllele>> Alterers { get; }
-
-        private static IImmutableSeq<IAlterer<TGene, TAllele>> Normalize(ISeq<IAlterer<TGene, TAllele>> alterers)
-        {
-            IEnumerable<IAlterer<TGene, TAllele>> Mapper(IAlterer<TGene, TAllele> a)
-            {
-                return a is CompositeAlterer<TGene, TAllele> alterer
-                    ? alterer.Alterers
-                    : Enumerable.Repeat(a, 1);
-            }
-
-            return alterers.SelectMany(Mapper).ToList().ToImmutableSeq();
-        }
-
-        public override int Alter(Population<TGene, TAllele> population, long generation)
-        {
-            return Alterers.Select(a => a.Alter(population, generation)).Sum();
-        }
-
-        public override bool Equals(object obj)
-        {
-            return obj is CompositeAlterer<TGene, TAllele> alterer &&
-                   Equality.Eq(alterer.Alterers, Alterers);
-        }
-
-        public override int GetHashCode()
-        {
-            return Hash.Of(GetType()).And(Alterers).Value;
-        }
-
-        public override string ToString()
-        {
-            return $"{GetType().Name}:\n{string.Join("\n", Alterers.Select(a => "   - " + a))}";
-        }
+        Alterers = Normalize(alterers);
     }
 
-    public static class CompositeAlterer
+    public IImmutableSeq<IAlterer<TGene, TAllele>> Alterers { get; }
+
+    private static IImmutableSeq<IAlterer<TGene, TAllele>> Normalize(ISeq<IAlterer<TGene, TAllele>> alterers)
     {
-        public static CompositeAlterer<TGene, TAllele> Of<TGene, TAllele>(params IAlterer<TGene, TAllele>[] alterers)
-            where TGene : IGene<TGene>
-            where TAllele : IComparable<TAllele>, IConvertible
+        IEnumerable<IAlterer<TGene, TAllele>> Mapper(IAlterer<TGene, TAllele> a)
         {
-            return new CompositeAlterer<TGene, TAllele>(ImmutableSeq.Of(alterers));
+            return a is CompositeAlterer<TGene, TAllele> alterer
+                ? alterer.Alterers
+                : Enumerable.Repeat(a, 1);
         }
 
-        public static CompositeAlterer<TGene, TAllele> Join<TGene, TAllele>(
-            IAlterer<TGene, TAllele> a1,
-            IAlterer<TGene, TAllele> a2
-        )
-            where TGene : IGene<TGene>
-            where TAllele : IComparable<TAllele>, IConvertible
-        {
-            return Of(a1, a2);
-        }
+        return alterers.SelectMany(Mapper).ToList().ToImmutableSeq();
+    }
+
+    public override int Alter(Population<TGene, TAllele> population, long generation)
+    {
+        return Alterers.Select(a => a.Alter(population, generation)).Sum();
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is CompositeAlterer<TGene, TAllele> alterer &&
+               Equality.Eq(alterer.Alterers, Alterers);
+    }
+
+    public override int GetHashCode()
+    {
+        return Hash.Of(GetType()).And(Alterers).Value;
+    }
+
+    public override string ToString()
+    {
+        return $"{GetType().Name}:\n{string.Join("\n", Alterers.Select(a => "   - " + a))}";
+    }
+}
+
+public static class CompositeAlterer
+{
+    public static CompositeAlterer<TGene, TAllele> Of<TGene, TAllele>(params IAlterer<TGene, TAllele>[] alterers)
+        where TGene : IGene<TGene>
+        where TAllele : IComparable<TAllele>
+    {
+        return new CompositeAlterer<TGene, TAllele>(ImmutableSeq.Of(alterers));
+    }
+
+    public static CompositeAlterer<TGene, TAllele> Join<TGene, TAllele>(
+        IAlterer<TGene, TAllele> a1,
+        IAlterer<TGene, TAllele> a2
+    )
+        where TGene : IGene<TGene>
+        where TAllele : IComparable<TAllele>
+    {
+        return Of(a1, a2);
     }
 }

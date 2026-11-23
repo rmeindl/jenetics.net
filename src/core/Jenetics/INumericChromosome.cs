@@ -18,84 +18,83 @@
 
 using System;
 
-namespace Jenetics
+namespace Jenetics;
+
+public interface INumericChromosome<out TAllele, TGene> : IBoundedChromosome<TAllele, TGene>
+    where TAllele : IComparable<TAllele>, IConvertible
+    where TGene : INumericGene<TAllele, TGene>
 {
-    public interface INumericChromosome<out TAllele, TGene> : IBoundedChromosome<TAllele, TGene>
+}
+
+public static class NumericChromosomeExtensions
+{
+    public static byte ByteValue<TAllele, TGene>(this INumericChromosome<TAllele, TGene> nc, int index)
         where TAllele : IComparable<TAllele>, IConvertible
         where TGene : INumericGene<TAllele, TGene>
     {
+        return nc.GetGene(index).Allele.ToByte(null);
     }
 
-    public static class NumericChromosomeExtensions
+    public static byte ByteValue<TAllele, TGene>(this INumericChromosome<TAllele, TGene> nc)
+        where TAllele : IComparable<TAllele>, IConvertible
+        where TGene : INumericGene<TAllele, TGene>
     {
-        public static byte ByteValue<TAllele, TGene>(this INumericChromosome<TAllele, TGene> nc, int index)
-            where TAllele : IComparable<TAllele>, IConvertible
-            where TGene : INumericGene<TAllele, TGene>
-        {
-            return nc.GetGene(index).Allele.ToByte(null);
-        }
+        return nc.ByteValue(0);
+    }
 
-        public static byte ByteValue<TAllele, TGene>(this INumericChromosome<TAllele, TGene> nc)
-            where TAllele : IComparable<TAllele>, IConvertible
-            where TGene : INumericGene<TAllele, TGene>
-        {
-            return nc.ByteValue(0);
-        }
+    public static short ShortValue<TAllele, TGene>(this INumericChromosome<TAllele, TGene> nc, int index)
+        where TAllele : IComparable<TAllele>, IConvertible
+        where TGene : INumericGene<TAllele, TGene>
+    {
+        return nc.GetGene(index).Allele.ToInt16(null);
+    }
 
-        public static short ShortValue<TAllele, TGene>(this INumericChromosome<TAllele, TGene> nc, int index)
-            where TAllele : IComparable<TAllele>, IConvertible
-            where TGene : INumericGene<TAllele, TGene>
-        {
-            return nc.GetGene(index).Allele.ToInt16(null);
-        }
+    public static short ShortValue<TAllele, TGene>(this INumericChromosome<TAllele, TGene> nc)
+        where TAllele : IComparable<TAllele>, IConvertible
+        where TGene : INumericGene<TAllele, TGene>
+    {
+        return nc.ShortValue(0);
+    }
 
-        public static short ShortValue<TAllele, TGene>(this INumericChromosome<TAllele, TGene> nc)
-            where TAllele : IComparable<TAllele>, IConvertible
-            where TGene : INumericGene<TAllele, TGene>
-        {
-            return nc.ShortValue(0);
-        }
+    public static int IntValue<TAllele, TGene>(this INumericChromosome<TAllele, TGene> nc, int index)
+        where TAllele : IComparable<TAllele>, IConvertible
+        where TGene : INumericGene<TAllele, TGene>
+    {
+        return nc.GetGene(index).Allele.ToInt32(null);
+    }
 
-        public static int IntValue<TAllele, TGene>(this INumericChromosome<TAllele, TGene> nc, int index)
-            where TAllele : IComparable<TAllele>, IConvertible
-            where TGene : INumericGene<TAllele, TGene>
-        {
-            return nc.GetGene(index).Allele.ToInt32(null);
-        }
+    public static int IntValue<TAllele, TGene>(this INumericChromosome<TAllele, TGene> nc)
+        where TAllele : IComparable<TAllele>, IConvertible
+        where TGene : INumericGene<TAllele, TGene>
+    {
+        return nc.IntValue(0);
+    }
 
-        public static int IntValue<TAllele, TGene>(this INumericChromosome<TAllele, TGene> nc)
-            where TAllele : IComparable<TAllele>, IConvertible
-            where TGene : INumericGene<TAllele, TGene>
-        {
-            return nc.IntValue(0);
-        }
+    public static float FloatValue<TAllele, TGene>(this INumericChromosome<TAllele, TGene> nc, int index)
+        where TAllele : IComparable<TAllele>, IConvertible
+        where TGene : INumericGene<TAllele, TGene>
+    {
+        return nc.GetGene(index).Allele.ToSingle(null);
+    }
 
-        public static float FloatValue<TAllele, TGene>(this INumericChromosome<TAllele, TGene> nc, int index)
-            where TAllele : IComparable<TAllele>, IConvertible
-            where TGene : INumericGene<TAllele, TGene>
-        {
-            return nc.GetGene(index).Allele.ToSingle(null);
-        }
+    public static float FloatValue<TAllele, TGene>(this INumericChromosome<TAllele, TGene> nc)
+        where TAllele : IComparable<TAllele>, IConvertible
+        where TGene : INumericGene<TAllele, TGene>
+    {
+        return nc.FloatValue(0);
+    }
 
-        public static float FloatValue<TAllele, TGene>(this INumericChromosome<TAllele, TGene> nc)
-            where TAllele : IComparable<TAllele>, IConvertible
-            where TGene : INumericGene<TAllele, TGene>
-        {
-            return nc.FloatValue(0);
-        }
+    public static double DoubleValue<TAllele, TGene>(this INumericChromosome<TAllele, TGene> nc, int index)
+        where TAllele : IComparable<TAllele>, IConvertible
+        where TGene : INumericGene<TAllele, TGene>
+    {
+        return nc.GetGene(index).Allele.ToDouble(null);
+    }
 
-        public static double DoubleValue<TAllele, TGene>(this INumericChromosome<TAllele, TGene> nc, int index)
-            where TAllele : IComparable<TAllele>, IConvertible
-            where TGene : INumericGene<TAllele, TGene>
-        {
-            return nc.GetGene(index).Allele.ToDouble(null);
-        }
-
-        public static double DoubleValue<TAllele, TGene>(this INumericChromosome<TAllele, TGene> nc)
-            where TAllele : IComparable<TAllele>, IConvertible
-            where TGene : INumericGene<TAllele, TGene>
-        {
-            return nc.DoubleValue(0);
-        }
+    public static double DoubleValue<TAllele, TGene>(this INumericChromosome<TAllele, TGene> nc)
+        where TAllele : IComparable<TAllele>, IConvertible
+        where TGene : INumericGene<TAllele, TGene>
+    {
+        return nc.DoubleValue(0);
     }
 }

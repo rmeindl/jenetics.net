@@ -19,26 +19,25 @@
 using System;
 using System.Collections.Generic;
 
-namespace Jenetics.Util
+namespace Jenetics.Util;
+
+public static class Lists
 {
-    public static class Lists
+    public static void Shuffle<T>(IList<T> list)
     {
-        public static void Shuffle<T>(IList<T> list)
-        {
-            Shuffle(list, RandomRegistry.GetRandom());
-        }
+        Shuffle(list, RandomRegistry.GetRandom());
+    }
 
-        public static void Shuffle<T>(IList<T> list, Random random)
-        {
-            for (var j = list.Count - 1; j > 0; --j)
-                Swap(list, j, random.NextInt(j + 1));
-        }
+    public static void Shuffle<T>(IList<T> list, Random random)
+    {
+        for (var j = list.Count - 1; j > 0; --j)
+            Swap(list, j, random.NextInt(j + 1));
+    }
 
-        public static void Swap<T>(IList<T> list, int i, int j)
-        {
-            var old = list[i];
-            list[i] = list[j];
-            list[j] = old;
-        }
+    public static void Swap<T>(IList<T> list, int i, int j)
+    {
+        var old = list[i];
+        list[i] = list[j];
+        list[j] = old;
     }
 }

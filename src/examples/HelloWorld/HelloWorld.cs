@@ -19,34 +19,33 @@
 using System;
 using System.Linq;
 using Jenetics.Engine;
+using JeneticsEngine = Jenetics.Engine.Engine;
 
-namespace Jenetics.Example
+namespace Jenetics.Example;
+public static class HelloWorld
 {
-    public static class HelloWorld
+    // 2.) Definition of the fitness function.
+    private static int Eval(Genotype<BitGene> gt)
     {
-        // 2.) Definition of the fitness function.
-        private static int Eval(Genotype<BitGene> gt)
+        return gt.GetChromosome().As<BitChromosome>().BitCount();
+    }
+
+    public static void Main()
+    {
+        // 1.) Define the genotype (factory) suitable
+        //     for the problem.
+        Genotype<BitGene> F()
         {
-            return gt.GetChromosome().As<BitChromosome>().BitCount();
+            return Genotype.Of(BitChromosome.Of(10, 0.5));
         }
 
-        public static void Main()
-        {
-            // 1.) Define the genotype (factory) suitable
-            //     for the problem.
-            Genotype<BitGene> F()
-            {
-                return Genotype.Of(BitChromosome.Of(10, 0.5));
-            }
+        // 3.) Create the execution environment.
+        var engine = JeneticsEngine.Builder(Eval, F).Build();
 
-            // 3.) Create the execution environment.
-            var engine = Engine.Engine.Builder(Eval, F).Build();
+        // 4.) Start the execution (evolution) and
+        //     collect the result.
+        var result = engine.Stream().Take(100).ToBestGenotype();
 
-            // 4.) Start the execution (evolution) and
-            //     collect the result.
-            var result = engine.Stream().Take(100).ToBestGenotype();
-
-            Console.WriteLine("Hello World:\n" + result);
-        }
+        Console.WriteLine($"Hello World:\n{result}");
     }
 }

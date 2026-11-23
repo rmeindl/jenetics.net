@@ -19,44 +19,43 @@
 using System;
 using System.Collections.Generic;
 
-namespace Jenetics
+namespace Jenetics;
+
+public enum Optimize
 {
-    public enum Optimize
+    Minimum,
+    Maximum
+}
+
+public static class OptimizeExtensions
+{
+    public static IComparer<T> Ascending<T>(this Optimize opt)
+        where T : IComparable<T>
     {
-        Minimum,
-        Maximum
+        return Comparer<T>.Create((x, y) => opt.Compare(x, y));
     }
 
-    public static class OptimizeExtensions
+    public static IComparer<T> Descending<T>(this Optimize opt)
+        where T : IComparable<T>
     {
-        public static IComparer<T> Ascending<T>(this Optimize opt)
-            where T : IComparable<T>
-        {
-            return Comparer<T>.Create((x, y) => Compare(opt, x, y));
-        }
+        return Comparer<T>.Create((x, y) => opt.Compare(y, x));
+    }
 
-        public static IComparer<T> Descending<T>(this Optimize opt)
-            where T : IComparable<T>
-        {
-            return Comparer<T>.Create((x, y) => Compare(opt, y, x));
-        }
+    public static int Compare<T>(this Optimize opt, T a, T b)
+        where T : IComparable<T>
+    {
+        return opt == Optimize.Maximum ? a.CompareTo(b) : b.CompareTo(a);
+    }
 
-        public static int Compare<T>(this Optimize opt, T a, T b)
-            where T : IComparable<T>
-        {
-            return opt == Optimize.Maximum ? a.CompareTo(b) : b.CompareTo(a);
-        }
+    public static T Best<T>(this Optimize opt, T a, T b)
+        where T : IComparable<T>
+    {
+        return opt.Compare(b, a) > 0 ? b : a;
+    }
 
-        public static T Best<T>(this Optimize opt, T a, T b)
-            where T : IComparable<T>
-        {
-            return Compare(opt, b, a) > 0 ? b : a;
-        }
-
-        public static T Worst<T>(this Optimize opt, T a, T b)
-            where T : IComparable<T>
-        {
-            return Compare(opt, b, a) < 0 ? b : a;
-        }
+    public static T Worst<T>(this Optimize opt, T a, T b)
+        where T : IComparable<T>
+    {
+        return opt.Compare(b, a) < 0 ? b : a;
     }
 }

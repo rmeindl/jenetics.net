@@ -16,31 +16,30 @@
 // Author:
 //    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
 
-namespace Jenetics.Internal.Math
+namespace Jenetics.Internal.Math;
+
+public static class Statistics
 {
-    public static class Statistics
+    public static double Min(double[] values)
     {
-        public static double Min(double[] values)
+        var min = double.NaN;
+        if (values.Length > 0)
         {
-            var min = double.NaN;
-            if (values.Length > 0)
-            {
-                min = values[0];
+            min = values[0];
 
-                for (var i = values.Length; --i >= 1;)
-                    if (values[i] < min)
-                        min = values[i];
-            }
-
-            return min;
+            for (var i = values.Length; --i >= 1;)
+                if (values[i] < min)
+                    min = values[i];
         }
 
-        public static long Sum(long[] values)
-        {
-            long sum = 0;
-            for (var i = values.Length; --i >= 0;)
-                sum += values[i];
-            return sum;
-        }
+        return min;
+    }
+
+    public static long Sum(long[] values)
+    {
+        long sum = 0;
+        for (var i = values.Length; --i >= 0;)
+            sum += values[i];
+        return sum;
     }
 }

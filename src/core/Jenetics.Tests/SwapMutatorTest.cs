@@ -19,62 +19,55 @@
 using System.Collections.Generic;
 using Xunit;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class SwapMutatorTest : MutatorTesterBase
 {
-    public class SwapMutatorTest : MutatorTesterBase
+    protected override IAlterer<DoubleGene, double> NewAlterer(double p)
     {
-        protected override IAlterer<DoubleGene, double> NewAlterer(double p)
+        return new SwapMutator<DoubleGene, double>(p);
+    }
+
+    [Theory]
+    [ClassData(typeof(TestUtils.AlterCountParameters))]
+    public override void AlterCount(int ngenes, int nchromosomes, int npopulation)
+    {
+        var p1 = TestUtils.NewDoubleGenePopulation(ngenes, nchromosomes, npopulation);
+        var p2 = p1.Copy();
+        Assert.Equal(p1, p2);
+
+        var mutator = NewAlterer(0.01);
+
+        var alterations = mutator.Alter(p1, 1);
+        //var diff = TestUtils.Diff(p1, p2);
+
+        if (ngenes == 1) Assert.Equal(0, alterations);
+        //Assert.True(alterations >= diff/2, $"{alterations} >= {diff/2}");
+        //Assert.True(alterations <= 2*diff, $"{alterations} < {2 * diff}");
+    }
+
+    [Theory]
+    [MemberData(nameof(AlterProbabilityParameters))]
+    public override void AlterProbability(int ngenes, int nchromosomes, int npopulation, double p)
+    {
+        base.AlterProbability(ngenes, nchromosomes, npopulation, p);
+    }
+
+    public static IEnumerable<object[]> AlterProbabilityParameters()
+    {
+        return new List<object[]>
         {
-            return new SwapMutator<DoubleGene, double>(p);
-        }
+            new object[] { 180, 1, 150, 0.15 },
+            new object[] { 180, 2, 150, 0.15 },
+            new object[] { 180, 15, 150, 0.15 },
 
-        [Theory]
-        [ClassData(typeof(TestUtils.AlterCountParameters))]
-        public override void AlterCount(int ngenes, int nchromosomes, int npopulation)
-        {
-            var p1 = TestUtils.NewDoubleGenePopulation(ngenes, nchromosomes, npopulation);
-            var p2 = p1.Copy();
-            Assert.Equal(p1, p2);
+            new object[] { 180, 1, 150, 0.5 },
+            new object[] { 180, 2, 150, 0.5 },
+            new object[] { 180, 15, 150, 0.5 },
 
-            var mutator = NewAlterer(0.01);
-
-            var alterations = mutator.Alter(p1, 1);
-            //var diff = TestUtils.Diff(p1, p2);
-
-            if (ngenes == 1)
-            {
-                Assert.Equal(0, alterations);
-            }
-            else 
-            {
-                //Assert.True(alterations >= diff/2, $"{alterations} >= {diff/2}");
-                //Assert.True(alterations <= 2*diff, $"{alterations} < {2 * diff}");
-            }
-        }
-
-        [Theory]
-        [MemberData(nameof(AlterProbabilityParameters))]
-        public override void AlterProbability(int ngenes, int nchromosomes, int npopulation, double p)
-        {
-            base.AlterProbability(ngenes, nchromosomes, npopulation, p);
-        }
-
-        public static IEnumerable<object[]> AlterProbabilityParameters()
-        {
-            return new List<object[]>
-            {
-                new object[] {180, 1, 150, 0.15},
-                new object[] {180, 2, 150, 0.15},
-                new object[] {180, 15, 150, 0.15},
-
-                new object[] {180, 1, 150, 0.5},
-                new object[] {180, 2, 150, 0.5},
-                new object[] {180, 15, 150, 0.5},
-
-                new object[] {180, 1, 150, 0.85},
-                new object[] {180, 2, 150, 0.85},
-                new object[] {180, 15, 150, 0.85}
-            };
-        }
+            new object[] { 180, 1, 150, 0.85 },
+            new object[] { 180, 2, 150, 0.85 },
+            new object[] { 180, 15, 150, 0.85 }
+        };
     }
 }

@@ -20,52 +20,51 @@ using System;
 using Jenetics.Internal.Util;
 using Jenetics.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+public interface IBoundedChromosome<out TAllele, TGene> : IChromosome<TGene>
+    where TAllele : IComparable<TAllele>
+    where TGene : IBoundedGene<TAllele, TGene>
 {
-    public interface IBoundedChromosome<out TAllele, TGene> : IChromosome<TGene>
-        where TAllele : IComparable<TAllele>
-        where TGene : IBoundedGene<TAllele, TGene>
+    TAllele Min { get; }
+    TAllele Max { get; }
+}
+
+[Serializable]
+public abstract class BoundedChromosomeBase<TAllele, TGene> : ChromosomeBase<TGene>,
+    IBoundedChromosome<TAllele, TGene>
+    where TAllele : IComparable<TAllele>
+    where TGene : BoundedGeneBase<TAllele, TGene>
+{
+    // for serialization only
+    protected internal BoundedChromosomeBase()
     {
-        TAllele Min { get; }
-        TAllele Max { get; }
     }
 
-    [Serializable]
-    public abstract class BoundedChromosomeBase<TAllele, TGene> : ChromosomeBase<TGene>,
-        IBoundedChromosome<TAllele, TGene>
-        where TAllele : IComparable<TAllele>
-        where TGene : BoundedGeneBase<TAllele, TGene>
+    protected BoundedChromosomeBase(IImmutableSeq<TGene> genes) : base(genes)
     {
-        // for serialization only
-        protected internal BoundedChromosomeBase()
-        {
-        }
+        Min = genes[0].Min;
+        Max = genes[0].Max;
+    }
 
-        protected BoundedChromosomeBase(IImmutableSeq<TGene> genes) : base(genes)
-        {
-            Min = genes[0].Min;
-            Max = genes[0].Max;
-        }
+    public TAllele Min { get; protected set; }
 
-        public TAllele Min { get; protected set; }
+    public TAllele Max { get; protected set; }
 
-        public TAllele Max { get; protected set; }
+    public override bool Equals(object? obj)
+    {
+        return Equality.Of(this, obj)(nc =>
+            Equality.Eq(Min, nc.Min) &&
+            Equality.Eq(Max, nc.Max) &&
+            base.Equals(obj)
+        );
+    }
 
-        public override bool Equals(object obj)
-        {
-            return Equality.Of(this, obj)(nc =>
-                Equality.Eq(Min, nc.Min) &&
-                Equality.Eq(Max, nc.Max) &&
-                base.Equals(obj)
-            );
-        }
-
-        public override int GetHashCode()
-        {
-            return Hash.Of(GetType())
-                .And(base.GetHashCode())
-                .And(Min)
-                .And(Max).Value;
-        }
+    public override int GetHashCode()
+    {
+        return Hash.Of(GetType())
+            .And(base.GetHashCode())
+            .And(Min)
+            .And(Max).Value;
     }
 }

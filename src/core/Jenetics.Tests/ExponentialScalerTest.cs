@@ -18,21 +18,20 @@
 
 using Jenetics.Util;
 
-namespace Jenetics
-{
-    public class ExponentialScalerTest : ObjectTesterBase<ExponentialScaler>
-    {
-        protected override Factory<ExponentialScaler> Factory()
-        {
-            return () =>
-            {
-                var random = RandomRegistry.GetRandom();
-                double a = random.NextInt(100) + 10;
-                double b = random.NextInt(100) + 10;
-                double c = random.NextInt(100) + 10;
+namespace Jenetics;
 
-                return new ExponentialScaler(a, b, c);
-            };
-        }
+public class ExponentialScalerTest : ObjectTesterBase<ExponentialScaler>
+{
+    protected override Factory<ExponentialScaler> Factory()
+    {
+        return () =>
+        {
+            var random = RandomRegistry.GetRandom();
+            double a = random.NextInt(100) + 10;
+            double b = random.NextInt(100) + 10;
+            double c = random.NextInt(100) + 10;
+
+            return new ExponentialScaler(a, b, c);
+        };
     }
 }

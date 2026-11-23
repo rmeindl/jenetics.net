@@ -18,64 +18,63 @@
 
 using Xunit;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class CharacterGeneTest : GeneTesterBase<char, CharacterGene>
 {
-    public class CharacterGeneTest : GeneTesterBase<char, CharacterGene>
+    protected override Factory<CharacterGene> Factory()
     {
-        protected override Factory<CharacterGene> Factory()
-        {
-            return CharacterGene.Of;
-        }
+        return CharacterGene.Of;
+    }
 
-        [Fact]
-        public void TestCharacterGene()
-        {
-            var gene = CharacterGene.Of();
-            Assert.True(gene.IsValidCharacter(gene.Allele));
-        }
+    [Fact]
+    public void TestCharacterGene()
+    {
+        var gene = CharacterGene.Of();
+        Assert.True(gene.IsValidCharacter(gene.Allele));
+    }
 
-        [Fact]
-        public void TestCharacterGeneCharacter()
-        {
-            var gene = CharacterGene.Of('4');
+    [Fact]
+    public void TestCharacterGeneCharacter()
+    {
+        var gene = CharacterGene.Of('4');
 
-            Assert.Equal('4', gene.Allele);
-        }
+        Assert.Equal('4', gene.Allele);
+    }
 
-        [Fact]
-        public void TestCompareTo()
-        {
-            var g1 = CharacterGene.Of('1');
-            var g2 = CharacterGene.Of('2');
-            var g3 = CharacterGene.Of('3');
+    [Fact]
+    public void TestCompareTo()
+    {
+        var g1 = CharacterGene.Of('1');
+        var g2 = CharacterGene.Of('2');
+        var g3 = CharacterGene.Of('3');
 
-            Assert.True(g1.CompareTo(g2) < 0);
-            Assert.True(g2.CompareTo(g3) < 0);
-            Assert.True(g3.CompareTo(g2) > 0);
-            Assert.True(g2.CompareTo(g2) == 0);
-        }
+        Assert.True(g1.CompareTo(g2) < 0);
+        Assert.True(g2.CompareTo(g3) < 0);
+        Assert.True(g3.CompareTo(g2) > 0);
+        Assert.True(g2.CompareTo(g2) == 0);
+    }
 
-        [Fact]
-        public void TestGetCharacter()
-        {
-            var gene = CharacterGene.Of('6');
+    [Fact]
+    public void TestGetCharacter()
+    {
+        var gene = CharacterGene.Of('6');
 
-            Assert.Equal('6', gene.Allele);
-        }
+        Assert.Equal('6', gene.Allele);
+    }
 
-        [Fact]
-        public void TestGetValidCharacters()
-        {
-            var cset = CharacterGene.DefaultCharacters;
-            Assert.NotNull(cset);
-            Assert.False(cset.IsEmpty);
-        }
+    [Fact]
+    public void TestGetValidCharacters()
+    {
+        var cset = CharacterGene.DefaultCharacters;
+        Assert.NotNull(cset);
+        Assert.False(cset.IsEmpty);
+    }
 
-        [Fact]
-        public void TestIsValidCharacter()
-        {
-            foreach (var c in CharacterGene.DefaultCharacters)
-                Assert.True(CharacterGene.Of(c).IsValidCharacter(c));
-        }
+    [Fact]
+    public void TestIsValidCharacter()
+    {
+        foreach (var c in CharacterGene.DefaultCharacters)
+            Assert.True(CharacterGene.Of(c).IsValidCharacter(c));
     }
 }

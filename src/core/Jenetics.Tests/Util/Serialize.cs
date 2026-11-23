@@ -21,23 +21,24 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using Xunit;
 
-namespace Jenetics.Util
+namespace Jenetics.Util;
+
+public static class Serialize
 {
-    public static class Serialize
+    public static void Test<T>(T obj)
     {
-        public static void Test<T>(T obj)
+        using (var stream = new MemoryStream())
         {
-            using (var stream = new MemoryStream())
-            {
-                IFormatter formatter = new BinaryFormatter();
-                formatter.Serialize(stream, obj);
+#pragma warning disable SYSLIB0011 // BinaryFormatter is used to validate legacy serialization behavior.
+            IFormatter formatter = new BinaryFormatter();
+            formatter.Serialize(stream, obj);
 
-                stream.Seek(0, SeekOrigin.Begin);
+            stream.Seek(0, SeekOrigin.Begin);
 
-                var copy = formatter.Deserialize(stream);
+            var copy = formatter.Deserialize(stream);
+#pragma warning restore SYSLIB0011 // BinaryFormatter is used to validate legacy serialization behavior.
 
-                Assert.Equal(obj, copy);
-            }
+            Assert.Equal(obj, copy);
         }
     }
 }

@@ -19,27 +19,26 @@
 using System;
 using Jenetics.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class PhenotypeTest : ObjectTesterBase<Phenotype<DoubleGene, double>>
 {
-    public class PhenotypeTest : ObjectTesterBase<Phenotype<DoubleGene, double>>
+    private readonly Func<Genotype<DoubleGene>, double> _ff = gt => Math.Sin(ToRadians(gt.Gene.Allele));
+
+    private readonly Factory<Genotype<DoubleGene>> _genotype = () => Genotype.Of(
+        DoubleChromosome.Of(0, 1, 50),
+        DoubleChromosome.Of(0, 1, 500),
+        DoubleChromosome.Of(0, 1, 100),
+        DoubleChromosome.Of(0, 1, 50)
+    );
+
+    protected override Factory<Phenotype<DoubleGene, double>> Factory()
     {
-        private readonly Func<Genotype<DoubleGene>, double> _ff = gt => Math.Sin(ToRadians(gt.Gene.Allele));
+        return () => Phenotype.Of(_genotype(), 0, _ff).Evaluate();
+    }
 
-        private readonly Factory<Genotype<DoubleGene>> _genotype = () => Genotype.Of(
-            DoubleChromosome.Of(0, 1, 50),
-            DoubleChromosome.Of(0, 1, 500),
-            DoubleChromosome.Of(0, 1, 100),
-            DoubleChromosome.Of(0, 1, 50)
-        );
-
-        protected override Factory<Phenotype<DoubleGene, double>> Factory()
-        {
-            return () => Phenotype.Of(_genotype(), 0, _ff).Evaluate();
-        }
-
-        private static double ToRadians(double angdeg)
-        {
-            return angdeg / 180.0 * Math.PI;
-        }
+    private static double ToRadians(double angdeg)
+    {
+        return angdeg / 180.0 * Math.PI;
     }
 }

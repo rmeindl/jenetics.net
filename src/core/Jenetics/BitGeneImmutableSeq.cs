@@ -21,29 +21,28 @@ using Jenetics.Internal.Collection;
 using Jenetics.Util;
 using Array = System.Array;
 
-namespace Jenetics
+namespace Jenetics;
+
+[Serializable]
+public class BitGeneImmutableSeq : ArrayImmutableSeq<BitGene>, ICopyable<BitGeneMutableSeq>
 {
-    [Serializable]
-    public class BitGeneImmutableSeq : ArrayImmutableSeq<BitGene>, ICopyable<BitGeneMutableSeq>
+    internal BitGeneImmutableSeq(Array<BitGene> array) : base(array)
     {
-        internal BitGeneImmutableSeq(Array<BitGene> array) : base(array)
-        {
-        }
+    }
 
-        public new BitGeneMutableSeq Copy()
-        {
-            return new BitGeneMutableSeq(Values.Copy());
-        }
+    public new BitGeneMutableSeq Copy()
+    {
+        return new BitGeneMutableSeq(Values.Copy());
+    }
 
-        internal void CopyTo(byte[] array)
-        {
-            var store = (BitGeneStore) Values.Store();
-            Array.Copy(store.Array, 0, array, 0, store.Array.Length);
-        }
+    internal void CopyTo(byte[] array)
+    {
+        var store = (BitGeneStore)Values.Store();
+        Array.Copy(store.Array, 0, array, 0, store.Array.Length);
+    }
 
-        internal BitGeneImmutableSeq Of(byte[] genes, int length)
-        {
-            return new BitGeneImmutableSeq(Internal.Collection.Array.Of(BitGeneStore.Of(genes, length)).Seal());
-        }
+    internal BitGeneImmutableSeq Of(byte[] genes, int length)
+    {
+        return new BitGeneImmutableSeq(Internal.Collection.Array.Of(BitGeneStore.Of(genes, length)).Seal());
     }
 }

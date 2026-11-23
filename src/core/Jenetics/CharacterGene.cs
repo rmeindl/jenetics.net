@@ -21,117 +21,115 @@ using Jenetics.Internal.Util;
 using Jenetics.Util;
 using static Jenetics.Internal.Util.Require;
 
-namespace Jenetics
+namespace Jenetics;
+
+[Serializable]
+public class CharacterGene : IGene<char, CharacterGene>, IComparable<CharacterGene>
 {
-    [Serializable]
-    public class CharacterGene : IGene<char, CharacterGene>, IComparable<CharacterGene>
+    public static readonly CharSeq DefaultCharacters = new(
+        "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+        " !\"$%&/()=?`{[]}\\+~*#';.:,-_<>|@^'"
+    );
+
+    private readonly CharSeq _validCharacters;
+
+    private CharacterGene(CharSeq chars, int index)
     {
-        public static readonly CharSeq DefaultCharacters = new CharSeq(
-            "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" +
-            " !\"$%&/()=?`{[]}\\+~*#';.:,-_<>|@^'"
+        Allele = chars[index];
+        _validCharacters = chars;
+        IsValid = true;
+    }
+
+    private CharacterGene(char character, CharSeq validChars)
+    {
+        Allele = NonNull(character);
+        _validCharacters = NonNull(validChars);
+        IsValid = _validCharacters.Contains(Allele);
+    }
+
+    public int CompareTo(CharacterGene? that)
+    {
+        return that == null ? 1 : Allele.CompareTo(that.Allele);
+    }
+
+    public bool IsValid { get; }
+
+    public CharacterGene NewInstance()
+    {
+        return Of(_validCharacters);
+    }
+
+    public CharacterGene NewInstance(char character)
+    {
+        return Of(character, _validCharacters);
+    }
+
+    public char Allele { get; }
+
+    public bool IsValidCharacter(char character)
+    {
+        return _validCharacters.Contains(character);
+    }
+
+    public static CharacterGene Of(CharSeq validCharacters)
+    {
+        return new CharacterGene(
+            validCharacters,
+            RandomRegistry.GetRandom().Next(validCharacters.Length)
         );
+    }
 
-        private readonly bool _valid;
-        private readonly CharSeq _validCharacters;
+    public static CharacterGene Of(
+        char character,
+        CharSeq validCharacters
+    )
+    {
+        return new CharacterGene(character, validCharacters);
+    }
 
-        private CharacterGene(CharSeq chars, int index)
-        {
-            Allele = chars[index];
-            _validCharacters = chars;
-            _valid = true;
-        }
+    public static CharacterGene Of()
+    {
+        return new CharacterGene(
+            DefaultCharacters,
+            RandomRegistry.GetRandom().NextInt(DefaultCharacters.Length)
+        );
+    }
 
-        private CharacterGene(char character, CharSeq validChars)
-        {
-            Allele = NonNull(character);
-            _validCharacters = NonNull(validChars);
-            _valid = _validCharacters.Contains(Allele);
-        }
+    public static CharacterGene Of(char character)
+    {
+        return new CharacterGene(character, DefaultCharacters);
+    }
 
-        public int CompareTo(CharacterGene that)
-        {
-            return Allele.CompareTo(that.Allele);
-        }
+    public CharSeq GetValidCharacters()
+    {
+        return _validCharacters;
+    }
 
-        public bool IsValid => _valid;
+    public override bool Equals(object? obj)
+    {
+        return obj is CharacterGene gene &&
+               Equality.Eq(gene.Allele, Allele) &&
+               Equality.Eq(gene._validCharacters, _validCharacters);
+    }
 
-        public CharacterGene NewInstance()
-        {
-            return Of(_validCharacters);
-        }
+    public override int GetHashCode()
+    {
+        return Hash.Of(GetType())
+            .And(Allele)
+            .And(_validCharacters).Value;
+    }
 
-        public CharacterGene NewInstance(char character)
-        {
-            return Of(character, _validCharacters);
-        }
+    public override string ToString()
+    {
+        return Allele.ToString();
+    }
 
-        public char Allele { get; }
+    internal static IImmutableSeq<CharacterGene> Seq(CharSeq chars, int length)
+    {
+        var r = RandomRegistry.GetRandom();
 
-        public bool IsValidCharacter(char character)
-        {
-            return _validCharacters.Contains(character);
-        }
-
-        public static CharacterGene Of(CharSeq validCharacters)
-        {
-            return new CharacterGene(
-                validCharacters,
-                RandomRegistry.GetRandom().Next(validCharacters.Length)
-            );
-        }
-
-        public static CharacterGene Of(
-            char character,
-            CharSeq validCharacters
-        )
-        {
-            return new CharacterGene(character, validCharacters);
-        }
-
-        public static CharacterGene Of()
-        {
-            return new CharacterGene(
-                DefaultCharacters,
-                RandomRegistry.GetRandom().NextInt(DefaultCharacters.Length)
-            );
-        }
-
-        public static CharacterGene Of(char character)
-        {
-            return new CharacterGene(character, DefaultCharacters);
-        }
-
-        public CharSeq GetValidCharacters()
-        {
-            return _validCharacters;
-        }
-
-        public override bool Equals(object obj)
-        {
-            return obj is CharacterGene gene &&
-                   Equality.Eq(gene.Allele, Allele) &&
-                   Equality.Eq(gene._validCharacters, _validCharacters);
-        }
-
-        public override int GetHashCode()
-        {
-            return Hash.Of(GetType())
-                .And(Allele)
-                .And(_validCharacters).Value;
-        }
-
-        public override string ToString()
-        {
-            return Allele.ToString();
-        }
-
-        internal static IImmutableSeq<CharacterGene> Seq(CharSeq chars, int length)
-        {
-            var r = RandomRegistry.GetRandom();
-
-            return MutableSeq.OfLength<CharacterGene>(length)
-                .Fill(() => new CharacterGene(chars, r.Next(chars.Length)))
-                .ToImmutableSeq();
-        }
+        return MutableSeq.OfLength<CharacterGene>(length)
+            .Fill(() => new CharacterGene(chars, r.Next(chars.Length)))
+            .ToImmutableSeq();
     }
 }

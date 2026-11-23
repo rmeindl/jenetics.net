@@ -21,86 +21,85 @@ using System.Linq;
 using Jenetics.Util;
 using Xunit;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class PopulationTest : ObjectTesterBase<Population<DoubleGene, double>>
 {
-    public class PopulationTest : ObjectTesterBase<Population<DoubleGene, double>>
+    private static readonly Func<Genotype<DoubleGene>, double> Ff = gt => gt.Gene.Allele;
+
+    private static readonly Func<double, double> Fs = d => d;
+
+    private static Phenotype<DoubleGene, double> Pt(double value)
     {
-        private static readonly Func<Genotype<DoubleGene>, double> Ff = gt => gt.Gene.Allele;
+        return Phenotype.Of(Genotype.Of(DoubleChromosome.Of(DoubleGene.Of(value, 0, 10))), 0, Ff, Fs);
+    }
 
-        private static readonly Func<double, double> Fs = d => d;
-
-        private static Phenotype<DoubleGene, double> Pt(double value)
+    protected override Factory<Population<DoubleGene, double>> Factory()
+    {
+        return () =>
         {
-            return Phenotype.Of(Genotype.Of(DoubleChromosome.Of(DoubleGene.Of(value, 0, 10))), 0, Ff, Fs);
+            var gt = Genotype.Of(DoubleChromosome.Of(0, 1));
+
+            return new Population<DoubleGene, double>(100)
+                .Fill(() => Phenotype.Of(gt.NewInstance(), 1, Ff, Fs), 100);
+        };
+    }
+
+    [Fact]
+    public void Empty()
+    {
+        var genotype = Genotype.Of(
+            Enumerable.Range(0, 10)
+                .Select(_ => DoubleChromosome.Of(0, 10, 10))
+                .ToImmutableSeq()
+        );
+
+        var pop = Population.Empty<DoubleGene, bool>();
+
+        Assert.True(0 == pop.Count);
+        Assert.True(pop.IsEmpty);
+
+        pop.Add(Phenotype.Of(genotype, 1, _ => true));
+
+        Assert.True(1 == pop.Count);
+        Assert.False(pop.IsEmpty);
+    }
+
+    [Fact]
+    public void Sort()
+    {
+        var population = new Population<DoubleGene, double>();
+        var random = RandomRegistry.GetRandom();
+        for (var i = 0; i < 100; ++i)
+            population.Add(Pt(random.Next() * 9.0));
+
+        population.PopulationSort();
+        for (var i = 0; i < population.Count - 1; ++i)
+        {
+            var first = Ff(population[i].GetGenotype());
+            var second = Ff(population[i + 1].GetGenotype());
+
+            Assert.True(first.CompareTo(second) >= 0);
         }
 
-        protected override Factory<Population<DoubleGene, double>> Factory()
+        Lists.Shuffle(population);
+        population.SortWith(Optimize.Maximum.Descending<double>());
+        for (var i = 0; i < population.Count - 1; ++i)
         {
-            return () =>
-            {
-                var gt = Genotype.Of(DoubleChromosome.Of(0, 1));
+            var first = Ff(population[i].GetGenotype());
+            var second = Ff(population[i + 1].GetGenotype());
 
-                return new Population<DoubleGene, double>(100)
-                    .Fill(() => Phenotype.Of(gt.NewInstance(), 1, Ff, Fs), 100);
-            };
+            Assert.True(first.CompareTo(second) >= 0, first + "<" + second);
         }
 
-        [Fact]
-        public void Empty()
+        Lists.Shuffle(population);
+        population.SortWith(Optimize.Minimum.Descending<double>());
+        for (var i = 0; i < population.Count - 1; ++i)
         {
-            var genotype = Genotype.Of(
-                Enumerable.Range(0, 10)
-                    .Select(i => DoubleChromosome.Of(0, 10, 10))
-                    .ToImmutableSeq()
-            );
+            var first = Ff(population[i].GetGenotype());
+            var second = Ff(population[i + 1].GetGenotype());
 
-            var pop = Population.Empty<DoubleGene, bool>();
-
-            Assert.True(0 == pop.Count);
-            Assert.True(pop.IsEmpty);
-
-            pop.Add(Phenotype.Of(genotype, 1, chromosomes => true));
-
-            Assert.True(1 == pop.Count);
-            Assert.False(pop.IsEmpty);
-        }
-
-        [Fact]
-        public void Sort()
-        {
-            var population = new Population<DoubleGene, double>();
-            var random = RandomRegistry.GetRandom();
-            for (var i = 0; i < 100; ++i)
-                population.Add(Pt(random.Next() * 9.0));
-
-            population.PopulationSort();
-            for (var i = 0; i < population.Count - 1; ++i)
-            {
-                var first = Ff(population[i].GetGenotype());
-                var second = Ff(population[i + 1].GetGenotype());
-
-                Assert.True(first.CompareTo(second) >= 0);
-            }
-
-            Lists.Shuffle(population);
-            population.SortWith(Optimize.Maximum.Descending<double>());
-            for (var i = 0; i < population.Count - 1; ++i)
-            {
-                var first = Ff(population[i].GetGenotype());
-                var second = Ff(population[i + 1].GetGenotype());
-
-                Assert.True(first.CompareTo(second) >= 0, first + "<" + second);
-            }
-
-            Lists.Shuffle(population);
-            population.SortWith(Optimize.Minimum.Descending<double>());
-            for (var i = 0; i < population.Count - 1; ++i)
-            {
-                var first = Ff(population[i].GetGenotype());
-                var second = Ff(population[i + 1].GetGenotype());
-
-                Assert.True(first.CompareTo(second) <= 0, first + ">" + second);
-            }
+            Assert.True(first.CompareTo(second) <= 0, first + ">" + second);
         }
     }
 }

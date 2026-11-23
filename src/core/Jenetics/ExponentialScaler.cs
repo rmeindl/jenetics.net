@@ -19,57 +19,56 @@
 using System;
 using Jenetics.Internal.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+[Serializable]
+public class ExponentialScaler
 {
-    [Serializable]
-    public class ExponentialScaler
+    public static ExponentialScaler SqrScaler = new(2);
+    public static ExponentialScaler SqrtScaler = new(0.5);
+
+    private readonly double _a;
+    private readonly double _b;
+    private readonly double _c;
+
+    public ExponentialScaler(double a, double b, double c)
     {
-        public static ExponentialScaler SqrScaler = new ExponentialScaler(2);
-        public static ExponentialScaler SqrtScaler = new ExponentialScaler(0.5);
+        _a = a;
+        _b = b;
+        _c = c;
+    }
 
-        private readonly double _a;
-        private readonly double _b;
-        private readonly double _c;
+    public ExponentialScaler(double b, double c) : this(1.0, b, c)
+    {
+    }
 
-        public ExponentialScaler(double a, double b, double c)
-        {
-            _a = a;
-            _b = b;
-            _c = c;
-        }
+    public ExponentialScaler(double c) : this(1.0, 0.0, c)
+    {
+    }
 
-        public ExponentialScaler(double b, double c) : this(1.0, b, c)
-        {
-        }
+    public double Apply(double value)
+    {
+        return Math.Pow(_a * value + _b, _c);
+    }
 
-        public ExponentialScaler(double c) : this(1.0, 0.0, c)
-        {
-        }
+    public override bool Equals(object? obj)
+    {
+        return obj is ExponentialScaler scaler &&
+               Equality.Eq(scaler._a, _a) &&
+               Equality.Eq(scaler._b, _b) &&
+               Equality.Eq(scaler._c, _c);
+    }
 
-        public double Apply(double value)
-        {
-            return Math.Pow(_a * value + _b, _c);
-        }
+    public override int GetHashCode()
+    {
+        return Hash.Of(GetType())
+            .And(_a)
+            .And(_b)
+            .And(_c).Value;
+    }
 
-        public override bool Equals(object obj)
-        {
-            return obj is ExponentialScaler scaler &&
-                   Equality.Eq(scaler._a, _a) &&
-                   Equality.Eq(scaler._b, _b) &&
-                   Equality.Eq(scaler._c, _c);
-        }
-
-        public override int GetHashCode()
-        {
-            return Hash.Of(GetType())
-                .And(_a)
-                .And(_b)
-                .And(_c).Value;
-        }
-
-        public override string ToString()
-        {
-            return $"{GetType().Name}[a={_a}, b={_b}, c={_c}]";
-        }
+    public override string ToString()
+    {
+        return $"{GetType().Name}[a={_a}, b={_b}, c={_c}]";
     }
 }

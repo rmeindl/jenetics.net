@@ -18,49 +18,48 @@
 
 using System;
 
-namespace Jenetics.Engine
+namespace Jenetics.Engine;
+
+internal class SteadyFitnessLimit<TAllele>
+    where TAllele : IComparable<TAllele>
 {
-    internal class SteadyFitnessLimit<TAllele>
-        where TAllele : IComparable<TAllele>, IConvertible
+    private readonly int _generations;
+    private TAllele? _fitness;
+
+    private bool _proceed = true;
+    private int _stable;
+
+    public SteadyFitnessLimit(int generations)
     {
-        private readonly int _generations;
-        private TAllele _fitness;
+        if (generations < 1)
+            throw new ArgumentException("Generations < 1: " + generations);
+        _generations = generations;
+    }
 
-        private bool _proceed = true;
-        private int _stable;
+    public bool Test<T>(EvolutionResult<T, TAllele> result)
+        where T : IGene<T>
+    {
+        if (!_proceed) return false;
 
-        public SteadyFitnessLimit(int generations)
+        if (_fitness == null)
         {
-            if (generations < 1)
-                throw new ArgumentException("Generations < 1: " + generations);
-            _generations = generations;
+            _fitness = result.GetBestFitness();
+            _stable = 1;
         }
-
-        public bool Test<T>(EvolutionResult<T, TAllele> result)
-            where T : IGene<T>
+        else
         {
-            if (!_proceed) return false;
-
-            if (_fitness == null)
+            var opt = result.GetOptimize();
+            if (opt.Compare(_fitness, result.GetBestFitness()) >= 0)
+            {
+                _proceed = ++_stable <= _generations;
+            }
+            else
             {
                 _fitness = result.GetBestFitness();
                 _stable = 1;
             }
-            else
-            {
-                var opt = result.GetOptimize();
-                if (opt.Compare(_fitness, result.GetBestFitness()) >= 0)
-                {
-                    _proceed = ++_stable <= _generations;
-                }
-                else
-                {
-                    _fitness = result.GetBestFitness();
-                    _stable = 1;
-                }
-            }
-
-            return _proceed;
         }
+
+        return _proceed;
     }
 }

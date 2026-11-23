@@ -21,64 +21,63 @@ using System.Collections.Generic;
 using Jenetics.Internal.Util;
 using Jenetics.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+[Serializable]
+public class DoubleChromosome : BoundedChromosomeBase<double, DoubleGene>,
+    INumericChromosome<double, DoubleGene>
 {
-    [Serializable]
-    public class DoubleChromosome : BoundedChromosomeBase<double, DoubleGene>,
-        INumericChromosome<double, DoubleGene>
+    private DoubleChromosome(IImmutableSeq<DoubleGene> genes) : base(genes)
     {
-        private DoubleChromosome(IImmutableSeq<DoubleGene> genes) : base(genes)
-        {
-        }
+    }
 
-        public DoubleChromosome(double min, double max, int length = 1) : this(DoubleGene.Seq(min, max, length))
-        {
-            Valid = true;
-        }
+    public DoubleChromosome(double min, double max, int length = 1) : this(DoubleGene.Seq(min, max, length))
+    {
+        Valid = true;
+    }
 
-        public override IEnumerator<DoubleGene> GetEnumerator()
-        {
-            return Genes.GetEnumerator();
-        }
+    public override IEnumerator<DoubleGene> GetEnumerator()
+    {
+        return Genes.GetEnumerator();
+    }
 
-        public override IChromosome<DoubleGene> NewInstance()
-        {
-            return new DoubleChromosome(Min, Max, Length);
-        }
+    public override IChromosome<DoubleGene> NewInstance()
+    {
+        return new DoubleChromosome(Min, Max, Length);
+    }
 
-        public override IChromosome<DoubleGene> NewInstance(IImmutableSeq<DoubleGene> genes)
-        {
-            return new DoubleChromosome(genes);
-        }
+    public override IChromosome<DoubleGene> NewInstance(IImmutableSeq<DoubleGene> genes)
+    {
+        return new DoubleChromosome(genes);
+    }
 
-        public static DoubleChromosome Of(double min, double max)
-        {
-            return new DoubleChromosome(min, max);
-        }
+    public static DoubleChromosome Of(double min, double max)
+    {
+        return new DoubleChromosome(min, max);
+    }
 
-        public static DoubleChromosome Of(double min, double max, int length)
-        {
-            return new DoubleChromosome(min, max, length);
-        }
+    public static DoubleChromosome Of(double min, double max, int length)
+    {
+        return new DoubleChromosome(min, max, length);
+    }
 
-        public static DoubleChromosome Of(DoubleRange range)
-        {
-            return new DoubleChromosome(range.Min, range.Max);
-        }
+    public static DoubleChromosome Of(DoubleRange range)
+    {
+        return new DoubleChromosome(range.Min, range.Max);
+    }
 
-        public static DoubleChromosome Of(params DoubleGene[] genes)
-        {
-            return new DoubleChromosome(ImmutableSeq.Of(genes));
-        }
+    public static DoubleChromosome Of(params DoubleGene[] genes)
+    {
+        return new DoubleChromosome(ImmutableSeq.Of(genes));
+    }
 
-        public override bool Equals(object obj)
-        {
-            return Equality.Of(this, obj)(base.Equals);
-        }
+    public override bool Equals(object? obj)
+    {
+        return Equality.Of(this, obj)(base.Equals);
+    }
 
-        public override int GetHashCode()
-        {
-            return Hash.Of(GetType()).And(base.GetHashCode()).Value;
-        }
+    public override int GetHashCode()
+    {
+        return Hash.Of(GetType()).And(base.GetHashCode()).Value;
     }
 }

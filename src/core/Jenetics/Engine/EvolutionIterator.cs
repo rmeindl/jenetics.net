@@ -21,64 +21,63 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace Jenetics.Engine
+namespace Jenetics.Engine;
+
+public class EvolutionIterator<TGene, TAllele> : IEnumerator<EvolutionResult<TGene, TAllele>>,
+    IEnumerable<EvolutionResult<TGene, TAllele>>
+    where TGene : IGene<TGene>
+    where TAllele : IComparable<TAllele>
 {
-    public class EvolutionIterator<TGene, TAllele> : IEnumerator<EvolutionResult<TGene, TAllele>>,
-        IEnumerable<EvolutionResult<TGene, TAllele>>
-        where TGene : IGene<TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
+    private readonly CancellationToken _cancellationToken;
+
+    private readonly Func<EvolutionStart<TGene, TAllele>, CancellationToken, EvolutionResult<TGene, TAllele>>
+        _evolution;
+
+    private readonly Func<EvolutionStart<TGene, TAllele>> _initial;
+
+    private EvolutionStart<TGene, TAllele>? _start;
+
+    public EvolutionIterator(
+        Func<EvolutionStart<TGene, TAllele>> initial,
+        Func<EvolutionStart<TGene, TAllele>, CancellationToken, EvolutionResult<TGene, TAllele>> evolution,
+        CancellationToken cancellationToken
+    )
     {
-        private readonly CancellationToken _cancellationToken;
+        _initial = initial;
+        _evolution = evolution;
+        _cancellationToken = cancellationToken;
+    }
 
-        private readonly Func<EvolutionStart<TGene, TAllele>, CancellationToken, EvolutionResult<TGene, TAllele>>
-            _evolution;
+    public IEnumerator<EvolutionResult<TGene, TAllele>> GetEnumerator()
+    {
+        return this;
+    }
 
-        private readonly Func<EvolutionStart<TGene, TAllele>> _initial;
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 
-        private EvolutionStart<TGene, TAllele> _start;
+    public EvolutionResult<TGene, TAllele> Current { get; private set; }
 
-        public EvolutionIterator(
-            Func<EvolutionStart<TGene, TAllele>> initial,
-            Func<EvolutionStart<TGene, TAllele>, CancellationToken, EvolutionResult<TGene, TAllele>> evolution,
-            CancellationToken cancellationToken
-        )
-        {
-            _initial = initial;
-            _evolution = evolution;
-            _cancellationToken = cancellationToken;
-        }
+    object IEnumerator.Current => Current;
 
-        public IEnumerator<EvolutionResult<TGene, TAllele>> GetEnumerator()
-        {
-            return this;
-        }
+    public void Dispose()
+    {
+    }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+    public bool MoveNext()
+    {
+        if (_start == null)
+            _start = _initial();
 
-        public EvolutionResult<TGene, TAllele> Current { get; private set; }
+        Current = _evolution(_start, _cancellationToken);
+        _start = Current.Next();
 
-        object IEnumerator.Current => Current;
+        return true;
+    }
 
-        public void Dispose()
-        {
-        }
-
-        public bool MoveNext()
-        {
-            if (_start == null)
-                _start = _initial();
-
-            Current = _evolution(_start, _cancellationToken);
-            _start = Current.Next();
-
-            return true;
-        }
-
-        public void Reset()
-        {
-        }
+    public void Reset()
+    {
     }
 }

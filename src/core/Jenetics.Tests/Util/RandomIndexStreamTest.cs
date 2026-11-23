@@ -16,9 +16,8 @@
 // Author:
 //    Franz Wilhelmstötter (franz.wilhelmstoetter@gmx.at)
 
-namespace Jenetics.Util
+namespace Jenetics.Util;
+
+public class RandomIndexStreamTest
 {
-    public class RandomIndexStreamTest
-    {
-    }
 }

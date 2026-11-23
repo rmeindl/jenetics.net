@@ -19,63 +19,62 @@
 using System;
 using Jenetics.Internal.Util;
 using Jenetics.Util;
-using static Jenetics.Internal.Math.random;
+using static Jenetics.Internal.Math.RandomExtensions;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class IntermediateCrossover<TGene, TAllele> : CrossoverBase<TGene, TAllele>
+    where TGene : INumericGene<TAllele, TGene>
+    where TAllele : IComparable<TAllele>, IConvertible
 {
-    public class IntermediateCrossover<TGene, TAllele> : CrossoverBase<TGene, TAllele>
-        where TGene : INumericGene<TAllele, TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
+    private readonly double _p;
+
+    public IntermediateCrossover(double probability, double p = 0) : base(probability)
     {
-        private readonly double _p;
+        _p = Require.NonNegative(p, "p");
+    }
 
-        public IntermediateCrossover(double probability, double p = 0) : base(probability)
+    protected internal override int Crossover(IMutableSeq<TGene> v, IMutableSeq<TGene> w)
+    {
+        var random = RandomRegistry.GetRandom();
+
+        var min = v[0].Min;
+        var max = v[0].Max;
+
+        for (int i = 0, n = Math.Min(v.Length, w.Length); i < n; ++i)
         {
-            _p = Require.NonNegative(p, "p");
-        }
+            var vi = v[i].DoubleValue();
+            var wi = w[i].DoubleValue();
 
-        protected internal override int Crossover(IMutableSeq<TGene> v, IMutableSeq<TGene> w)
-        {
-            var random = RandomRegistry.GetRandom();
-
-            var min = v[0].Min;
-            var max = v[0].Max;
-
-            for (int i = 0, n = Math.Min(v.Length, w.Length); i < n; ++i)
+            dynamic t, s;
+            do
             {
-                var vi = v[i].DoubleValue();
-                var wi = w[i].DoubleValue();
+                var a = NextDouble(random, -_p, 1 + _p);
+                var b = NextDouble(random, -_p, 1 + _p);
 
-                dynamic t, s;
-                do
-                {
-                    var a = NextDouble(random, -_p, 1 + _p);
-                    var b = NextDouble(random, -_p, 1 + _p);
+                t = a * vi + (1 - a) * wi;
+                s = b * wi + (1 - b) * vi;
+            } while (t < min || s < min || t >= max || s >= max);
 
-                    t = a * vi + (1 - a) * wi;
-                    s = b * wi + (1 - b) * vi;
-                } while (t < min || s < min || t >= max || s >= max);
-
-                v[i] = v[i].NewInstance(t);
-                w[i] = w[i].NewInstance(s);
-            }
-
-            return 2;
+            v[i] = v[i].NewInstance(t);
+            w[i] = w[i].NewInstance(s);
         }
 
-        public override bool Equals(object obj)
-        {
-            return obj is IntermediateCrossover<TGene, TAllele> && base.Equals(obj);
-        }
+        return 2;
+    }
 
-        public override int GetHashCode()
-        {
-            return Hash.Of(GetType()).And(base.GetHashCode()).Value;
-        }
+    public override bool Equals(object? obj)
+    {
+        return obj is IntermediateCrossover<TGene, TAllele> && base.Equals(obj);
+    }
 
-        public override string ToString()
-        {
-            return $"{GetType().Name}[p={_p}]";
-        }
+    public override int GetHashCode()
+    {
+        return Hash.Of(GetType()).And(base.GetHashCode()).Value;
+    }
+
+    public override string ToString()
+    {
+        return $"{GetType().Name}[p={_p}]";
     }
 }

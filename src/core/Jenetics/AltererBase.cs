@@ -19,31 +19,30 @@
 using System;
 using Jenetics.Internal.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+public abstract class AltererBase<TGene, TAllele> : IAlterer<TGene, TAllele>
+    where TGene : IGene<TGene>
+    where TAllele : IComparable<TAllele>
 {
-    public abstract class AltererBase<TGene, TAllele> : IAlterer<TGene, TAllele>
-        where TGene : IGene<TGene>
-        where TAllele : IComparable<TAllele>
+    protected AltererBase(double probability)
     {
-        protected AltererBase(double probability)
-        {
-            Probability = Require.Probability(probability);
-        }
+        Probability = Require.Probability(probability);
+    }
 
-        public double Probability { get; }
+    public double Probability { get; }
 
-        public abstract int Alter(Population<TGene, TAllele> population, long generation);
+    public abstract int Alter(Population<TGene, TAllele> population, long generation);
 
-        public override bool Equals(object obj)
-        {
-            return Equality.Of(this, obj)(alterer =>
-                Equality.Eq(Probability, alterer.Probability)
-            );
-        }
+    public override bool Equals(object? obj)
+    {
+        return Equality.Of(this, obj)(alterer =>
+            Equality.Eq(Probability, alterer.Probability)
+        );
+    }
 
-        public override int GetHashCode()
-        {
-            return Hash.Of(GetType()).And(Probability).Value;
-        }
+    public override int GetHashCode()
+    {
+        return Hash.Of(GetType()).And(Probability).Value;
     }
 }

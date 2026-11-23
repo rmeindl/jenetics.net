@@ -20,63 +20,62 @@ using System;
 using Jenetics.Util;
 using Xunit;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class EnumGeneTest : GeneTesterBase<int, EnumGene<int>>
 {
-    public class EnumGeneTest : GeneTesterBase<int, EnumGene<int>>
+    private readonly Factory<EnumGene<int>> _factory = () =>
     {
-        private readonly Factory<EnumGene<int>> _factory = () =>
-        {
-            var alleles = MutableSeq.OfLength<int>(100).Fill(Factories.Int()).ToImmutableSeq();
-            return EnumGene.Of(alleles);
-        };
+        var alleles = MutableSeq.OfLength<int>(100).Fill(Factories.Int()).ToImmutableSeq();
+        return EnumGene.Of(alleles);
+    };
 
-        protected override Factory<EnumGene<int>> Factory()
+    protected override Factory<EnumGene<int>> Factory()
+    {
+        return _factory;
+    }
+
+    [Fact]
+    public void ValueOf()
+    {
+        const int length = 100;
+        var alleles = MutableSeq.OfLength<int>(length).Fill(Factories.Int()).ToImmutableSeq();
+
+        Assert.Equal(length, alleles.Length);
+        for (var i = 0; i < alleles.Length; ++i)
+            Assert.Equal(alleles[i], i);
+
+        for (var i = 0; i < alleles.Length; ++i)
         {
-            return _factory;
+            Assert.Equal(new EnumGene<int>(i, alleles).Allele, i);
+            Assert.Same(new EnumGene<int>(i, alleles).GetValidAlleles(), alleles);
         }
+    }
 
-        [Fact]
-        public void ValueOf()
-        {
-            const int length = 100;
-            var alleles = MutableSeq.OfLength<int>(length).Fill(Factories.Int()).ToImmutableSeq();
+    [Fact]
+    public void ValueOfIndexOutOfBounds1()
+    {
+        const int length = 100;
+        var alleles = MutableSeq.OfLength<int>(length).Fill(Factories.Int()).ToImmutableSeq();
 
-            Assert.Equal(alleles.Length, length);
-            for (var i = 0; i < alleles.Length; ++i)
-                Assert.Equal(alleles[i], i);
+        Assert.Throws<IndexOutOfRangeException>(() => new EnumGene<int>(length + 1, alleles));
+    }
 
-            for (var i = 0; i < alleles.Length; ++i)
-            {
-                Assert.Equal(new EnumGene<int>(i, alleles).Allele, i);
-                Assert.Same(new EnumGene<int>(i, alleles).GetValidAlleles(), alleles);
-            }
-        }
+    [Fact]
+    public void ValueOfIndexOutOfBounds2()
+    {
+        const int length = 100;
+        var alleles = MutableSeq.OfLength<int>(length).Fill(Factories.Int()).ToImmutableSeq();
 
-        [Fact]
-        public void ValueOfIndexOutOfBounds1()
-        {
-            const int length = 100;
-            var alleles = MutableSeq.OfLength<int>(length).Fill(Factories.Int()).ToImmutableSeq();
+        Assert.Throws<IndexOutOfRangeException>(() => new EnumGene<int>(-1, alleles));
+    }
 
-            Assert.Throws<IndexOutOfRangeException>(() => new EnumGene<int>(length + 1, alleles));
-        }
+    [Fact]
+    public void ValueOfZeroLength()
+    {
+        const int length = 0;
+        var alleles = MutableSeq.OfLength<int>(length).Fill(Factories.Int()).ToImmutableSeq();
 
-        [Fact]
-        public void ValueOfIndexOutOfBounds2()
-        {
-            const int length = 100;
-            var alleles = MutableSeq.OfLength<int>(length).Fill(Factories.Int()).ToImmutableSeq();
-
-            Assert.Throws<IndexOutOfRangeException>(() => new EnumGene<int>(-1, alleles));
-        }
-
-        [Fact]
-        public void ValueOfZeroLength()
-        {
-            const int length = 0;
-            var alleles = MutableSeq.OfLength<int>(length).Fill(Factories.Int()).ToImmutableSeq();
-
-            Assert.Throws<ArgumentException>(() => EnumGene.Of(alleles));
-        }
+        Assert.Throws<ArgumentException>(() => EnumGene.Of(alleles));
     }
 }

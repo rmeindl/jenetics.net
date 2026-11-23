@@ -22,76 +22,75 @@ using System.Runtime.Serialization;
 using Jenetics.Internal.Util;
 using Jenetics.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+[Serializable]
+public class LongChromosome : BoundedChromosomeBase<long, LongGene>, INumericChromosome<long, LongGene>,
+    ISerializable
 {
-    [Serializable]
-    public class LongChromosome : BoundedChromosomeBase<long, LongGene>, INumericChromosome<long, LongGene>,
-        ISerializable
+    private LongChromosome(IImmutableSeq<LongGene> genes) : base(genes)
     {
-        private LongChromosome(IImmutableSeq<LongGene> genes) : base(genes)
-        {
-        }
+    }
 
-        public LongChromosome(long min, long max, int length = 1) : this(LongGene.Seq(min, max, length))
-        {
-            Valid = true;
-        }
+    public LongChromosome(long min, long max, int length = 1) : this(LongGene.Seq(min, max, length))
+    {
+        Valid = true;
+    }
 
-        protected LongChromosome(SerializationInfo info, StreamingContext context)
-        {
-            var genes = MutableSeq.OfLength<LongGene>(info.GetInt32("_length"));
-            Min = info.GetInt64("_min");
-            Max = info.GetInt64("_max");
+    protected LongChromosome(SerializationInfo info, StreamingContext context)
+    {
+        var genes = MutableSeq.OfLength<LongGene>(info.GetInt32("_length"));
+        Min = info.GetInt64("_min");
+        Max = info.GetInt64("_max");
 
-            for (var i = 0; i < genes.Length; ++i)
-                genes[i] = new LongGene(info.GetInt64("_gene_" + i), Min, Max);
+        for (var i = 0; i < genes.Length; ++i)
+            genes[i] = new LongGene(info.GetInt64("_gene_" + i), Min, Max);
 
-            Genes = genes.ToImmutableSeq();
-        }
+        Genes = genes.ToImmutableSeq();
+    }
 
-        public override IEnumerator<LongGene> GetEnumerator()
-        {
-            return Genes.GetEnumerator();
-        }
+    public override IEnumerator<LongGene> GetEnumerator()
+    {
+        return Genes.GetEnumerator();
+    }
 
-        public override IChromosome<LongGene> NewInstance()
-        {
-            return new LongChromosome(Min, Max, Length);
-        }
+    public override IChromosome<LongGene> NewInstance()
+    {
+        return new LongChromosome(Min, Max, Length);
+    }
 
-        public override IChromosome<LongGene> NewInstance(IImmutableSeq<LongGene> genes)
-        {
-            return new LongChromosome(genes);
-        }
+    public override IChromosome<LongGene> NewInstance(IImmutableSeq<LongGene> genes)
+    {
+        return new LongChromosome(genes);
+    }
 
-        public void GetObjectData(SerializationInfo info, StreamingContext context)
-        {
-            info.AddValue("_length", Length);
-            info.AddValue("_min", Min);
-            info.AddValue("_max", Max);
+    public void GetObjectData(SerializationInfo info, StreamingContext context)
+    {
+        info.AddValue("_length", Length);
+        info.AddValue("_min", Min);
+        info.AddValue("_max", Max);
 
-            for (var i = 0; i < Genes.Length; i++)
-                info.AddValue("_gene_" + i, Genes[i].Allele);
-        }
+        for (var i = 0; i < Genes.Length; i++)
+            info.AddValue("_gene_" + i, Genes[i].Allele);
+    }
 
-        public override bool Equals(object obj)
-        {
-            return Equality.Of(this, obj)(base.Equals);
-        }
+    public override bool Equals(object? obj)
+    {
+        return Equality.Of(this, obj)(base.Equals);
+    }
 
-        public override int GetHashCode()
-        {
-            return Hash.Of(GetType()).And(base.GetHashCode()).Value;
-        }
+    public override int GetHashCode()
+    {
+        return Hash.Of(GetType()).And(base.GetHashCode()).Value;
+    }
 
-        public static LongChromosome Of(LongRange range)
-        {
-            return new LongChromosome(range.Min, range.Max);
-        }
+    public static LongChromosome Of(LongRange range)
+    {
+        return new LongChromosome(range.Min, range.Max);
+    }
 
-        public static LongChromosome Of(long min, long max, int length)
-        {
-            return new LongChromosome(min, max, length);
-        }
+    public static LongChromosome Of(long min, long max, int length)
+    {
+        return new LongChromosome(min, max, length);
     }
 }

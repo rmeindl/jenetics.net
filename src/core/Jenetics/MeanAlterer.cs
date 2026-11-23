@@ -19,52 +19,51 @@
 using System;
 using Jenetics.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class MeanAlterer<TGene, TAllele> : RecombinatorBase<TGene, TAllele>
+    where TGene : IGene<TGene>, IMean<TGene>
+    where TAllele : IComparable<TAllele>
 {
-    public class MeanAlterer<TGene, TAllele> : RecombinatorBase<TGene, TAllele>
-        where TGene : IGene<TGene>, IMean<TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
+    public MeanAlterer(double probability) : base(probability, 2)
     {
-        public MeanAlterer(double probability) : base(probability, 2)
-        {
-        }
+    }
 
-        public MeanAlterer() : this(0.05)
-        {
-        }
+    public MeanAlterer() : this(0.05)
+    {
+    }
 
-        protected internal override int Recombine(Population<TGene, TAllele> population, int[] individuals,
-            long generation)
-        {
-            var random = RandomRegistry.GetRandom();
+    protected internal override int Recombine(Population<TGene, TAllele> population, int[] individuals,
+        long generation)
+    {
+        var random = RandomRegistry.GetRandom();
 
-            var pt1 = population[individuals[0]];
-            var pt2 = population[individuals[1]];
-            var gt1 = pt1.GetGenotype();
-            var gt2 = pt2.GetGenotype();
+        var pt1 = population[individuals[0]];
+        var pt2 = population[individuals[1]];
+        var gt1 = pt1.GetGenotype();
+        var gt2 = pt2.GetGenotype();
 
-            var cindex = random.NextInt(Math.Min(gt1.Length, gt2.Length));
+        var cindex = random.NextInt(Math.Min(gt1.Length, gt2.Length));
 
-            var c1 = gt1.ToSeq().Copy();
-            var c2 = gt2.ToSeq();
+        var c1 = gt1.ToSeq().Copy();
+        var c2 = gt2.ToSeq();
 
-            var mean = Mean(
-                c1[cindex].ToSeq().Copy(),
-                c2[cindex].ToSeq()
-            );
+        var mean = Mean(
+            c1[cindex].ToSeq().Copy(),
+            c2[cindex].ToSeq()
+        );
 
-            c1[cindex] = c1[cindex].NewInstance(mean.ToImmutableSeq());
+        c1[cindex] = c1[cindex].NewInstance(mean.ToImmutableSeq());
 
-            population[individuals[0]] = pt1.NewInstance(gt1.NewInstance(c1.ToImmutableSeq()), generation);
+        population[individuals[0]] = pt1.NewInstance(gt1.NewInstance(c1.ToImmutableSeq()), generation);
 
-            return 1;
-        }
+        return 1;
+    }
 
-        private static IMutableSeq<TGene> Mean(IMutableSeq<TGene> a, ISeq<TGene> b)
-        {
-            for (var i = a.Length; --i >= 0;)
-                a[i] = a[i].Mean(b[i]);
-            return a;
-        }
+    private static IMutableSeq<TGene> Mean(IMutableSeq<TGene> a, ISeq<TGene> b)
+    {
+        for (var i = a.Length; --i >= 0;)
+            a[i] = a[i].Mean(b[i]);
+        return a;
     }
 }

@@ -21,61 +21,59 @@ using System.Linq;
 using Jenetics.Engine;
 using Jenetics.Util;
 using static Jenetics.Internal.Util.Require;
+using JeneticsEngine = Jenetics.Engine.Engine;
 
-namespace Jenetics.Example
+namespace Jenetics.Example;
+public class SubsetSum : IProblem<IImmutableSeq<int>, EnumGene<int>, int>
 {
-    public class SubsetSum : IProblem<IImmutableSeq<int>, EnumGene<int>, int>
+    private readonly IImmutableSeq<int> _basicSet;
+    private readonly int _size;
+
+    private SubsetSum(IImmutableSeq<int> basicSet, int size)
     {
-        private readonly IImmutableSeq<int> _basicSet;
-        private readonly int _size;
+        _basicSet = NonNull(basicSet);
+        _size = size;
+    }
 
-        private SubsetSum(IImmutableSeq<int> basicSet, int size)
-        {
-            _basicSet = NonNull(basicSet);
-            _size = size;
-        }
+    public Func<IImmutableSeq<int>, int> Fitness()
+    {
+        return subset => Math.Abs(
+            subset.Sum()
+        );
+    }
 
-        public Func<IImmutableSeq<int>, int> Fitness()
-        {
-            return subset => Math.Abs(
-                subset.Sum()
-            );
-        }
+    public ICodec<IImmutableSeq<int>, EnumGene<int>> Codec()
+    {
+        return Codecs.OfSubSet(_basicSet, _size);
+    }
 
-        public ICodec<IImmutableSeq<int>, EnumGene<int>> Codec()
-        {
-            return Codecs.OfSubSet(_basicSet, _size);
-        }
+    private static SubsetSum Of(int n, int k, Random random)
+    {
+        return new SubsetSum(
+            random.Doubles()
+                .Take(n)
+                .Select(d => (int) ((d - 0.5) * n))
+                .ToImmutableSeq(),
+            k
+        );
+    }
 
-        private static SubsetSum Of(int n, int k, Random random)
-        {
-            return new SubsetSum(
-                random.Doubles()
-                    .Take(n)
-                    .Select(d => (int) ((d - 0.5) * n))
-                    .ToImmutableSeq(),
-                k
-            );
-        }
+    public static void Main()
+    {
+        var problem = Of(500, 15, new Random());
 
-        public static void Main()
-        {
-            //SubsetSum problem = Of(500, 15, new LCG64ShiftRandom(101010));
-            var problem = Of(500, 15, new Random());
+        var engine = JeneticsEngine.Builder(problem)
+            .Minimizing()
+            .MaximalPhenotypeAge(5)
+            .Alterers(
+                new PartiallyMatchedCrossover<int, int>(0.4),
+                new Mutator<EnumGene<int>, int>(0.3))
+            .Build();
 
-            var engine = Engine.Engine.Builder(problem)
-                .Minimizing()
-                .MaximalPhenotypeAge(5)
-                .Alterers(
-                    new PartiallyMatchedCrossover<int, int>(0.4),
-                    new Mutator<EnumGene<int>, int>(0.3))
-                .Build();
+        var result = engine.Stream()
+            .TakeWhile(Limits.BySteadyFitness<EnumGene<int>, int>(55))
+            .ToBestPhenotype();
 
-            var result = engine.Stream()
-                .TakeWhile(Limits.BySteadyFitness<EnumGene<int>, int>(55))
-                .ToBestPhenotype();
-
-            Console.WriteLine(result);
-        }
+        Console.WriteLine(result);
     }
 }

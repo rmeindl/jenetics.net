@@ -3,12 +3,12 @@
         <OutputType>Exe</OutputType>
     </PropertyGroup>
     <PropertyGroup>
-        <TargetFramework>netcoreapp2.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
         <ApplicationIcon/>
         <OutputTypeEx>exe</OutputTypeEx>
         <StartupObject>Jenetics.Example.CodecExample</StartupObject>
         <RootNamespace>Jenetics.Example</RootNamespace>
-		<AssemblyName>CodecExample</AssemblyName>
+        <AssemblyName>CodecExample</AssemblyName>
         <OutputType>Exe</OutputType>
     </PropertyGroup>
     <ItemGroup>

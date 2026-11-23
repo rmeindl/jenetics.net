@@ -20,84 +20,83 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Jenetics.Internal.Collection
-{
-    public static class Array
-    {
-        public static Array<T> Of<T>(IStore<T> store)
-        {
-            return new Array<T>(store);
-        }
+namespace Jenetics.Internal.Collection;
 
-        public static Array<T> OfLength<T>(int length)
-        {
-            return new Array<T>(ObjectStore.OfLength<T>(length));
-        }
+public static class Array
+{
+    public static Array<T> Of<T>(IStore<T> store)
+    {
+        return new Array<T>(store);
     }
 
-    [Serializable]
-    public class Array<T> : IEnumerable<T>
+    public static Array<T> OfLength<T>(int length)
     {
-        private readonly int _start;
-        private readonly StoreRef<T> _store;
+        return new Array<T>(ObjectStore.OfLength<T>(length));
+    }
+}
 
-        private Array(StoreRef<T> store, int from, int until)
-        {
-            _store = store;
-            _start = from;
-            Length = until - from;
-        }
+[Serializable]
+public class Array<T> : IEnumerable<T>
+{
+    private readonly int _start;
+    private readonly StoreRef<T> _store;
 
-        public Array(IStore<T> store) : this(StoreRef.Of(store), 0, store.Length)
-        {
-        }
+    private Array(StoreRef<T> store, int from, int until)
+    {
+        _store = store;
+        _start = from;
+        Length = until - from;
+    }
 
-        public int Length { get; }
+    public Array(IStore<T> store) : this(StoreRef.Of(store), 0, store.Length)
+    {
+    }
 
-        public T this[int index]
-        {
-            get => _store[index + _start];
-            set => _store[index + _start] = value;
-        }
+    public int Length { get; }
 
-        public IEnumerator<T> GetEnumerator()
-        {
-            for (var i = _start; i < Length; i++)
-                yield return _store[i];
-        }
+    public T this[int index]
+    {
+        get => _store[index + _start];
+        set => _store[index + _start] = value;
+    }
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+    public IEnumerator<T> GetEnumerator()
+    {
+        for (var i = _start; i < Length; i++)
+            yield return _store[i];
+    }
 
-        public Array<T> Seal()
-        {
-            return new Array<T>(_store.Seal(), _start, Length + _start);
-        }
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 
-        public IStore<T> Store()
-        {
-            return _store.Value;
-        }
+    public Array<T> Seal()
+    {
+        return new Array<T>(_store.Seal(), _start, Length + _start);
+    }
 
-        public Array<T> Copy()
-        {
-            return new Array<T>(_store.Copy(_start, Length + _start));
-        }
+    public IStore<T> Store()
+    {
+        return _store.Value;
+    }
 
-        public Array<T> Slice(int from, int until)
-        {
-            CheckIndex(from, until);
-            return new Array<T>(_store, from + _start, until + _start);
-        }
+    public Array<T> Copy()
+    {
+        return new Array<T>(_store.Copy(_start, Length + _start));
+    }
 
-        public void CheckIndex(int from, int until)
-        {
-            if (from > until)
-                throw new IndexOutOfRangeException($"fromIndex({from}) > toIndex({until})");
-            if (from < 0 || until > Length)
-                throw new IndexOutOfRangeException($"Invalid index range: [{from}, {until})");
-        }
+    public Array<T> Slice(int from, int until)
+    {
+        CheckIndex(from, until);
+        return new Array<T>(_store, from + _start, until + _start);
+    }
+
+    public void CheckIndex(int from, int until)
+    {
+        if (from > until)
+            throw new IndexOutOfRangeException($"fromIndex({from}) > toIndex({until})");
+        if (from < 0 || until > Length)
+            throw new IndexOutOfRangeException($"Invalid index range: [{from}, {until})");
     }
 }

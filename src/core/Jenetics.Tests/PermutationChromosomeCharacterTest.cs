@@ -18,13 +18,12 @@
 
 using Jenetics.Util;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class PermutationChromosomeCharacterTest : ChromosomeTesterBase<EnumGene<char>>
 {
-    public class PermutationChromosomeCharacterTest : ChromosomeTesterBase<EnumGene<char>>
+    protected override Factory<IChromosome<EnumGene<char>>> Factory()
     {
-        protected override Factory<IChromosome<EnumGene<char>>> Factory()
-        {
-            return () => PermutationChromosome.Of(CharSeq.Of("a-zA-Z"));
-        }
+        return () => PermutationChromosome.Of(CharSeq.Of("a-zA-Z"));
     }
 }

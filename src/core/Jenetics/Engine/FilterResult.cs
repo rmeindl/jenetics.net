@@ -18,21 +18,20 @@
 
 using System;
 
-namespace Jenetics.Engine
-{
-    internal class FilterResult<TGene, TAllele>
-        where TGene : IGene<TGene>
-        where TAllele : IComparable<TAllele>, IConvertible
-    {
-        internal readonly int InvalidCount;
-        internal readonly int KillCount;
-        internal readonly Population<TGene, TAllele> Population;
+namespace Jenetics.Engine;
 
-        internal FilterResult(Population<TGene, TAllele> population, int killCount, int invalidCount)
-        {
-            Population = population;
-            KillCount = killCount;
-            InvalidCount = invalidCount;
-        }
+internal class FilterResult<TGene, TAllele>
+    where TGene : IGene<TGene>
+    where TAllele : IComparable<TAllele>
+{
+    internal readonly int InvalidCount;
+    internal readonly int KillCount;
+    internal readonly Population<TGene, TAllele> Population;
+
+    internal FilterResult(Population<TGene, TAllele> population, int killCount, int invalidCount)
+    {
+        Population = population;
+        KillCount = killCount;
+        InvalidCount = invalidCount;
     }
 }

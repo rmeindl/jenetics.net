@@ -18,24 +18,23 @@
 
 using System;
 
-namespace Jenetics.Test
+namespace Jenetics.Test;
+
+public abstract class RetryBase
 {
-    public abstract class RetryBase
+    protected void Retry<TException>(int count, Action block)
+        where TException : Exception
     {
-        protected void Retry<TException>(int count, Action block)
-            where TException : Exception
-        {
-            if (count > 1)
-                try
-                {
-                    block();
-                }
-                catch (TException)
-                {
-                    Retry<TException>(count - 1, block);
-                }
-            else
+        if (count > 1)
+            try
+            {
                 block();
-        }
+            }
+            catch (TException)
+            {
+                Retry<TException>(count - 1, block);
+            }
+        else
+            block();
     }
 }

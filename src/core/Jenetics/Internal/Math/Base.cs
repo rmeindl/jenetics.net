@@ -19,142 +19,141 @@
 using System;
 using Jenetics.Util;
 
-namespace Jenetics.Internal.Math
+namespace Jenetics.Internal.Math;
+
+public static class Base
 {
-    public static class Base
+    public static long UlpDistance(double a, double b)
     {
-        public static long UlpDistance(double a, double b)
-        {
-            return UlpPosition(a) - UlpPosition(b);
-        }
+        return UlpPosition(a) - UlpPosition(b);
+    }
 
-        public static long UlpPosition(double a)
-        {
-            var t = BitConverter.DoubleToInt64Bits(a);
-            if (t < 0)
-                t = long.MinValue - t;
-            return t;
-        }
+    public static long UlpPosition(double a)
+    {
+        var t = BitConverter.DoubleToInt64Bits(a);
+        if (t < 0)
+            t = long.MinValue - t;
+        return t;
+    }
 
-        public static int[] Subset(int n, int k)
-        {
-            return Subset(n, k, RandomRegistry.GetRandom());
-        }
+    public static int[] Subset(int n, int k)
+    {
+        return Subset(n, k, RandomRegistry.GetRandom());
+    }
 
-        public static int[] Subset(int n, int k, Random random)
+    public static int[] Subset(int n, int k, Random random)
+    {
+        if (k <= 0)
+            throw new ArgumentOutOfRangeException($"Subset size smaller or equal zero: {k}");
+        if (n < k)
+            throw new ArgumentOutOfRangeException($"n smaller than k: {n} < {k}.");
+        var sub = new int[k];
+        Subset(n, sub, random);
+        return sub;
+    }
+
+    public static int[] Subset(int n, int[] sub, Random random)
+    {
+        var k = sub.Length;
+        CheckSubSet(n, k);
+
+        if (sub.Length == n)
         {
-            if (k <= 0)
-                throw new ArgumentOutOfRangeException($"Subset size smaller or equal zero: {k}");
-            if (n < k)
-                throw new ArgumentOutOfRangeException($"n smaller than k: {n} < {k}.");
-            var sub = new int[k];
-            Subset(n, sub, random);
+            for (var i = 0; i < k; ++i)
+                sub[i] = i;
             return sub;
         }
 
-        public static int[] Subset(int n, int[] sub, Random random)
+        for (var i = 0; i < k; ++i)
+            sub[i] = i * n / k;
+
+        int l;
+        int ix;
+        for (var i = 0; i < k; ++i)
         {
-            var k = sub.Length;
-            CheckSubSet(n, k);
-
-            if (sub.Length == n)
+            do
             {
-                for (var i = 0; i < k; ++i)
-                    sub[i] = i;
-                return sub;
-            }
+                ix = NextInt(random, 1, n);
+                l = (ix * k - 1) / n;
+            } while (sub[l] >= ix);
 
-            for (var i = 0; i < k; ++i)
-                sub[i] = i * n / k;
-
-            int l;
-            int ix;
-            for (var i = 0; i < k; ++i)
-            {
-                do
-                {
-                    ix = NextInt(random, 1, n);
-                    l = (ix * k - 1) / n;
-                } while (sub[l] >= ix);
-
-                sub[l] = sub[l] + 1;
-            }
-
-            var m = 0;
-            var ip = 0;
-            var @is = k;
-            for (var i = 0; i < k; ++i)
-            {
-                m = sub[i];
-                sub[i] = 0;
-
-                if (m != i * n / k)
-                {
-                    ip = ip + 1;
-                    sub[ip - 1] = m;
-                }
-            }
-
-            var ihi = ip;
-            for (var i = 1; i <= ihi; ++i)
-            {
-                ip = ihi + 1 - i;
-                l = 1 + (sub[ip - 1] * k - 1) / n;
-                var ids = sub[ip - 1] - (l - 1) * n / k;
-                sub[ip - 1] = 0;
-                sub[@is - 1] = l;
-                @is = @is - ids;
-            }
-
-            var ir = 0;
-            var m0 = 0;
-            for (var ll = 1; ll <= k; ++ll)
-            {
-                l = k + 1 - ll;
-
-                if (sub[l - 1] != 0)
-                {
-                    ir = l;
-                    m0 = 1 + (sub[l - 1] - 1) * n / k;
-                    m = sub[l - 1] * n / k - m0 + 1;
-                }
-
-                ix = NextInt(random, m0, m0 + m - 1);
-
-                var i = l + 1;
-                while (i <= ir && ix >= sub[i - 1])
-                {
-                    ix = ix + 1;
-                    sub[i - 2] = sub[i - 1];
-                    i = i + 1;
-                }
-
-                sub[i - 2] = ix;
-                --m;
-            }
-
-            return sub;
+            sub[l] = sub[l] + 1;
         }
 
-        public static void CheckSubSet(int n, int k)
+        var m = 0;
+        var ip = 0;
+        var @is = k;
+        for (var i = 0; i < k; ++i)
         {
-            if (k <= 0)
-                throw new ArgumentOutOfRangeException($"Subset size smaller or equal zero: {k}");
-            if (n < k)
-                throw new ArgumentOutOfRangeException($"n smaller than k: {n} < {k}.");
-            if (!Arithmetics.IsMultiplicationSave(n, k))
-                throw new ArgumentException(
-                    $"n*sub.length > Integer.MAX_VALUE ({n}*{k} = {n * k} > Integer.MAX_VALUE)");
+            m = sub[i];
+            sub[i] = 0;
+
+            if (m != i * n / k)
+            {
+                ip = ip + 1;
+                sub[ip - 1] = m;
+            }
         }
 
-        public static double Clamp(double v, double lo, double hi)
+        var ihi = ip;
+        for (var i = 1; i <= ihi; ++i)
         {
-            return v < lo ? lo : v > hi ? hi : v;
+            ip = ihi + 1 - i;
+            l = 1 + (sub[ip - 1] * k - 1) / n;
+            var ids = sub[ip - 1] - (l - 1) * n / k;
+            sub[ip - 1] = 0;
+            sub[@is - 1] = l;
+            @is = @is - ids;
         }
 
-        private static int NextInt(Random random, int a, int b)
+        var ir = 0;
+        var m0 = 0;
+        for (var ll = 1; ll <= k; ++ll)
         {
-            return a == b ? a - 1 : random.NextInt(b - a) + a;
+            l = k + 1 - ll;
+
+            if (sub[l - 1] != 0)
+            {
+                ir = l;
+                m0 = 1 + (sub[l - 1] - 1) * n / k;
+                m = sub[l - 1] * n / k - m0 + 1;
+            }
+
+            ix = NextInt(random, m0, m0 + m - 1);
+
+            var i = l + 1;
+            while (i <= ir && ix >= sub[i - 1])
+            {
+                ix = ix + 1;
+                sub[i - 2] = sub[i - 1];
+                i = i + 1;
+            }
+
+            sub[i - 2] = ix;
+            --m;
         }
+
+        return sub;
+    }
+
+    public static void CheckSubSet(int n, int k)
+    {
+        if (k <= 0)
+            throw new ArgumentOutOfRangeException($"Subset size smaller or equal zero: {k}");
+        if (n < k)
+            throw new ArgumentOutOfRangeException($"n smaller than k: {n} < {k}.");
+        if (!Arithmetics.IsMultiplicationSave(n, k))
+            throw new ArgumentException(
+                $"n*sub.length > Integer.MAX_VALUE ({n}*{k} = {n * k} > Integer.MAX_VALUE)");
+    }
+
+    public static double Clamp(double v, double lo, double hi)
+    {
+        return v < lo ? lo : v > hi ? hi : v;
+    }
+
+    private static int NextInt(Random random, int a, int b)
+    {
+        return a == b ? a - 1 : random.NextInt(b - a) + a;
     }
 }

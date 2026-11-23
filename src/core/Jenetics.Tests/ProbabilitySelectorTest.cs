@@ -22,68 +22,67 @@ using Jenetics.Internal.Math;
 using Jenetics.Util;
 using Xunit;
 
-namespace Jenetics
+namespace Jenetics;
+
+public class ProbabilitySelectorTest
 {
-    public class ProbabilitySelectorTest
+    private static double[] Array(int size, Random randomSource)
     {
-        private static double[] Array(int size, Random randomSource)
+        var array = new double[size];
+        for (var i = 0; i < array.Length; ++i)
+            array[i] = i;
+
+        Lists.Shuffle(array, randomSource);
+        return array;
+    }
+
+    [Theory]
+    [MemberData(nameof(ArraySize))]
+    public void Revert(int size)
+    {
+        var probabilities = Array(size, new Random());
+        var reverted = ProbabilitySelector.SortAndRevert(probabilities);
+
+        for (var i = 0; i < size; ++i)
+            Assert.Equal(size - 1.0, probabilities[i] + reverted[i]);
+    }
+
+    [Theory]
+    [MemberData(nameof(ArraySize))]
+    public void RevertSortedArray(int size)
+    {
+        var values = Array(size, new Random());
+        System.Array.Sort(values);
+
+        var reverted = ProbabilitySelector.SortAndRevert(values);
+        for (var i = 0; i < values.Length; ++i)
+            Assert.Equal(values.Length - i - 1, reverted[i]);
+    }
+
+    [Theory]
+    [MemberData(nameof(ArraySize))]
+    public void IndexOfSerialEqualBinary(int size)
+    {
+        var probabilities = Array(size, new Random(12));
+        Arithmetics.Normalize(probabilities);
+        ProbabilitySelector.Incremental(probabilities);
+
+        Assert.Equal(
+            ProbabilitySelector.IndexOfSerial(probabilities, 0.5),
+            ProbabilitySelector.IndexOfBinary(probabilities, 0.5)
+        );
+    }
+
+    public static IEnumerable<object[]> ArraySize()
+    {
+        return new[]
         {
-            var array = new double[size];
-            for (var i = 0; i < array.Length; ++i)
-                array[i] = i;
-
-            Lists.Shuffle(array, randomSource);
-            return array;
-        }
-
-        [Theory]
-        [MemberData(nameof(ArraySize))]
-        public void Revert(int size)
-        {
-            var probabilities = Array(size, new Random());
-            var reverted = ProbabilitySelector.SortAndRevert(probabilities);
-
-            for (var i = 0; i < size; ++i)
-                Assert.Equal(size - 1.0, probabilities[i] + reverted[i]);
-        }
-
-        [Theory]
-        [MemberData(nameof(ArraySize))]
-        public void RevertSortedArray(int size)
-        {
-            var values = Array(size, new Random());
-            System.Array.Sort(values);
-
-            var reverted = ProbabilitySelector.SortAndRevert(values);
-            for (var i = 0; i < values.Length; ++i)
-                Assert.Equal(values.Length - i - 1, reverted[i]);
-        }
-
-        [Theory]
-        [MemberData(nameof(ArraySize))]
-        public void IndexOfSerialEqualBinary(int size)
-        {
-            var probabilities = Array(size, new Random(12));
-            Arithmetics.Normalize(probabilities);
-            ProbabilitySelector.Incremental(probabilities);
-
-            Assert.Equal(
-                ProbabilitySelector.IndexOfSerial(probabilities, 0.5),
-                ProbabilitySelector.IndexOfBinary(probabilities, 0.5)
-            );
-        }
-
-        public static IEnumerable<object[]> ArraySize()
-        {
-            return new[]
-            {
-                new object[] {6},
-                new object[] {100},
-                new object[] {1000},
-                new object[] {10_000},
-                new object[] {100_000},
-                new object[] {500_000}
-            };
-        }
+            new object[] { 6 },
+            new object[] { 100 },
+            new object[] { 1000 },
+            new object[] { 10_000 },
+            new object[] { 100_000 },
+            new object[] { 500_000 }
+        };
     }
 }

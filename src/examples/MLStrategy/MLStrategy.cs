@@ -20,39 +20,38 @@ using System;
 using System.Linq;
 using Jenetics.Engine;
 using Jenetics.Util;
+using JeneticsEngine = Jenetics.Engine.Engine;
 
-namespace Jenetics.Example
+namespace Jenetics.Example;
+public static class MLStrategy
 {
-    public static class MLStrategy
+    private static double Fitness(double x)
     {
-        private static double Fitness(double x)
-        {
-            return x;
-        }
+        return x;
+    }
 
-        public static void Main()
-        {
-            const int μ = 5;
-            const int λ = 20;
-            const double p = 0.2;
+    public static void Main()
+    {
+        const int mu = 5;
+        const int lambda = 20;
+        const double mutationProbability = 0.2;
 
-            var codec = Codecs.OfScalar(DoubleRange.Of(0, 1));
+        var codec = Codecs.OfScalar(DoubleRange.Of(0, 1));
 
-            var engine = Engine.Engine
-                .Builder(Fitness, codec)
-                .PopulationSize(λ)
-                .SurvivorsSize(0)
-                .OffspringSelector(new TruncationSelector<DoubleGene, double>(μ))
-                .Alterers(new Mutator<DoubleGene, double>(p))
-                .Build();
+        var engine = JeneticsEngine
+            .Builder(Fitness, codec)
+            .PopulationSize(lambda)
+            .SurvivorsSize(0)
+            .OffspringSelector(new TruncationSelector<DoubleGene, double>(mu))
+            .Alterers(new Mutator<DoubleGene, double>(mutationProbability))
+            .Build();
 
-            Console.WriteLine(
-                codec.Decode(
-                    engine.Stream()
-                        .Take(100)
-                        .ToBestGenotype()
-                )
-            );
-        }
+        Console.WriteLine(
+            codec.Decode(
+                engine.Stream()
+                    .Take(100)
+                    .ToBestGenotype()
+            )
+        );
     }
 }
